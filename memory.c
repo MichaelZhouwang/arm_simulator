@@ -59,7 +59,7 @@ void memory_destroy(memory mem) {
 // Private memory read / write
 
 int memory_read_bytes(memory mem, int be, uint32_t address, uint8_t *bytes, size_t len) {
-    if (address+len-1 >= mem->size)) {
+    if (address+len-1 >= mem->size) {
         return -1;
     }
     

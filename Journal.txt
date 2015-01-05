@@ -1,5 +1,5 @@
 J-1 :
-	Complétion de memory.c (Jeremy)
+	Complétion de memory.c & arm_instruction.c(Jeremy)
 	
 J1 : 
 	Prise en main de Git

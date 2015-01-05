@@ -86,7 +86,7 @@ DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(srcdir)/config.h.in $(top_srcdir)/../build-aux/depcomp \
 	../build-aux/compile ../build-aux/depcomp \
 	../build-aux/install-sh ../build-aux/missing \
-	../build-aux/ylwrap $(top_srcdir)/../build-aux/compile \
+	$(top_srcdir)/../build-aux/compile \
 	$(top_srcdir)/../build-aux/install-sh \
 	$(top_srcdir)/../build-aux/missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4

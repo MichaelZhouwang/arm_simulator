@@ -437,7 +437,11 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This config.status script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it."
 
+<<<<<<< HEAD
 ac_pwd='/home/f/finielj/arm_simulator/Examples'
+=======
+ac_pwd='/home/v/vizzinje/Documents/arm_simulator/Examples'
+>>>>>>> 7e9e9cf4c571235deb6e24090cc73c077703be4c
 srcdir='.'
 INSTALL='/usr/bin/install -c'
 MKDIR_P='/bin/mkdir -p'
@@ -656,12 +660,21 @@ S["mkdir_p"]="$(MKDIR_P)"
 S["MKDIR_P"]="/bin/mkdir -p"
 S["INSTALL_STRIP_PROGRAM"]="$(install_sh) -c -s"
 S["STRIP"]="strip"
+<<<<<<< HEAD
 S["install_sh"]="${SHELL} /home/f/finielj/arm_simulator/build-aux/install-sh"
 S["MAKEINFO"]="${SHELL} /home/f/finielj/arm_simulator/build-aux/missing makeinfo"
 S["AUTOHEADER"]="${SHELL} /home/f/finielj/arm_simulator/build-aux/missing autoheader"
 S["AUTOMAKE"]="${SHELL} /home/f/finielj/arm_simulator/build-aux/missing automake-1.14"
 S["AUTOCONF"]="${SHELL} /home/f/finielj/arm_simulator/build-aux/missing autoconf"
 S["ACLOCAL"]="${SHELL} /home/f/finielj/arm_simulator/build-aux/missing aclocal-1.14"
+=======
+S["install_sh"]="${SHELL} /home/v/vizzinje/Documents/arm_simulator/build-aux/install-sh"
+S["MAKEINFO"]="${SHELL} /home/v/vizzinje/Documents/arm_simulator/build-aux/missing makeinfo"
+S["AUTOHEADER"]="${SHELL} /home/v/vizzinje/Documents/arm_simulator/build-aux/missing autoheader"
+S["AUTOMAKE"]="${SHELL} /home/v/vizzinje/Documents/arm_simulator/build-aux/missing automake-1.14"
+S["AUTOCONF"]="${SHELL} /home/v/vizzinje/Documents/arm_simulator/build-aux/missing autoconf"
+S["ACLOCAL"]="${SHELL} /home/v/vizzinje/Documents/arm_simulator/build-aux/missing aclocal-1.14"
+>>>>>>> 7e9e9cf4c571235deb6e24090cc73c077703be4c
 S["VERSION"]="1.0"
 S["PACKAGE"]="arm-examples"
 S["CYGPATH_W"]="echo"

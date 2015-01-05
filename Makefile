@@ -244,12 +244,21 @@ distuninstallcheck_listfiles = find . -type f -print
 am__distuninstallcheck_listfiles = $(distuninstallcheck_listfiles) \
   | sed 's|^\./|$(prefix)/|' | grep -v '$(infodir)/dir$$'
 distcleancheck_listfiles = find . -type f -print
+<<<<<<< HEAD
 ACLOCAL = ${SHELL} /home/f/finielj/arm_simulator/build-aux/missing aclocal-1.14
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 1
 AUTOCONF = ${SHELL} /home/f/finielj/arm_simulator/build-aux/missing autoconf
 AUTOHEADER = ${SHELL} /home/f/finielj/arm_simulator/build-aux/missing autoheader
 AUTOMAKE = ${SHELL} /home/f/finielj/arm_simulator/build-aux/missing automake-1.14
+=======
+ACLOCAL = ${SHELL} /home/v/vizzinje/Documents/arm_simulator/build-aux/missing aclocal-1.14
+AMTAR = $${TAR-tar}
+AM_DEFAULT_VERBOSITY = 1
+AUTOCONF = ${SHELL} /home/v/vizzinje/Documents/arm_simulator/build-aux/missing autoconf
+AUTOHEADER = ${SHELL} /home/v/vizzinje/Documents/arm_simulator/build-aux/missing autoheader
+AUTOMAKE = ${SHELL} /home/v/vizzinje/Documents/arm_simulator/build-aux/missing automake-1.14
+>>>>>>> 7e9e9cf4c571235deb6e24090cc73c077703be4c
 AWK = gawk
 CC = gcc
 CCAS = gcc
@@ -281,7 +290,11 @@ LEX_OUTPUT_ROOT = lex.yy
 LIBOBJS = 
 LIBS = 
 LTLIBOBJS = 
+<<<<<<< HEAD
 MAKEINFO = ${SHELL} /home/f/finielj/arm_simulator/build-aux/missing makeinfo
+=======
+MAKEINFO = ${SHELL} /home/v/vizzinje/Documents/arm_simulator/build-aux/missing makeinfo
+>>>>>>> 7e9e9cf4c571235deb6e24090cc73c077703be4c
 MKDIR_P = /bin/mkdir -p
 OBJEXT = o
 PACKAGE = arm_simulator
@@ -296,10 +309,17 @@ SET_MAKE =
 SHELL = /bin/bash
 STRIP = 
 VERSION = 1.1
+<<<<<<< HEAD
 abs_builddir = /home/f/finielj/arm_simulator
 abs_srcdir = /home/f/finielj/arm_simulator
 abs_top_builddir = /home/f/finielj/arm_simulator
 abs_top_srcdir = /home/f/finielj/arm_simulator
+=======
+abs_builddir = /home/v/vizzinje/Documents/arm_simulator
+abs_srcdir = /home/v/vizzinje/Documents/arm_simulator
+abs_top_builddir = /home/v/vizzinje/Documents/arm_simulator
+abs_top_srcdir = /home/v/vizzinje/Documents/arm_simulator
+>>>>>>> 7e9e9cf4c571235deb6e24090cc73c077703be4c
 ac_ct_CC = gcc
 am__include = include
 am__leading_dot = .
@@ -318,7 +338,11 @@ host_alias =
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
+<<<<<<< HEAD
 install_sh = ${SHELL} /home/f/finielj/arm_simulator/build-aux/install-sh
+=======
+install_sh = ${SHELL} /home/v/vizzinje/Documents/arm_simulator/build-aux/install-sh
+>>>>>>> 7e9e9cf4c571235deb6e24090cc73c077703be4c
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale

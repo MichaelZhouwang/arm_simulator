@@ -22,7 +22,6 @@ Contact: Guillaume.Huard@imag.fr
 */
 
 #include <stdlib.h>
-
 #include <stdio.h>
 #include "memory.h"
 #include "util.h"

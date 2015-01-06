@@ -62,6 +62,8 @@ int instruction_check_condition(arm_core p, uint8_t field) {
         case 15: res = -1; break; // undefined
         default: res =  0; break; // impossible
     }
+
+	debug("condition : %x, %d\n", field, res);
     return res;
 }
 
@@ -106,16 +108,13 @@ static int arm_execute_instruction(arm_core p) {
     // We check the condition
     cond_field = instruction_get_condition_field(instruction);
     result = instruction_check_condition(p, cond_field);
-	debug("condition : %x, %d\n", cond_field, result);
 	
-    if (result == 1) {
-		debug("condition valide\n");
-        // The condition was checked, the instruction will be handled
+    if (cond_field != 0xff) {
         ins_class_field = instruction_get_handler_field(instruction);
 		debug("handler : %x\n", ins_class_field);
 
         handler = instruction_field_get_handler(ins_class_field);
-    } else if (result == -1) {
+    } else {
         // The condition is undefined
 		debug("condition non definie\n");
         handler = arm_miscellaneous;

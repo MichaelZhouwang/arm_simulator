@@ -28,14 +28,34 @@ Contact: Guillaume.Huard@imag.fr
 #include <stdlib.h>
 
 int arm_branch(arm_core p, uint32_t ins) {
-    debug("arm_branch: %d\n", (int)ins);
-    return UNDEFINED_INSTRUCTION;
+
+	debug("current add %x\n", arm_read_register(p,15));
+	if ((ins >> 24) & 1) //Link
+	{
+		debug("Branch and Link\n");
+		arm_write_register(p, 14, arm_read_register(p, 15)); //R14 = R15
+	}
+	else
+		debug("Branch\n");
+
+	int32_t add = ins & 0xffffff;
+	add = add << 8;
+	add = add >> 8;
+	add = add << 2;
+	debug("déplacement de %d\n", add);
+	add += arm_read_register(p, 15);
+
+	debug("branch to add %x\n", add);
+
+	arm_write_register(p, 15, add);
+
+    return 0;
 }
 
 int arm_coprocessor_others_swi(arm_core p, uint32_t ins) {
-    debug("arm_data_processing_shift: %d\n", (int)ins);
+    debug("arm_coprocessor_other_swi: %d\n", (int)ins);
     if (get_bit(ins, 24)) {
-        debug("==> swi instruction");
+        debug("==> swi instruction\n");
         // Here we implement the end of the simulation as swi 0x123456
         if ((ins & 0xFFFFFF) == 0x123456)
             exit(0);
@@ -49,3 +69,19 @@ int arm_miscellaneous(arm_core p, uint32_t ins) {
     return UNDEFINED_INSTRUCTION;
 }
 
+int arm_mrs(arm_core p, uint32_t ins) {
+	uint8_t rd = (ins >> 12) & 0x0f;
+
+	if (rd == 15)
+		return UNDEFINED_INSTRUCTION;
+
+	//b19-b16 => SBO
+	//b11-b0 => SBZ
+
+	if ((ins >> 22) & 1) // R
+		arm_write_register(p, rd, arm_read_spsr(p));
+	else
+		arm_write_register(p, rd, arm_read_cpsr(p));
+
+	return 0;
+}

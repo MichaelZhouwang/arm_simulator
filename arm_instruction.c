@@ -28,6 +28,8 @@ Contact: Guillaume.Huard@imag.fr
 #include "arm_branch_other.h"
 #include "arm_constants.h"
 #include "util.h"
+#include <debug.h>
+#include "arm_core.h"
 
 // Fields parsing
 
@@ -39,8 +41,9 @@ inline uint8_t instruction_get_handler_field(uint32_t instruction) {
     return (uint8_t)((instruction>>25) & 7);
 }
 
-int instruction_check_condition(arm_core p, uint8_t field) {
+int instruction_check_condition(arm_core p, uint32_t inst) {
     int res;
+	uint8_t field = instruction_get_condition_field(inst);
     switch(field) {
         case 0:  res = is_z_set(p);                                     break;
         case 1:  res = is_z_clear(p);                                   break;
@@ -60,6 +63,8 @@ int instruction_check_condition(arm_core p, uint8_t field) {
         case 15: res = -1; break; // undefined
         default: res =  0; break; // impossible
     }
+
+	debug("condition : %x, %d\n", field, res);
     return res;
 }
 
@@ -92,24 +97,31 @@ static int arm_execute_instruction(arm_core p) {
     instruction_handler_t handler = NULL;
     
     // We fetch the instruction
+	debug("fetch\n");
     result = arm_fetch(p, &instruction);
+
     if (result) {
         return result;
     }
+
     
+	debug("instruction %x\n", instruction);
     // We check the condition
     cond_field = instruction_get_condition_field(instruction);
     result = instruction_check_condition(p, cond_field);
-    if (result == 1) {
-        // The condition was checked, the instruction will be handled
+	
+    if (cond_field != 0x0f) {
         ins_class_field = instruction_get_handler_field(instruction);
+		debug("handler : %x\n", ins_class_field);
+
         handler = instruction_field_get_handler(ins_class_field);
-    } else if (result == -1) {
+    } else {
         // The condition is undefined
+		debug("condition non definie\n");
         handler = arm_miscellaneous;
     }
     
-    return (handler) ? handler(p, instruction) : -1;
+    return (handler != NULL) ? handler(p, instruction) : -1;
 }
 
 int arm_step(arm_core p) {

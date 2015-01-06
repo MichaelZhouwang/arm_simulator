@@ -41,8 +41,9 @@ inline uint8_t instruction_get_handler_field(uint32_t instruction) {
     return (uint8_t)((instruction>>25) & 7);
 }
 
-int instruction_check_condition(arm_core p, uint8_t field) {
+int instruction_check_condition(arm_core p, uint32_t inst) {
     int res;
+	uint8_t field = instruction_get_condition_field(inst);
     switch(field) {
         case 0:  res = is_z_set(p);                                     break;
         case 1:  res = is_z_clear(p);                                   break;
@@ -109,7 +110,7 @@ static int arm_execute_instruction(arm_core p) {
     cond_field = instruction_get_condition_field(instruction);
     result = instruction_check_condition(p, cond_field);
 	
-    if (cond_field != 0xff) {
+    if (cond_field != 0x0f) {
         ins_class_field = instruction_get_handler_field(instruction);
 		debug("handler : %x\n", ins_class_field);
 

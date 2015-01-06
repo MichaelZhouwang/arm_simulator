@@ -99,11 +99,11 @@ static int arm_execute_instruction(arm_core p) {
     
     // We check the condition
     cond_field = instruction_get_condition_field(instruction);
-    result = instruction_check_condition(p, field);
+    result = instruction_check_condition(p, cond_field);
     if (result == 1) {
         // The condition was checked, the instruction will be handled
         ins_class_field = instruction_get_handler_field(instruction);
-        handler = instruction_field_get_handler(field);
+        handler = instruction_field_get_handler(ins_class_field);
     } else if (result == -1) {
         // The condition is undefined
         handler = arm_miscellaneous;

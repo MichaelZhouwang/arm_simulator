@@ -31,12 +31,12 @@ Contact: Guillaume.Huard@imag.fr
 // Decoding functions for different classes of instructions
 
 int arm_data_processing_shift(arm_core p, uint32_t ins) {
-    debug("arm_data_processing_shift: %d", (int)ins);
+    debug("arm_data_processing_shift: %d\n", (int)ins);
     return UNDEFINED_INSTRUCTION;
 }
 
 int arm_data_processing_immediate(arm_core p, uint32_t ins) {
-    debug("arm_data_processing_immediate: %d", (int)ins);
+    debug("arm_data_processing_immediate: %d\n", (int)ins);
     return UNDEFINED_INSTRUCTION;
 }
 

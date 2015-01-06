@@ -20,12 +20,15 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
 #ifndef __ARM_LOAD_STORE_H__
 #define __ARM_LOAD_STORE_H__
+
 #include <stdint.h>
 #include "arm_core.h"
 
 int arm_load_store(arm_core p, uint32_t ins);
+int arm_load_store_immediate(arm_core p, uint32_t ins);
 int arm_load_store_multiple(arm_core p, uint32_t ins);
 int arm_coprocessor_load_store(arm_core p, uint32_t ins);
 

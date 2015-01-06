@@ -20,6 +20,7 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
 #include "arm_core.h"
 #include "no_trace_location.h"
 #include "arm_constants.h"
@@ -27,6 +28,8 @@ Contact: Guillaume.Huard@imag.fr
 #include "util.h"
 #include "trace.h"
 #include <stdlib.h>
+
+// ARM CORE
 
 struct arm_core_data {
     int32_t registers_storage[31];
@@ -249,3 +252,55 @@ void arm_print_state(arm_core p, FILE *out) {
         }
     }
 }
+
+// NZCV flags helpers
+
+inline int arm_read_n(arm_core p) {
+    return arm_read_register(p, N);
+}
+
+inline int arm_read_z(arm_core p) {
+    return arm_read_register(p, Z);
+}
+
+inline int arm_read_c(arm_core p) {
+    return arm_read_register(p, C);
+}
+
+inline int arm_read_v(arm_core p) {
+    return arm_read_register(p, V);
+}
+
+inline int is_n_clear(arm_core p) {
+    return (arm_read_n(p) == 0);
+}
+
+inline int is_z_clear(arm_core p) {
+    return (arm_read_z(p) == 0);
+}
+
+inline int is_c_clear(arm_core p) {
+    return (arm_read_c(p) == 0);
+}
+
+inline int is_v_clear(arm_core p) {
+    return (arm_read_v(p) == 0);
+}
+
+inline int is_n_set(arm_core p) {
+    return (arm_read_n(p) == 1);
+}
+
+inline int is_z_set(arm_core p) {
+    return (arm_read_z(p) == 1);
+}
+
+inline int is_c_set(arm_core p) {
+    return (arm_read_c(p) == 1);
+}
+
+inline int is_v_set(arm_core p) {
+    return (arm_read_v(p) == 1);
+}
+
+

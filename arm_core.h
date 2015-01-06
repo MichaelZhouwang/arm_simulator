@@ -20,13 +20,16 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
 #ifndef __ARM_CORE_H__
 #define __ARM_CORE_H__
+
 #include <sys/types.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "memory.h"
 
+// ARM CORE
 typedef struct arm_core_data *arm_core;
 
 void arm_init();
@@ -54,6 +57,22 @@ int arm_read_word(arm_core p, uint32_t address, uint32_t *value);
 int arm_write_byte(arm_core p, uint32_t address, uint8_t value);
 int arm_write_half(arm_core p, uint32_t address, uint16_t value);
 int arm_write_word(arm_core p, uint32_t address, uint32_t value);
+
+// NZCV flags  helpers
+int arm_read_n(arm_core p);
+int arm_read_z(arm_core p);
+int arm_read_c(arm_core p);
+int arm_read_v(arm_core p);
+
+int is_n_clear(arm_core p);
+int is_z_clear(arm_core p);
+int is_c_clear(arm_core p);
+int is_v_clear(arm_core p);
+
+int is_n_set(arm_core p);
+int is_z_set(arm_core p);
+int is_c_set(arm_core p);
+int is_v_set(arm_core p);
 
 #include "trace_location.h"
 #endif

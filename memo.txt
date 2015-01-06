@@ -1,0 +1,167 @@
+-----------------------------------------------------------------------------
+Informations generales :
+-----------------------------------------------------------------------------
+
+Groupe:
+    - Vizzini Jeremy
+    - Finiel Jeremie
+    - Souchet Julie
+    - Heckmann Victor
+
+
+Configuration et execution :
+    - source ~/.envarm/setenvarm.sh
+    - ./arm_simulator
+    - arm-eabi-gdb
+    - file Examples/example1
+    - target remote localhost:43317
+    - load
+    - stepi
+
+Pour obtenir de l'aide il y a :
+    - ./arm_simulator -- help
+
+
+-----------------------------------------------------------------------------
+Avancement du projet :
+-----------------------------------------------------------------------------
+
+Taches :
+    - gestion de la memoire         : implemente et teste
+    - fetch d'une instruction       : implemente et pas teste
+    - execution des instructions    : pas implemente et pas teste
+    - gestion des interruptions IRQ : pas implemente et pas teste
+    - compte rendu final            : en cours
+    
+Gestion des differentes instructions :
+|--------------|-------|------------|-------|------------------------------|
+| Instructions | Doc   |Implemente  | Teste | Nom du test                  |
+|--------------|-------|------------|-------|------------------------------|
+|   B          |-------|------------|-------|------------------------------|
+|   BL         |-------|------------|-------|------------------------------|
+|--------------|-------|------------|-------|------------------------------|
+|   TEQ        |-------|------------|-------|------------------------------|
+|   CMP        |-------|------------|-------|------------------------------|
+|   CMN        |-------|------------|-------|------------------------------|
+|   ORR        |-------|------------|-------|------------------------------|
+|   MOV        |-------|------------|-------|------------------------------|
+|   BIC        |-------|------------|-------|------------------------------|
+|   MVN        |-------|------------|-------|------------------------------|
+|   AND        |-------|------------|-------|------------------------------|
+|   EOR        |-------|------------|-------|------------------------------|
+|   SUB        |-------|------------|-------|------------------------------|
+|   RSB        |-------|------------|-------|------------------------------|
+|   ADD        |-------|------------|-------|------------------------------|
+|   ADC        |-------|------------|-------|------------------------------|
+|   SBC        |-------|------------|-------|------------------------------|
+|   RSC        |-------|------------|-------|------------------------------|
+|   TST        |-------|------------|-------|------------------------------|
+|--------------|-------|------------|-------|------------------------------|
+|   LDR        |-------|------------|-------|------------------------------|
+|   LDRB       |-------|------------|-------|------------------------------|
+|   LDRH       |-------|------------|-------|------------------------------|
+|   STR        |-------|------------|-------|------------------------------|
+|   STRB       |-------|------------|-------|------------------------------|
+|   STRH       |-------|------------|-------|------------------------------|
+|   LDM(1)     |-------|------------|-------|------------------------------|
+|   STM(1)     |-------|------------|-------|------------------------------|
+|--------------|-------|------------|-------|------------------------------|
+|   LDRSH      |-------|------------|-------|------------------------------|
+|   LDRSB      |-------|------------|-------|------------------------------|
+|--------------|-------|------------|-------|------------------------------|
+
+
+-----------------------------------------------------------------------------
+Modification par fichiers :
+-----------------------------------------------------------------------------
+
+|---------------------|------------------------------------------------------|
+| arm_core            | - ajout de fonctions pour l'access a NZCV            |
+|---------------------|------------------------------------------------------|
+| arm_exception       | - a completer ...                                    |
+|---------------------|------------------------------------------------------|
+| memory              | - implementation des access a la memoire             |
+|---------------------|------------------------------------------------------|
+|arm_instruction      | - ajout du fetch                                     |
+|                     | - prise en compte des conditions                     |
+|                     | - redirection des instructions dans les handlers     |
+|---------------------|------------------------------------------------------|
+| arm_data_processing | - a completer ...                                    |
+|---------------------|------------------------------------------------------|
+| arm_load_store      | - a completer ...                                    |
+|---------------------|------------------------------------------------------|
+| arm_branch_other    | - a completer ...                                    |
+|---------------------|------------------------------------------------------|
+
+
+Traitants des differentes classes d instructions (p110 figure A3-1)
+|-----------------------------------------------|------|
+| Traitants                                     | Code |
+|-----------------------------------------------|------|
+| arm_data_processing_shift                     | 000  |
+| arm_data_processing_immediate                 | 001  |
+| arm_load_store_immediate                      | 010  |
+| arm_load_store                                | 011  |
+| arm_load_store_multiple                       | 100  |
+| arm_branch                                    | 101  |
+| arm_coprocessor_load_store                    | 110  |
+| arm_coprocessor_others_swi                    | 111  |
+|-----------------------------------------------|------|
+
+-----------------------------------------------------------------------------
+Documentation :
+-----------------------------------------------------------------------------
+
+Schema d'une instruction vu au niveau de arm_instruction (p110 figure A3-1)
+|-------------|----------|--------------------|
+| 31 30 29 28 | 27 26 25 | 24 ############# 0 |
+|-------------|----------|--------------------|
+| cond field  | handler  | XXXXXXXXXXXXXXXXXX |
+|-------------|----------|--------------------|
+
+Les differentes valeurs du champ de condition (p112 figure A3-4)
+|-----------------------------------|------|-----------|
+| Description                       | Code | Flags     |
+|-----------------------------------|------|-----------|
+| Equal                             | 0000 | Z=1       |
+| Not equal                         | 0001 | Z=0       |
+| Carry set/unsigned higher or same | 0010 | C=1       |
+| Carry clear/unsigned lower        | 0011 | C=0       |
+| Minus/negative                    | 0100 | N=1       |
+| Plus/positive or zero             | 0101 | N=0       |
+| Overflow                          | 0110 | V=1       |
+| No overflow                       | 0111 | V=0       |
+| Unsigned higher                   | 1000 | C=1 Z=0   |
+| Unsigned lower or same            | 1001 | C=0 Z=1   |
+| Signed greater than or equal      | 1010 | N=V       |
+| Signed less than                  | 1011 | N!=V      |
+| Signed greater than               | 1100 | Z=0 N=V   |
+| Signed less than or equal         | 1101 | Z=1 N!=V  |
+| Always (unconditional)            | 1110 | Always    |
+| 1111  (see page 110)              | 1111 | Undefined |
+|-----------------------------------|------|-----------|
+
+Operation de Data processing (p115 table A3-2)
+|--------|----------|------------------------------|------------------------------------------------|
+| Opcode | Mnemonic | Operation                    | Instructions action                            |
+|--------|----------|------------------------------|------------------------------------------------|
+|  0000  |   AND    | Logical AND                  | Rd := Rn AND shifter_operand                   |
+|  0001  |   EOR    | Logical Exclusive OR         | Rd := Rn EOR shifter_operand                   |
+|  0010  |   SUB    | Subtract                     | Rd := Rn - shifter_operand                     |
+|  0011  |   RSB    | Reverse                      | Rd := shifter_operand - Rn                     |
+|  0100  |   ADD    | Add                          | Rd := Rn + shifter_operand                     |
+|  0101  |   ADC    | Add with Carry               | Rd := Rn + shifter_operand + Carry Flag        |
+|  0110  |   SBC    | Subtract with Carry          | Rd := Rn - shifter_operand - NOT(Carry Flag)   |
+|  0111  |   RSC    | Reverse Subtract with Carry  | Rd := shifter_operand - Rn - NOT(Carry Flag)   |
+|  1000  |   TST    | Test                         | Update flags after Rn AND shifter_operand      |
+|  1001  |   TEQ    | Test Equivalence             | Update flags after Rn EOR shifter_operand      |
+|  1010  |   CMP    | Compare                      | Update flags after Rn - shifter_operand        |
+|  1011  |   CMN    | Compare Negated              | Update flags after Rn + shifter_operand        |
+|  1100  |   ORR    | Logical (inclusive) OR       | Rd := Rn OR shifter_operand                    |
+|  1101  |   MOV    | Move                         | Rd := shifter_operand (no first operand)       |
+|  1110  |   BIC    | Bit Clear                    | Rd := Rn AND NOT(shifter_operand)              |
+|  1111  |   MVN    | Move Not                     | Rd := NOT shifter_operand (no first operand)   |
+|--------|----------|------------------------------|------------------------------------------------|
+
+
+

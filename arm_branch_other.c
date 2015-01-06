@@ -20,20 +20,23 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
 #include "arm_branch_other.h"
 #include "arm_constants.h"
 #include "util.h"
 #include <debug.h>
 #include <stdlib.h>
 
-
 int arm_branch(arm_core p, uint32_t ins) {
+    debug("arm_branch: %d", (int)ins);
     return UNDEFINED_INSTRUCTION;
 }
 
 int arm_coprocessor_others_swi(arm_core p, uint32_t ins) {
+    debug("arm_data_processing_shift: %d", (int)ins);
     if (get_bit(ins, 24)) {
-        /* Here we implement the end of the simulation as swi 0x123456 */
+        debug("==> swi instruction");
+        // Here we implement the end of the simulation as swi 0x123456
         if ((ins & 0xFFFFFF) == 0x123456)
             exit(0);
         return SOFTWARE_INTERRUPT;
@@ -42,5 +45,7 @@ int arm_coprocessor_others_swi(arm_core p, uint32_t ins) {
 }
 
 int arm_miscellaneous(arm_core p, uint32_t ins) {
+    debug("arm_miscellaneous: %d", (int)ins);
     return UNDEFINED_INSTRUCTION;
 }
+

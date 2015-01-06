@@ -20,6 +20,7 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
 #include "arm_load_store.h"
 #include "arm_exception.h"
 #include "arm_constants.h"
@@ -27,14 +28,21 @@ Contact: Guillaume.Huard@imag.fr
 #include "debug.h"
 
 int arm_load_store(arm_core p, uint32_t ins) {
+    debug("arm_load_store: %d", (int)ins);
+    return UNDEFINED_INSTRUCTION;
+}
+
+int arm_load_store_immediate(arm_core p, uint32_t ins) {
+    debug("arm_load_store_immediate: %d", (int)ins);
     return UNDEFINED_INSTRUCTION;
 }
 
 int arm_load_store_multiple(arm_core p, uint32_t ins) {
+    debug("arm_load_store_multiple: %d", (int)ins);
     return UNDEFINED_INSTRUCTION;
 }
 
 int arm_coprocessor_load_store(arm_core p, uint32_t ins) {
-    /* Not implemented */
+    debug("arm_coprocessor_load_store: %d", (int)ins);
     return UNDEFINED_INSTRUCTION;
 }

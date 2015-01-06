@@ -20,12 +20,14 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
 #ifndef __ARM_DATA_PROCESSING_H__
 #define __ARM_DATA_PROCESSING_H__
+
 #include <stdint.h>
 #include "arm_core.h"
 
 int arm_data_processing_shift(arm_core p, uint32_t ins);
-int arm_data_processing_immediate_msr(arm_core p, uint32_t ins);
+int arm_data_processing_immediate(arm_core p, uint32_t ins);
 
 #endif

@@ -20,10 +20,13 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
 #ifndef __ARM_INSTRUCTION_H__
 #define __ARM_INSTRUCTION_H__
-#include "arm_core.h"
 
+#include "arm_core.h"
+         
+// Execution of instructions
 int arm_step(arm_core p);
 
 #endif

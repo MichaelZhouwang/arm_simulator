@@ -28,21 +28,21 @@ Contact: Guillaume.Huard@imag.fr
 #include "debug.h"
 
 int arm_load_store(arm_core p, uint32_t ins) {
-    debug("arm_load_store: %d", (int)ins);
+    debug("arm_load_store: %d\n", (int)ins);
     return UNDEFINED_INSTRUCTION;
 }
 
 int arm_load_store_immediate(arm_core p, uint32_t ins) {
-    debug("arm_load_store_immediate: %d", (int)ins);
+    debug("arm_load_store_immediate: %d\n", (int)ins);
     return UNDEFINED_INSTRUCTION;
 }
 
 int arm_load_store_multiple(arm_core p, uint32_t ins) {
-    debug("arm_load_store_multiple: %d", (int)ins);
+    debug("arm_load_store_multiple: %d\n", (int)ins);
     return UNDEFINED_INSTRUCTION;
 }
 
 int arm_coprocessor_load_store(arm_core p, uint32_t ins) {
-    debug("arm_coprocessor_load_store: %d", (int)ins);
+    debug("arm_coprocessor_load_store: %d\n", (int)ins);
     return UNDEFINED_INSTRUCTION;
 }

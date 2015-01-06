@@ -28,12 +28,12 @@ Contact: Guillaume.Huard@imag.fr
 #include <stdlib.h>
 
 int arm_branch(arm_core p, uint32_t ins) {
-    debug("arm_branch: %d", (int)ins);
+    debug("arm_branch: %d\n", (int)ins);
     return UNDEFINED_INSTRUCTION;
 }
 
 int arm_coprocessor_others_swi(arm_core p, uint32_t ins) {
-    debug("arm_data_processing_shift: %d", (int)ins);
+    debug("arm_data_processing_shift: %d\n", (int)ins);
     if (get_bit(ins, 24)) {
         debug("==> swi instruction");
         // Here we implement the end of the simulation as swi 0x123456
@@ -45,7 +45,7 @@ int arm_coprocessor_others_swi(arm_core p, uint32_t ins) {
 }
 
 int arm_miscellaneous(arm_core p, uint32_t ins) {
-    debug("arm_miscellaneous: %d", (int)ins);
+    debug("arm_miscellaneous: %d\n", (int)ins);
     return UNDEFINED_INSTRUCTION;
 }
 

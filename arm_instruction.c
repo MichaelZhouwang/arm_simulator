@@ -57,7 +57,7 @@ int instruction_check_condition(arm_core p, uint8_t field) {
         case 12: res = is_z_set(p) && arm_read_n(p) == arm_read_v(p);   break;
         case 13: res = is_z_clear(p) && arm_read_n(p) != arm_read_v(p); break;
         case 14: res =  1; break; // always
-        case 15: res = -1; break; // undefined
+        case 15: res = -1; break; // unconditional
         default: res =  0; break; // impossible
     }
     return res;
@@ -105,8 +105,8 @@ static int arm_execute_instruction(arm_core p) {
         ins_class_field = instruction_get_handler_field(instruction);
         handler = instruction_field_get_handler(ins_class_field);
     } else if (result == -1) {
-        // The condition is undefined
-        handler = arm_miscellaneous;
+        // The instruction is unconditional
+        handler = arm_unconditional;
     }
     
     return (handler) ? handler(p, instruction) : -1;

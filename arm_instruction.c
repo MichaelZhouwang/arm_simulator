@@ -121,7 +121,7 @@ static int arm_execute_instruction(arm_core p) {
         handler = arm_miscellaneous;
     }
     
-    return (handler) ? handler(p, instruction) : -1;
+    return (handler != NULL) ? handler(p, instruction) : -1;
 }
 
 int arm_step(arm_core p) {

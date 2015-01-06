@@ -11,6 +11,8 @@ Groupe:
 
 Configuration et execution :
     - source ~/.envarm/setenvarm.sh
+    - ./configure
+    - make 
     - ./arm_simulator
     - arm-eabi-gdb
     - file Examples/example1

@@ -28,6 +28,38 @@ Contact: Guillaume.Huard@imag.fr
 #include "util.h"
 #include "debug.h"
 
+// Condition check
+inline uint8_t instruction_get_condition_field(uint32_t instruction) {
+    return (uint8_t)(instruction>>28);
+}
+
+int instruction_check_condition(arm_core p, uint8_t field) {
+    int res;
+    switch(field) {
+        case 0:  res = is_z_set(p);                                     break;
+        case 1:  res = is_z_clear(p);                                   break;
+        case 2:  res = is_c_set(p);                                     break;
+        case 3:  res = is_c_clear(p);                                   break;
+        case 4:  res = is_n_set(p);                                     break;
+        case 5:  res = is_n_clear(p);                                   break;
+        case 6:  res = is_v_set(p);                                     break;
+        case 7:  res = is_v_clear(p);                                   break;
+        case 8:  res = is_c_set(p) && is_z_clear(p);                    break;
+        case 9:  res = is_c_clear(p) && is_z_set(p);                    break;
+        case 10: res = arm_read_n(p) == arm_read_v(p);                  break;
+        case 11: res = arm_read_n(p) != arm_read_v(p);                  break;
+        case 12: res = is_z_set(p) && arm_read_n(p) == arm_read_v(p);   break;
+        case 13: res = is_z_clear(p) && arm_read_n(p) != arm_read_v(p); break;
+        case 14: res =  1; break; // always
+        case 15: res = -1; break; // undefined
+        default: res =  0; break; // impossible
+    }
+
+	debug("condition : %x, %d\n", field, res);
+    return res;
+}
+
+
 typedef enum {AND, EOR, SUB, RSB, ADD, ADC, SBC, RSC, TST, TEQ, CMP, CMN, ORR, MOV, BIC, MVN} op_code_t;
 typedef int(* dp_instruction_handler_t)(arm_core, uint8_t, uint32_t, uint32_t, uint8_t);
 
@@ -71,22 +103,6 @@ int get_immediate(uint32_t ins) {
 	int rotate_imm = (ins >> 8) & 15;
 	return imm_8 >> (rotate_imm * 2) ;
 }
-// Shifted register operand value
-void shift(int* op, int code, int value) {
-	switch(code){
-		case 0: // LSL
-			*op <<= value;
-			break;
-		case 1: // LSR
-			*op >>= value;
-			break;
-		case 2: // ASR
-			
-			break;
-		case 3: // ROR
-			break;
-	}	
-}
 
 
 
@@ -97,29 +113,22 @@ dp_instruction_handler_t decode(op_code_t op_code) {
 
 // Decoding functions for different classes of instructions
 int arm_data_processing_shift(arm_core p, uint32_t ins) {
-    debug("arm_data_processing_shift: %d\n", (int)ins);
+    debug("arm_data_processing_shift: %d\n", (int)ins);    
     
+    uint8_t cond_field = instruction_get_condition_field(ins);
+    int result = instruction_check_condition(p, cond_field);
+    if(result) return result;
+    
+    // Parsing the instruction
     op_code_t op_code = get_op_code(ins);
+    dp_instruction_handler_t handler = decode(op_code);
+    
     rd = get_rd(ins);
+    
     if(op_code != MOV && op_code != MVN) {
     	rn = get_rn(ins);
     	op1 = arm_read_register(p, rn);
     }
-    // calcul de op2
-    rm = get_rm(ins);
-    shift_imm = get_shift_imm(ins);
-    op2 = arm_read_register(p, rm);
-    if(shift_imm) {
-		  bit4 = get_bit4(ins);
-		  shift_code = get_shift_code(ins);
-    	int shift_value;
-    	if(!bit4) shift_value = shift_imm;
-    	else {
-				rs = get_rs(ins);
-				shift_value = arm_read_register(p, rs);
-		  }
-		  shift(&op2, shift_code, shift_value);
-		}
     
     if(op_code == CMP || op_code == CMN  || op_code == TST || op_code == TEQ) {
     	S = 1;
@@ -128,9 +137,24 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
     	S = get_S(ins);
     }
     
-    dp_instruction_handler_t handler = decode(op_code);
+    rm = get_rm(ins);
+    shift_imm = get_shift_imm(ins);
+		shift_code = get_shift_code(ins);
+    op2 = arm_read_register(p, rm);
+    if(shift_imm || shift_code) {
+		  bit4 = get_bit4(ins);
+    	uint8_t shift_value;
+    	if(!bit4) shift_value = shift_imm;
+    	else {
+				rs = get_rs(ins);
+				shift_value = arm_read_register(p, rs);
+		  }
+		  op2 = shift(p, op2, shift_code, shift_value);
+		}
+        
+    // Specific function call
     handler(p, rd, op1, op2, S);
-    return UNDEFINED_INSTRUCTION;
+    return result;
 }
 
 

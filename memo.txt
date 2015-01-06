@@ -168,4 +168,20 @@ Operation de Data processing (p115 table A3-2)
 |--------|----------|------------------------------|------------------------------------------------|
 
 
-
+Les différents Shifts (p.449-457)
+|------|----------|---------------------------------------------------|
+| Code | Mnemonic | Effet                                             |
+|------|----------|---------------------------------------------------|
+|  00  |   LSL    | Decale d'un certain nombre de bits vers la gauche |
+|      |          | en ajoutant des 0 à droite                        |
+|------|----------|---------------------------------------------------|
+|  01  |   LSR    | Decale d'un certain nombre de bits vers la droite |
+|      |          | en ajoutant des 0 à gauche                        |
+|------|----------|---------------------------------------------------|
+|  10  |   ASR    | Identique à LSR, sauf que les bits ajoutés à      |
+|      |          | droite sont les mêmes que le bit de poids fort    |
+|------|----------|---------------------------------------------------|
+|  11  |  ROR/RRX | Decale d'un certain nombre de bits vers la droite,|
+|      |          | les bits dépassant à droite sont ajoutés à gauche |
+|------|----------|---------------------------------------------------|
+ 

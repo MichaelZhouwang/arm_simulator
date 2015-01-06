@@ -71,6 +71,22 @@ int get_immediate(uint32_t ins) {
 	int rotate_imm = (ins >> 8) & 15;
 	return imm_8 >> (rotate_imm * 2) ;
 }
+// Shifted register operand value
+void shift(int* op, int code, int value) {
+	switch(code){
+		case 0: // LSL
+			*op <<= value;
+			break;
+		case 1: // LSR
+			*op >>= value;
+			break;
+		case 2: // ASR
+			
+			break;
+		case 3: // ROR
+			break;
+	}	
+}
 
 
 
@@ -91,18 +107,19 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
     }
     // calcul de op2
     rm = get_rm(ins);
-    bit4 = get_bit4(ins);
-    shift_code = get_shift_code(ins);
     shift_imm = get_shift_imm(ins);
-    if(bit4 || shift_code || shift_imm) {
+    op2 = arm_read_register(p, rm);
+    if(shift_imm) {
+		  bit4 = get_bit4(ins);
+		  shift_code = get_shift_code(ins);
     	int shift_value;
     	if(!bit4) shift_value = shift_imm;
     	else {
 				rs = get_rs(ins);
 				shift_value = arm_read_register(p, rs);
 		  }
+		  shift(&op2, shift_code, shift_value);
 		}
-    else op2 = arm_read_register(p, rm);
     
     if(op_code == CMP || op_code == CMN  || op_code == TST || op_code == TEQ) {
     	S = 1;

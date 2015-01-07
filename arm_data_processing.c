@@ -63,8 +63,7 @@ int instruction_check_condition(arm_core p, uint8_t field) {
 
 typedef int(* dp_instruction_handler_t)(arm_core, uint8_t, uint32_t, uint32_t, uint8_t);
 
-uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, bit4, bit7;
-int op1, op2;
+
 
 // Data processing instruction parsing
 static inline int get_op_code(uint32_t ins) {
@@ -209,7 +208,8 @@ void mvn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
 // Decoding functions for various classes of instructions
 int arm_data_processing_shift(arm_core p, uint32_t ins) {
     debug("arm_data_processing_shift: %d\n", (int)ins);    
-    
+    uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, bit4, bit7;
+		int op1, op2;
     uint8_t cond_field = instruction_get_condition_field(ins);
     int result = instruction_check_condition(p, cond_field);
     if(result) return result;
@@ -255,10 +255,12 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
 
 int arm_data_processing_immediate(arm_core p, uint32_t ins) {
     debug("arm_data_processing_immediate: %d\n", (int)ins);
-    
+    uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, bit4, bit7;
+		int op1, op2;
     /*
-    	Attention : bit25 == 0 &&	bit7 == 1 && bit4 == 1 	=> load/store ou MRS
+    	Attention : bit25 == 0 &&	bit7 == 1 && bit4 == 1 	=> load/store (ou MRS à voir de plus près)
     	cf. p.443, 144 et 146
+    	=> appel arm_load_store_miscellaneous(arm_core p, uint32_t ins)
     */
     
     return UNDEFINED_INSTRUCTION;

@@ -303,17 +303,49 @@ inline int is_v_set(arm_core p) {
     return (arm_read_v(p) == 1);
 }
 
-void set_n(arm_core p){}
-void set_z(arm_core p){}
-void set_c(arm_core p){}
-void set_v(arm_core p){}
+void set_n(arm_core p) {
+	uint32_t res = arm_read_cpsr(p);
+	res = set_bit(res, N);
+	arm_write_cpsr(p, res);
+}
+void set_z(arm_core p) {
+	uint32_t res = arm_read_cpsr(p);
+	res = set_bit(res, Z);
+	arm_write_cpsr(p, res);
+}
+void set_c(arm_core p) {
+	uint32_t res = arm_read_cpsr(p);
+	res = set_bit(res, C);
+	arm_write_cpsr(p, res);
+}
+void set_v(arm_core p) {
+	uint32_t res = arm_read_cpsr(p);
+	res = set_bit(res, V);
+	arm_write_cpsr(p, res);
+}
 
-void clear_n(arm_core p){}
-void clear_z(arm_core p){}
-void clear_c(arm_core p){}
-void clear_v(arm_core p){}
+void clear_n(arm_core p) {
+	uint32_t res = arm_read_cpsr(p);
+	res = clr_bit(res, N);
+	arm_write_cpsr(p, res);
+}
+void clear_z(arm_core p) {
+	uint32_t res = arm_read_cpsr(p);
+	res = clr_bit(res, Z);
+	arm_write_cpsr(p, res);
+}
+void clear_c(arm_core p) {
+	uint32_t res = arm_read_cpsr(p);
+	res = clr_bit(res, C);
+	arm_write_cpsr(p, res);
+}
+void clear_v(arm_core p) {
+	uint32_t res = arm_read_cpsr(p);
+	res = clr_bit(res, V);
+	arm_write_cpsr(p, res);
+}
 
 inline void update_flags(arm_core p, uint32_t value) {
-	if(value == 0) 
+	//if(value == 0) 
 }
 

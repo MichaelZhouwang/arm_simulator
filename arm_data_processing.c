@@ -28,14 +28,6 @@ Contact: Guillaume.Huard@imag.fr
 #include "util.h"
 #include "debug.h"
 
-typedef enum {
-    AND, EOR, SUB, RSB, ADD, ADC, SBC, RSC, TST, TEQ, CMP, CMN, ORR, MOV, BIC, MVN
-} op_code_t;
-
-typedef enum {
-    LSL, LSR, ASR, ROR
-} shift_code_t;
-
 // Condition check
 inline uint8_t instruction_get_condition_field(uint32_t instruction) {
     return (uint8_t)(instruction>>28);
@@ -68,7 +60,7 @@ int instruction_check_condition(arm_core p, uint8_t field) {
 }
 
 
-typedef enum {AND, EOR, SUB, RSB, ADD, ADC, SBC, RSC, TST, TEQ, CMP, CMN, ORR, MOV, BIC, MVN} op_code_t;
+
 typedef int(* dp_instruction_handler_t)(arm_core, uint8_t, uint32_t, uint32_t, uint8_t);
 
 uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, bit4, bit7;
@@ -76,7 +68,7 @@ int op1, op2;
 
 // Data processing instruction parsing
 static inline int get_op_code(uint32_t ins) {
-	return (ins >> 12) & 15;
+	return (ins >> 21) & 15;
 }
 static inline uint8_t get_rd(uint32_t ins) {
 	return (ins >> 12) & 15;
@@ -93,7 +85,7 @@ static inline uint8_t get_S(uint32_t ins) {
 static inline uint8_t get_rs(uint32_t ins) {
 	return (ins >> 8) & 15;
 }
-uint8_t get_shift_imm(uint32_t ins) {
+static inline uint8_t get_shift_imm(uint32_t ins) {
 	return (ins >> 7) & 31;
 }
 static inline int get_shift_code(uint32_t ins) {
@@ -105,21 +97,116 @@ static inline uint8_t get_bit4(uint32_t ins) {
 static inline uint8_t get_bit7(uint32_t ins) {
 	return (ins >> 7) & 1;
 }
+static inline uint8_t get_bit25(uint32_t ins) {
+	return (ins >> 25) & 1;
+}
 // Immediate operand value
-uint32_t get_immediate(uint32_t ins) {
+static inline uint32_t get_immediate(uint32_t ins) {
 	uint32_t imm_8 = ins & 255;
 	uint8_t rotate_imm = (ins >> 8) & 15;
 	return ror(imm_8,(rotate_imm * 2)) ;
 }
 
 
-
 // Decoding
-static dp_instruction_handler_t decode(op_code_t op_code) {
-	return and; // à compléter
+dp_instruction_handler_t decode(int op_code) {
+	switch(op_code) {
+		case 0: return and; break;
+		case 1: return eor; break;
+		case 2: return sub; break;
+		case 3: return rsb; break;
+		case 4: return add; break;
+		case 5: return adc; break;
+		case 6: return sbc; break;
+		case 7: return rsc; break;
+		case 8: return tst; break;
+		case 9: return teq; break;
+		case 10: return cmp; break;
+		case 11: return cmn; break;
+		case 12: return orr; break;
+		case 13: return mov; break;
+		case 14: return bic; break;
+		case 15: return mvn; break;
+	}
 }
 
-// Decoding functions for different classes of instructions
+// Instructions
+
+void and(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+	uint32_t result = op1 & op2;
+	arm_write_register(p, rd, result);
+	if(S) update_flags(p, result);
+}
+
+void eor(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+	uint32_t result = op1 ^ op2;
+	arm_write_register(p, rd, result);
+}
+
+void sub(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+	uint32_t result = op1 - op2;
+	arm_write_register(p, rd, result);
+}
+
+void rsb(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+	uint32_t result = op2 - op1;
+	arm_write_register(p, rd, result);
+}
+
+void add(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+	uint32_t result = op1 + op2;
+	arm_write_register(p, rd, result);
+}
+
+void adc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+	uint32_t result = op1 + op2 + is_c_set(p);
+	arm_write_register(p, rd, result);
+}
+
+void sbc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+	uint32_t result = op1 - op2 - is_c_clear(p);
+	arm_write_register(p, rd, result);
+}
+
+void rsc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+	uint32_t result = op2 - op1 - is_c_clear(p);
+	arm_write_register(p, rd, result);
+}
+
+void tst(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+
+}
+
+void teq(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+
+}
+
+void cmp(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+
+}
+
+void cmn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+
+}
+
+void orr(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+
+}
+
+void mov(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+
+}
+
+void bic(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+
+}
+
+void mvn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+
+}
+
+
+// Decoding functions for various classes of instructions
 int arm_data_processing_shift(arm_core p, uint32_t ins) {
     debug("arm_data_processing_shift: %d\n", (int)ins);    
     
@@ -128,7 +215,7 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
     if(result) return result;
     
     // Parsing the instruction
-    op_code_t op_code = get_op_code(ins);
+    int op_code = get_op_code(ins);
     dp_instruction_handler_t handler = decode(op_code);
     
     rd = get_rd(ins);
@@ -160,7 +247,7 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
 		  op2 = shift(p, op2, shift_code, shift_value);
 		}
         
-    // Specific function call
+    // Specific instruction call
     handler(p, rd, op1, op2, S);
     return result;
 }
@@ -168,6 +255,12 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
 
 int arm_data_processing_immediate(arm_core p, uint32_t ins) {
     debug("arm_data_processing_immediate: %d\n", (int)ins);
+    
+    /*
+    	Attention : bit25 == 0 &&	bit7 == 1 && bit4 == 1 	=> load/store ou MRS
+    	cf. p.443, 144 et 146
+    */
+    
     return UNDEFINED_INSTRUCTION;
 }
 

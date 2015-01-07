@@ -6,5 +6,9 @@ J1 :
 	Prise en main des fichiers fournis
 	
 J2 :
-	arm_data_processing.c : décodage des instructions, des registres / valeurs immédiates
-	arm_branch_other.c : implémentation des instructions B, BL et MRS
+	arm_data_processing : décodage des instructions, des registres / valeurs immédiates
+	arm_branch_other : implémentation des instructions B, BL et MRS
+	
+J3 :
+	arm_data_processing : implémentation des instructions and, eor, ... , mvn
+	arm_core : ajout de la màj des flags

@@ -74,17 +74,16 @@ int is_z_set(arm_core p);
 int is_c_set(arm_core p);
 int is_v_set(arm_core p);
 
-void set_n(arm_core p);
-void set_z(arm_core p);
-void set_c(arm_core p);
-void set_v(arm_core p);
+uint32_t set_n(uint32_t cpsr);
+uint32_t set_z(uint32_t cpsr);
+uint32_t set_c(uint32_t cpsr);
+uint32_t set_v(uint32_t cpsr);
 
-void clear_n(arm_core p);
-void clear_z(arm_core p);
-void clear_c(arm_core p);
-void clear_v(arm_core p);
+uint32_t clear_n(uint32_t cpsr);
+uint32_t clear_z(uint32_t cpsr);
+uint32_t clear_c(uint32_t cpsr);
+uint32_t clear_v(uint32_t cpsr);
 
-void update_flags(arm_core p, uint32_t value);
 
 #include "trace_location.h"
 #endif

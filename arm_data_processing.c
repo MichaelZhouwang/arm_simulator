@@ -130,43 +130,162 @@ dp_instruction_handler_t decode(int op_code) {
 // Instructions
 
 void and(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 & op2;
+	uint64_t result = op1 & op2;
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
 	arm_write_register(p, rd, result);
-	if(S) update_flags(p, result);
 }
 
 void eor(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 ^ op2;
+	uint64_t result = op1 ^ op2;
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
 	arm_write_register(p, rd, result);
 }
 
 void sub(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 - op2;
+	uint64_t result = op1 - op2;
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
 	arm_write_register(p, rd, result);
 }
 
 void rsb(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op2 - op1;
+	uint64_t result = op2 - op1;
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
 	arm_write_register(p, rd, result);
 }
 
 void add(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 + op2;
+	uint64_t result = op1 + op2;
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
 	arm_write_register(p, rd, result);
 }
 
 void adc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 + op2 + is_c_set(p);
+	uint64_t result = op1 + op2 + is_c_set(p);
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
 	arm_write_register(p, rd, result);
 }
 
 void sbc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 - op2 - is_c_clear(p);
+	uint64_t result = op1 - op2 - is_c_clear(p);
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
 	arm_write_register(p, rd, result);
 }
 
 void rsc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op2 - op1 - is_c_clear(p);
+	uint64_t result = op2 - op1 - is_c_clear(p);
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
 	arm_write_register(p, rd, result);
 }
 
@@ -302,6 +421,7 @@ int arm_data_processing_immediate(arm_core p, uint32_t ins) {
     /*
     	Attention : bit25 == 0 &&	bit7 == 1 && bit4 == 1 	=> load/store 
     	cf. p.443, 144 et 146
+    	=> appel arm_load_store_miscellaneous(arm_core p, uint32_t ins)
     */
 
 

@@ -40,20 +40,57 @@ int is_big_endian() {
 int shift(arm_core p,int op, int code, int value, uint8_t* shift_C) {
 	switch(code){
 		case 0: // LSL
-			op <<= value;
+			if(value == 0) *shift_C = arm_read_c(p);
+			else {
+				if(value < 32) {
+					*shift_C = get_bit(op, 32-value);
+					op <<= value;
+				}
+				else {
+					if(value == 32) *shift_C = get_bit(op, 0);
+					else *shift_C = 0;
+					op = 0;
+				}				
+			}
 			break;
 		case 1: // LSR
-			op >>= value;
+			if(value == 0) *shift_C = arm_read_c(p);
+			else {
+				if(value < 32) {
+					*shift_C = get_bit(op, value-1);
+					op >>= value;
+				}
+				else {
+					if(value == 32) *shift_C = get_bit(op, 31);
+					else *shift_C = 0;
+					op = 0;
+				}				
+			}
 			break;
 		case 2: // ASR
-			op = asr(op, value);
+			if(value == 0) *shift_C = arm_read_c(p);
+			else {
+				if(value < 32) {
+					*shift_C = get_bit(op, value-1);
+					op = asr(op, value);
+				}
+				else {
+					*shift_C = get_bit(op,31);
+					if(get_bit(op,31)) op = 0;
+					else op = 0xFFFFFFFF;
+				}				
+			}			
 			break;
 		case 3: 
-			if(value) // ROR
-				op = ror(op, value);
-			else // RRX
-				op >>= 1;
-				op |= is_c_set(p);
+			if(!value) // RRX
+				*shift_C = get_bit(op,0);
+				op = (arm_read_c(p) << 31) | (op >> 1);
+			else // ROR
+				if(!get_bit(value,4,0))	*shift_C = get_bit(op, 31);
+				else {
+					*shift_C = get_bit(op, get_bit(value,4,0) - 1);
+					op = ror(op, value);
+				}
 			break;
 	}	
 	return op;

@@ -55,13 +55,16 @@ int arm_branch(arm_core p, uint32_t ins) {
 
 int arm_coprocessor_others_swi(arm_core p, uint32_t ins) {
     debug("arm_coprocessor_other_swi: %d\n", (int)ins);
+    
     if (get_bit(ins, 24)) {
         debug("==> swi instruction\n");
         // Here we implement the end of the simulation as swi 0x123456
-        if ((ins & 0xFFFFFF) == 0x123456)
+        if ((ins & 0xFFFFFF) == 0x123456) {
             exit(0);
+        }
         return SOFTWARE_INTERRUPT;
-    } 
+    }
+    
     return UNDEFINED_INSTRUCTION;
 }
 

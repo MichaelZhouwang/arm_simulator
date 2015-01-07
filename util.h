@@ -20,8 +20,10 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
 #ifndef __UTIL_H__
 #define __UTIL_H__
+
 #include <stdint.h>
 #include "arm_core.h"
 
@@ -45,4 +47,5 @@ uint32_t ror(uint32_t value, uint8_t rotation);
 int shift(arm_core p,int op, int code, uint8_t value);
 
 int is_big_endian();
+
 #endif

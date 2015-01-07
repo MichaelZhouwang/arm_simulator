@@ -31,19 +31,14 @@ Contact: Guillaume.Huard@imag.fr
 #include <debug.h>
 #include "arm_core.h"
 
-// Fields parsing
+// Condition field
 
-inline uint8_t instruction_get_condition_field(uint32_t instruction) {
+inline uint8_t instruction_get_cond_field(uint32_t instruction) {
     return (uint8_t)(instruction>>28);
 }
 
-inline uint8_t instruction_get_handler_field(uint32_t instruction) {
-    return (uint8_t)((instruction>>25) & 7);
-}
-
-int instruction_check_condition(arm_core p, uint32_t inst) {
+int instruction_check_cond_field(arm_core p, uint8_t field) {
     int res;
-	uint8_t field = instruction_get_condition_field(inst);
     switch(field) {
         case 0:  res = is_z_set(p);                                     break;
         case 1:  res = is_z_clear(p);                                   break;
@@ -63,12 +58,22 @@ int instruction_check_condition(arm_core p, uint32_t inst) {
         case 15: res = -1; break; // undefined
         default: res =  0; break; // impossible
     }
-
 	debug("condition : %x, %d\n", field, res);
     return res;
 }
 
+int instruction_check_condition(arm_core p, uint32_t inst) {
+   uint8_t field = instruction_get_condition_field(inst);
+    return instruction_check_cond_field(field);
+}
+
+// Instruction handlers
+
 typedef int(* instruction_handler_t)(arm_core, uint32_t);
+
+inline uint8_t instruction_get_handler_field(uint32_t instruction) {
+    return (uint8_t)((instruction>>25) & 7);
+}
 
 instruction_handler_t instruction_field_get_handler(uint8_t field) {
     instruction_handler_t handler;
@@ -86,7 +91,6 @@ instruction_handler_t instruction_field_get_handler(uint8_t field) {
     return handler;
 }
 
-
 // Execution of instructions
 
 static int arm_execute_instruction(arm_core p) {
@@ -99,25 +103,21 @@ static int arm_execute_instruction(arm_core p) {
     // We fetch the instruction
 	debug("fetch\n");
     result = arm_fetch(p, &instruction);
-
     if (result) {
+	    debug("error during fetch %x\n");
         return result;
     }
 
-    
 	debug("instruction %x\n", instruction);
-    // We check the condition
-    cond_field = instruction_get_condition_field(instruction);
+    cond_field = instruction_get_cond_field(instruction);
     result = instruction_check_condition(p, cond_field);
 	
     if (cond_field != 0x0f) {
         ins_class_field = instruction_get_handler_field(instruction);
 		debug("handler : %x\n", ins_class_field);
-
         handler = instruction_field_get_handler(ins_class_field);
     } else {
-        // The condition is undefined
-		debug("condition non definie\n");
+		debug("The condition is undefined\n");
         handler = arm_miscellaneous;
     }
     
@@ -126,12 +126,10 @@ static int arm_execute_instruction(arm_core p) {
 
 int arm_step(arm_core p) {
     int result;
-
     result = arm_execute_instruction(p);
     if (result) {
         arm_exception(p, result);
     }
-    
     return result;
 }
 

@@ -28,6 +28,14 @@ Contact: Guillaume.Huard@imag.fr
 #include "util.h"
 #include "debug.h"
 
+typedef enum {
+    AND, EOR, SUB, RSB, ADD, ADC, SBC, RSC, TST, TEQ, CMP, CMN, ORR, MOV, BIC, MVN
+} op_code_t;
+
+typedef enum {
+    LSL, LSR, ASR, ROR
+} shift_code_t;
+
 // Condition check
 inline uint8_t instruction_get_condition_field(uint32_t instruction) {
     return (uint8_t)(instruction>>28);
@@ -67,48 +75,48 @@ uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, bit4, bit7;
 int op1, op2;
 
 // Data processing instruction parsing
-int get_op_code(uint32_t ins) {
-	return (ins >> 21) & 15;
-}
-uint8_t get_rd(uint32_t ins) {
+static inline int get_op_code(uint32_t ins) {
 	return (ins >> 12) & 15;
 }
-uint8_t get_rn(uint32_t ins) {
+static inline uint8_t get_rd(uint32_t ins) {
+	return (ins >> 12) & 15;
+}
+static inline uint8_t get_rn(uint32_t ins) {
 	return (ins >> 16) & 15;
 }
-uint8_t get_rm(uint32_t ins) {
+static inline uint8_t get_rm(uint32_t ins) {
 	return ins & 15;
 }
-uint8_t get_S(uint32_t ins) {
+static inline uint8_t get_S(uint32_t ins) {
 	return (ins >> 20) & 1;
 }
-uint8_t get_rs(uint32_t ins) {
+static inline uint8_t get_rs(uint32_t ins) {
 	return (ins >> 8) & 15;
 }
 uint8_t get_shift_imm(uint32_t ins) {
 	return (ins >> 7) & 31;
 }
-int get_shift_code(uint32_t ins) {
+static inline int get_shift_code(uint32_t ins) {
 	return (ins >> 5) & 3;
 }
-uint8_t get_bit4(uint32_t ins) {
+static inline uint8_t get_bit4(uint32_t ins) {
 	return (ins >> 4) & 1;
 }
-uint8_t get_bit7(uint32_t ins) {
+static inline uint8_t get_bit7(uint32_t ins) {
 	return (ins >> 7) & 1;
 }
 // Immediate operand value
-int get_immediate(uint32_t ins) {
-	int imm_8 = ins & 255;
-	int rotate_imm = (ins >> 8) & 15;
-	return imm_8 >> (rotate_imm * 2) ;
+uint32_t get_immediate(uint32_t ins) {
+	uint32_t imm_8 = ins & 255;
+	uint8_t rotate_imm = (ins >> 8) & 15;
+	return ror(imm_8,(rotate_imm * 2)) ;
 }
 
 
 
 // Decoding
-dp_instruction_handler_t decode(op_code_t op_code) {
-	return NULL; // à compléter
+static dp_instruction_handler_t decode(op_code_t op_code) {
+	return and; // à compléter
 }
 
 // Decoding functions for different classes of instructions

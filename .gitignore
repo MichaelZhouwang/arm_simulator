@@ -22,6 +22,7 @@ Makefile.in
 /Examples/example4
 /Examples/exampleMRS
 /Examples/exampleLDR
+/Examples/exampleADC
 /Examples/insertion_sort
 /Examples/stamp-h1
 /autom4te.cache/

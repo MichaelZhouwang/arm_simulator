@@ -303,4 +303,7 @@ inline int is_v_set(arm_core p) {
     return (arm_read_v(p) == 1);
 }
 
+void update_flags(arm_core p, uint32_t value) {
+	
+}
 

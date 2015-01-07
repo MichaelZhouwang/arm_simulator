@@ -85,7 +85,5 @@ uint32_t clear_c(uint32_t cpsr);
 uint32_t clear_v(uint32_t cpsr);
 
 
-void update_flags(arm_core p, uint32_t op1, uint32_t op2, uint8_t add); // if the operation is op1+op2, use add = 1 ; op1-op2 => add = 0
-
 #include "trace_location.h"
 #endif

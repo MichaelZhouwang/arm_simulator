@@ -330,20 +330,4 @@ uint32_t clear_v(uint32_t cpsr) {
 	return clr_bit(cpsr, V);
 }
 
-void update_flags(arm_core p, uint32_t op1, uint32_t op2, uint8_t add) {
-	uint64_t result = add ? op1 + op2 : op1 - op2;
-	uint32_t cpsr = arm_read_cpsr(p);
-	cpsr = clear_n(cpsr);
-	cpsr = clear_z(cpsr);
-	cpsr = clear_c(cpsr);
-	cpsr = clear_v(cpsr);
-	if(get_bit(result,31)) cpsr = set_n(cpsr);
-	if(result == 0) cpsr = set_z(cpsr);
-	if(result > UINT_MAX) cpsr = set_c(cpsr);
-	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
-		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
-		cpsr = set_v(cpsr);
-	
-	arm_write_cpsr(p, cpsr);
-}
 

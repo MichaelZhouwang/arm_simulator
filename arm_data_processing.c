@@ -138,37 +138,37 @@ void and(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
 }
 
 void eor(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 ^ op2;
+	uint64_t result = op1 ^ op2;
 	arm_write_register(p, rd, result);
 }
 
 void sub(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 - op2;
+	uint64_t result = op1 - op2;
 	arm_write_register(p, rd, result);
 }
 
 void rsb(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op2 - op1;
+	uint64_t result = op2 - op1;
 	arm_write_register(p, rd, result);
 }
 
 void add(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 + op2;
+	uint64_t result = op1 + op2;
 	arm_write_register(p, rd, result);
 }
 
 void adc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 + op2 + is_c_set(p);
+	uint64_t result = op1 + op2 + is_c_set(p);
 	arm_write_register(p, rd, result);
 }
 
 void sbc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 - op2 - is_c_clear(p);
+	uint64_t result = op1 - op2 - is_c_clear(p);
 	arm_write_register(p, rd, result);
 }
 
 void rsc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op2 - op1 - is_c_clear(p);
+	uint64_t result = op2 - op1 - is_c_clear(p);
 	arm_write_register(p, rd, result);
 }
 

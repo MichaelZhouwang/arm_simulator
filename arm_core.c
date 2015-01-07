@@ -28,6 +28,7 @@ Contact: Guillaume.Huard@imag.fr
 #include "util.h"
 #include "trace.h"
 #include <stdlib.h>
+#include <limits.h>
 
 // ARM CORE
 
@@ -303,49 +304,46 @@ inline int is_v_set(arm_core p) {
     return (arm_read_v(p) == 1);
 }
 
-void set_n(arm_core p) {
-	uint32_t res = arm_read_cpsr(p);
-	res = set_bit(res, N);
-	arm_write_cpsr(p, res);
+uint32_t set_n(uint32_t cpsr) {
+	return set_bit(cpsr, N);
 }
-void set_z(arm_core p) {
-	uint32_t res = arm_read_cpsr(p);
-	res = set_bit(res, Z);
-	arm_write_cpsr(p, res);
+uint32_t set_z(uint32_t cpsr) {
+	return set_bit(cpsr, Z);
 }
-void set_c(arm_core p) {
-	uint32_t res = arm_read_cpsr(p);
-	res = set_bit(res, C);
-	arm_write_cpsr(p, res);
+uint32_t set_c(uint32_t cpsr) {
+	return set_bit(cpsr, C);
 }
-void set_v(arm_core p) {
-	uint32_t res = arm_read_cpsr(p);
-	res = set_bit(res, V);
-	arm_write_cpsr(p, res);
+uint32_t set_v(uint32_t cpsr) {
+	return set_bit(cpsr, V);
 }
 
-void clear_n(arm_core p) {
-	uint32_t res = arm_read_cpsr(p);
-	res = clr_bit(res, N);
-	arm_write_cpsr(p, res);
+uint32_t clear_n(uint32_t cpsr) {
+	return clr_bit(cpsr, N);
 }
-void clear_z(arm_core p) {
-	uint32_t res = arm_read_cpsr(p);
-	res = clr_bit(res, Z);
-	arm_write_cpsr(p, res);
+uint32_t clear_z(uint32_t cpsr) {
+	return clr_bit(cpsr, Z);
 }
-void clear_c(arm_core p) {
-	uint32_t res = arm_read_cpsr(p);
-	res = clr_bit(res, C);
-	arm_write_cpsr(p, res);
+uint32_t clear_c(uint32_t cpsr) {
+	return clr_bit(cpsr, C);
 }
-void clear_v(arm_core p) {
-	uint32_t res = arm_read_cpsr(p);
-	res = clr_bit(res, V);
-	arm_write_cpsr(p, res);
+uint32_t clear_v(uint32_t cpsr) {
+	return clr_bit(cpsr, V);
 }
 
-inline void update_flags(arm_core p, uint32_t value) {
-	//if(value == 0) 
+void update_flags(arm_core p, uint32_t op1, uint32_t op2, uint8_t add) {
+	uint64_t result = add ? op1 + op2 : op1 - op2;
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
 }
 

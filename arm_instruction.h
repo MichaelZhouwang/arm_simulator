@@ -28,7 +28,10 @@ Contact: Guillaume.Huard@imag.fr
          
 // Execution of instructions
 int arm_step(arm_core p);
+
+// Condition of instructions
+uint8_t instruction_get_cond_field(uint32_t instruction);
+int instruction_check_cond_field(arm_core p, uint32_t instruction);
 int instruction_check_condition(arm_core p, uint32_t instruction);
-uint8_t instruction_get_condition_field(uint32_t instruction);
 
 #endif

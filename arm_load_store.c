@@ -61,69 +61,35 @@ static inline uint8_t arm_ls_get_rm(uint32_t ins) {
 	return (uint8_t)(ins & 0xF);
 }
 
-// Compute offset according to manual p458
+static inline int arm_ls_get_shift(uint32_t ins) {
+	return (int)((ins >> 5) & 3);
+}
 
-// [<Rn>, #+/-<offset_12>]
-static uint32 arm_ls_compute_imm_offset(arm_core p, uint32_t ins) {	
-	uint32_t rn = arm_ls_get_rn(ins);
-	uint32_t offset = ins & 0x7FF;
+static inline int arm_ls_get_shift_imm(uint32_t ins) {
+	return (int)((ins >> 7) & 15);
+}
 
-	if (arm_ls_get_u(ins)) { 
-		return rn + offset;
+static inline int arm_ls_get_offset(uint32_t ins) {
+	return (int)(ins & 0x7FF);
+}
+
+
+// Addressing mode
+
+typedef enum {
+    addressing_offset,
+    addressing_pre_indexed,
+    addressing_post_indexed
+} addressing_t;
+
+static inline addressing_t arm_ls_get_addressing(uint32_t ins) {
+	if (arm_ls_get_p(ins)) {
+	    return addressing_post_indexed;
+	} else if (arm_ls_get_w(ins)) {
+	    return addressing_pre_indexed;
 	} else {
-	 	return rn - offset;
+	    return addressing_offset;
 	}
-}
-
-// [<Rn>, +/-<Rm>]
-// [<Rn>, +/-<Rm>, LSL #<shift_imm>]
-// [<Rn>, +/-<Rm>, LSR #<shift_imm>]
-// [<Rn>, +/-<Rm>, ASR #<shift_imm>]
-// [<Rn>, +/-<Rm>, ROR #<shift_imm>]
-// [<Rn>, +/-<Rm>, RRX]
-static uint32 arm_ls_compute_reg_offset(arm_core p, uint32_t ins) {
-	uint32_t rn = arm_ls_get_rn(ins);
-	uint32_t rm = arm_ls_get_rm(ins);
-	int shift = (ins >> 5) & 3;
-	int shift_imm = (ins >> 7) & 15;
-	int index;
-
-	// TODO
-	index = 
-
-	if (arm_ls_get_u(ins)) {
-		address = Rn + index;
-	} else {
-		address = Rn - index;
-	}
-
-// [<Rn>, #+/-<offset_12>]!
-static uint32 arm_ls_compute_imm_pre(arm_core p, uint32_t ins) {
-	uint32_t rn = arm_ls_get_rn(ins);
-	uint32_t offset = ins & 0x7FF;
-	uint32_t address;
-
-	if (arm_ls_get_u(ins)) { 
-		address = rn + offset;
-	} else {
-	 	address = rn - offset;
-	}
-	arm_write_register(p, rn, address);	
-
-	return address;
-}
-
-static uint32 arm_ls_compute_reg_pre(arm_core p, uint32_t ins) {
-
-}
-
-// [<Rn>], #+/-<offset_12>
-static uint32 arm_ls_compute_imm_post(arm_core p, uint32_t ins) {
-
-}
-
-static uint32 arm_ls_compute_reg_post(arm_core p, uint32_t ins) {
-
 }
 
 // Public
@@ -131,22 +97,29 @@ static uint32 arm_ls_compute_reg_post(arm_core p, uint32_t ins) {
 int arm_load_store(arm_core p, uint32_t ins) {
     debug("arm_load_store: %d\n", (int)ins);
 
-	int rd = arm_ls_get_rd(ins);
-	int rn = arm_ls_get_rn(ins);
+	uint32 address, value;
+	int result, index;
+	uint8_t rd = arm_ls_get_rd(ins);
+	uint8_t rn = arm_ls_get_rn(ins);
+	uint8_t rm = arm_ls_get_rm(ins);
+	int shift = arm_ls_get_shift(ins);
+	int shift_imm = arm_ls_get_shift_imm(ins);
+	addressing_t adressing = arm_ls_get_addressing(ins);
 	
-	if (rn == 15) {
-		return UNDEFINED_INSTRUCTION;
-	}
-
-	if (arm_ls_get_p(ins)) {
-		address = arm_ls_compute_reg_post(p, ins);
-	} else if (arm_ls_get_w(ins)) {
-		address = arm_ls_compute_reg_pre(p, ins);
-	} else {
-		address = arm_ls_compute_reg_offset(p, ins);	
-	}
-
-	if (arm_ls_get_l(ins)) {
+	if (adressing == addressing_post_indexed) {
+       address = rn;
+    }
+	index = shift(/*complete*/); // TODO: add shift function created in util.h
+	if (adressing != addressing_post_indexed ||
+        instruction_check_condition(p, ins)) {
+		address = (arm_ls_get_u(ins)) ? rn+index : rn-index;
+    }
+    if (adressing == addressing_pre_indexed &&
+        instruction_check_condition(p, ins)) {
+        rn = address;
+    }
+	
+	if (arm_ls_get_l(ins)) { //TODO: Prise en charge de B
 		result = arm_read_word(p, address, &value);
 		if (result) arm_write_register(p, rd, value);
 	} else { 
@@ -159,32 +132,36 @@ int arm_load_store(arm_core p, uint32_t ins) {
 
 int arm_load_store_immediate(arm_core p, uint32_t ins) {
     debug("arm_load_store_immediate: %d\n", (int)ins);
-	
+	    // GESTION DES EXEPTIONS ?
 	uint32 address, value;
 	int result;
-	uint8_t rd = arm_ls_get_rd(ins);
+	uint8_t rd = arm_ls_get_rd(ins); // PAS REG met val de REG
 	uint8_t rn = arm_ls_get_rn(ins);
+	uint32_t offset = arm_ls_get_offset(ins);
+	addressing_t adressing = arm_ls_get_addressing(ins);
 
-	if (rn == 15) {
-		return UNDEFINED_INSTRUCTION;
+	if (adressing == addressing_post_indexed) {
+       arm_write_register(p, rn, address);
+    }
+    if (adressing != addressing_post_indexed || 
+        instruction_check_condition(p, ins)) {
+        address = arm_ls_get_u(ins) ? rn+offset : rn-offset;
+    }
+    if (adressing == addressing_pre_indexed &&
+        instruction_check_condition(p, ins)) {
+       arm_write_register(p, rn, address);
+    }
+    if (rn == 15 && adressing == addressing_offset) {
+		address += 8;
 	}
 
-	if (arm_ls_get_p(ins)) {	
-		address = arm_ls_compute_imm_post(p, ins);
-	} else if (arm_ls_get_w(ins)) {
-		address = arm_ls_compute_imm_pre(p, ins);
-	} else {
-		address = arm_ls_compute_imm_offset(p, ins);
-	}
-
-	if (arm_ls_get_l(ins)) {
+	if (arm_ls_get_l(ins)) { //TODO: Prise en charge de B
 		result = arm_read_word(p, address, &value);
 		if (result) arm_write_register(p, rd, value);
 	} else {
 		value = arm_read_register(p, rd);
 		result = arm_write_word(p, address, value);
 	}
-
     return result;
 }
 

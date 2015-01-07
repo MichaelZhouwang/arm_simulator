@@ -28,42 +28,48 @@ Contact: Guillaume.Huard@imag.fr
 #include "util.h"
 #include "debug.h"
 
-typedef enum {AND, EOR, SUB, RSB, ADD, ADC, SBC, RSC, TST, TEQ, CMP, CMN, ORR, MOV, BIC, MVN} op_code_t;
-typedef enum {LSL, LSR, ASR, ROR} shift_code_t;
+typedef enum {
+    AND, EOR, SUB, RSB, ADD, ADC, SBC, RSC, TST, TEQ, CMP, CMN, ORR, MOV, BIC, MVN
+} op_code_t;
+
+typedef enum {
+    LSL, LSR, ASR, ROR
+} shift_code_t;
+
 typedef int(* dp_instruction_handler_t)(arm_core, uint8_t, uint32_t, uint32_t, uint8_t);
 
 uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, bit4, bit7;
 int op1, op2;
 
 // Data processing instruction parsing
-int get_op_code(uint32_t ins) {
+static inline int get_op_code(uint32_t ins) {
 	return (ins >> 12) & 15;
 }
-uint8_t get_rd(uint32_t ins) {
+static inline uint8_t get_rd(uint32_t ins) {
 	return (ins >> 12) & 15;
 }
-uint8_t get_rn(uint32_t ins) {
+static inline uint8_t get_rn(uint32_t ins) {
 	return (ins >> 16) & 15;
 }
-uint8_t get_rm(uint32_t ins) {
+static inline uint8_t get_rm(uint32_t ins) {
 	return ins & 15;
 }
-uint8_t get_S(uint32_t ins) {
+static inline uint8_t get_S(uint32_t ins) {
 	return (ins >> 20) & 1;
 }
-uint8_t get_rs(uint32_t ins) {
+static inline uint8_t get_rs(uint32_t ins) {
 	return (ins >> 8) & 15;
 }
-uint8_t get_shift_imm(uint32_t ins) {
+static inline uint8_t get_shift_imm(uint32_t ins) {
 	return (ins >> 8) & 31;
 }
-int get_shift_code(uint32_t ins) {
+static inline int get_shift_code(uint32_t ins) {
 	return (ins >> 5) & 3;
 }
-uint8_t get_bit4(uint32_t ins) {
+static inline uint8_t get_bit4(uint32_t ins) {
 	return (ins >> 4) & 1;
 }
-uint8_t get_bit7(uint32_t ins) {
+static inline uint8_t get_bit7(uint32_t ins) {
 	return (ins >> 7) & 1;
 }
 // Immediate operand value
@@ -77,7 +83,7 @@ int get_immediate(uint32_t ins) {
 
 
 // Decoding
-dp_instruction_handler_t decode(op_code_t op_code) {
+static dp_instruction_handler_t decode(op_code_t op_code) {
 	return and; // à compléter
 }
 

@@ -28,39 +28,37 @@ Contact: Guillaume.Huard@imag.fr
 #include <stdlib.h>
 
 int arm_branch(arm_core p, uint32_t ins) {
-
-	debug("current add %x\n", arm_read_register(p,15));
-	if ((ins >> 24) & 1) //Link
-	{
+    int32_t pc = arm_read_register(p,15);
+    int32_t shift;
+    
+	debug("arm_branch pc:  %x\n", pc);
+	if ((ins >> 24) & 1) {
 		debug("Branch and Link\n");
-		arm_write_register(p, 14, arm_read_register(p, 15)); //R14 = R15
-	}
-	else
+		arm_write_register(p, 14, pc); //R14 <- R15
+	} else {
 		debug("Branch\n");
+	}
 
-	int32_t add = ins & 0xffffff;
-	add = add << 8;
-	add = add >> 8;
-	add = add << 2;
-	debug("déplacement de %d\n", add);
-	add += arm_read_register(p, 15);
-
-	debug("branch to add %x\n", add);
-
-	arm_write_register(p, 15, add);
+	shift = ((((ins & 0xffffff) << 8) >> 8) << 2);
+	pc += shift;
+	debug("branch to pc:%x (shift: %x)\n", pc, shift);
+	arm_write_register(p, 15, pc);
 
     return 0;
 }
 
 int arm_coprocessor_others_swi(arm_core p, uint32_t ins) {
     debug("arm_coprocessor_other_swi: %d\n", (int)ins);
+    
     if (get_bit(ins, 24)) {
         debug("==> swi instruction\n");
         // Here we implement the end of the simulation as swi 0x123456
-        if ((ins & 0xFFFFFF) == 0x123456)
+        if ((ins & 0xFFFFFF) == 0x123456) {
             exit(0);
+        }
         return SOFTWARE_INTERRUPT;
-    } 
+    }
+    
     return UNDEFINED_INSTRUCTION;
 }
 
@@ -70,8 +68,8 @@ int arm_miscellaneous(arm_core p, uint32_t ins) {
 }
 
 int arm_mrs(arm_core p, uint32_t ins) {
-	uint8_t rd = (ins >> 12) & 0x0f;
-
+	uint8_t rd = ((ins >> 12) & 0x0f);
+    // A COMPLETER SELON LA PAGE 226 ? (jeremy)
 	if (rd == 15)
 		return UNDEFINED_INSTRUCTION;
 

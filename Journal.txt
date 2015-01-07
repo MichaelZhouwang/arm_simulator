@@ -8,3 +8,6 @@ J1 :
 J2 :
 	arm_data_processing.c : décodage des instructions, des registres / valeurs immédiates
 	arm_branch_other.c : implémentation des instructions B, BL et MRS
+	
+J3 :
+	arm_data_processing.c : implémentation des instructions and, eor, ... , mvn

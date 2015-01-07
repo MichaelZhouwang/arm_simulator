@@ -74,5 +74,7 @@ int is_z_set(arm_core p);
 int is_c_set(arm_core p);
 int is_v_set(arm_core p);
 
+void update_flags(arm_core p, uint32_t value);
+
 #include "trace_location.h"
 #endif

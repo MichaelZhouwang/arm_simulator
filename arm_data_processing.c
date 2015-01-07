@@ -108,7 +108,7 @@ int get_immediate(uint32_t ins) {
 
 // Decoding
 dp_instruction_handler_t decode(op_code_t op_code) {
-	return and; // à compléter
+	return NULL; // à compléter
 }
 
 // Decoding functions for different classes of instructions

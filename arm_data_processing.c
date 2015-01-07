@@ -20,7 +20,7 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
-
+#include "arm_instruction.h"
 #include "arm_data_processing.h"
 #include "arm_exception.h"
 #include "arm_constants.h"
@@ -88,16 +88,6 @@ static inline uint8_t get_shift_imm(uint32_t ins) {
 static inline int get_shift_code(uint32_t ins) {
 	return (ins >> 5) & 3;
 }
-// Immediate operand value
-static inline uint32_t get_immediate(uint32_t ins, uint8_t* shift_C) {
-	uint32_t imm_8 = ins & 255;
-	uint8_t rotate_imm = (ins >> 8) & 15;
-	uint32_t result = ror(imm_8,(rotate_imm * 2));
-	if(rotate_imm == 0) *shift_C = arm_read_c(p);
-	else *shift_C = get_bit(result,31);
-	return result;
-}
-
 
 // Decoding
 dp_instruction_handler_t decode(int op_code) {
@@ -330,8 +320,8 @@ void mvn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 int arm_data_processing_shift(arm_core p, uint32_t ins) {
     debug("arm_data_processing_shift: %d\n", (int)ins);    
     
-	uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, shift_C;
-	int op1, op2;
+		uint8_t rd, S, shift_C;
+		int op1, op2;
     uint8_t cond_field = instruction_get_condition_field(ins);
     int result = instruction_check_condition(p, cond_field);
     if(result) return result;
@@ -343,31 +333,22 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
     rd = get_rd(ins);
     
     if(op_code != MOV && op_code != MVN) {
-    	rn = get_rn(ins);
-    	op1 = arm_read_register(p, rn);
+    	op1 = arm_read_register(p, get_rn(ins));
     }
     
-    if(op_code == CMP || op_code == CMN  || op_code == TST || op_code == TEQ) {
-    	S = 1;
-    }
-    else {
-    	S = get_S(ins);
-    }
+    op2 = get_shifted(ins, &shift_C);
     
-    rm = get_rm(ins);
-    shift_imm = get_shift_imm(ins);
-		shift_code = get_shift_code(ins);
-    op2 = arm_read_register(p, rm);
-    if(shift_imm || shift_code) {
-		  bit4 = get_bit4(ins);
-    	uint8_t shift_value;
-    	if(!bit4) shift_value = shift_imm;
-    	else {
-				rs = get_rs(ins);
-				shift_value = arm_read_register(p, rs);
-		  }
-		  op2 = shift(p, op2, shift_code, shift_value);
+		  //redirection sur MRS et MSR
+		if (get_bits(ins, 24, 23) == 0x02 && !get_bit(ins, 20))
+		{
+			if (get_bit(ins, 21))
+				arm_msr(p, ins);
+			else
+				arm_mrs(p, ins);
 		}
+    
+    
+    
         
     // Specific instruction call
     handler(p, rd, op1, op2, S, shift_C);
@@ -391,17 +372,7 @@ int arm_data_processing_immediate(arm_core p, uint32_t ins) {
 		op2 = arm_read_register(p, rm);
 	}
 
-	//redirection sur MRS et MSR
-	if (get_bits(ins, 24, 23) == 0x02 && !get_bit(ins, 20))
-	{
-		if (get_bit(ins, 21))
-			arm_msr(p, ins, op2);
-		else
-			arm_mrs(p, ins, op2);
-	}
-	else
-	{
-
+	
 		dp_instruction_handler_t handler = decode(op_code);
 
 		rd = get_rd(ins);
@@ -419,7 +390,7 @@ int arm_data_processing_immediate(arm_core p, uint32_t ins) {
 		}
 
 		handler(p, rd, op1, op2, S, shift_C);
-	}
+	
 
 
     /*

@@ -31,11 +31,6 @@ uint32_t ror(uint32_t value, uint8_t rotation) {
     return (value >> rotation) | (value << (32-rotation));
 }
 
-int is_big_endian() {
-    static uint32_t one = 1;
-    return ((* (uint8_t *) &one) == 0);
-}
-
 int shift(arm_core p,int op, int code, int value) {
 	switch(code){
 		case 0: // LSL
@@ -56,4 +51,20 @@ int shift(arm_core p,int op, int code, int value) {
 			break;
 	}	
 	return op;
+}
+
+int number_of_set_bits(int bits_field) {
+	int i;
+	int n = 0;
+	for(i=0; i<16; i++){
+		if(get_bit(bits_field, i)) {
+			n++;
+		}
+	}
+	return n;
+}
+
+int is_big_endian() {
+    static uint32_t one = 1;
+    return ((* (uint8_t *) &one) == 0);
 }

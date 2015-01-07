@@ -116,7 +116,6 @@ static int arm_execute_instruction(arm_core p) {
 
 	debug("instruction %x\n", instruction);
     cond_field = instruction_get_cond_field(instruction);
-    result = instruction_check_condition(p, cond_field);
 	
     if (cond_field != 0x0f) {
         ins_class_field = instruction_get_handler_field(instruction);

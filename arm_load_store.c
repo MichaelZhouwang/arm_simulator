@@ -90,6 +90,10 @@ static inline int get_h(uint32_t ins) {
 	return (int)((ins >> 5) & 1);
 }
 
+static inline int get_register_list(uint32_t ins) {
+	return (int)(ins & 0x7FF);
+}
+
 // Load to reg / store from reg
 
 int arm_load_to_reg(int8_t reg, int32_t address, int b) {
@@ -103,12 +107,14 @@ int arm_load_to_reg(int8_t reg, int32_t address, int b) {
 }
 
 int arm_store_from_reg(int8_t reg, int32_t address, int b) {
+	int result;
 	int value = arm_read_register(p, reg);
 	if (b) {		
-		return arm_write_byte(p, address, &value);
+		result = arm_write_byte(p, address, &value);
 	} else {
-		return arm_write_word(p, address, &value);
+		result = arm_write_word(p, address, &value);
 	}
+	return result;
 }
 
 // Load store
@@ -187,9 +193,8 @@ int arm_load_store_immediate(arm_core p, uint32_t ins) {
 }
 
 // Load store miscellaneous
-
 int arm_load_store_miscellaneous(arm_core p, uint32_t ins) {
-	debug("arm_load_store: %d\n", (int)ins);
+	debug("arm_store_miscellaneous: %d\n", (int)ins);
 	
 	uint32 address;
 	uint8_t rd = get_rd(ins);
@@ -199,39 +204,119 @@ int arm_load_store_miscellaneous(arm_core p, uint32_t ins) {
 	int offset_type = (get_bit(ins, 24) << 1) & get_bit(ins, 21);
 	
 	if (get_bit(ins, 22)) { // immediate
+		int offset = (get_immed_h(ins) << 4) | get_immed_l(ins);
 		if (offset_type == 0) { // post_indexed
-		
+			address = val_rn;
+			if (instruction_check_condition(p, ins)) {
+				val_rn = (get_u(ins)) ? val_rn + offset : val_rn - offset;
+				arm_write_register(p, rn, val_rn);
+			}
 		} else if (offset_type == 2) { // pre_indexed
-
+			address = (get_u(ins) ? val_rn + offset : val_rn - offset;      
+			if (instruction_check_condition(p, ins)) {
+				arm_write_register(p, rn, address);
+			}
 		} else { // offset
-			int offset_8 = (immedH << 4) OR immedL
-			if U == 1 then
-				address = Rn + offset_8
-			else /* U == 0 */
-				address = Rn - offset_8
+			address = (get_u(ins)) ? val_rn + offset : val_rn - offset;
+			if (rn == 15) {
+				address += 8;
+			}
 		}
 	} else { // register
 		if (offset_type == 0) { // post_indexed
-		
+			address = val_n;
+			if (instruction_check_condition(p, ins)) {
+       			address = (get_u(ins)) ? val_rn + val_rm : val_rn - val_rm;   
+    		}
 		} else if (offset_type == 2) { // pre_indexed
-
+			address = (get_u(ins)) ? val_rn + val_rm : val_rn - val_rm;
+			if (instruction_check_condition(p, ins)) {
+				arm_write_register(p, rn, address);
+    		}
 		} else { // offset
-
+			address = (get_u(ins)) ? val_rn + val_rm : val_rn - val_rm;
+			if (rn == 15) {
+				address += 8;
+			}
 		}
 	}
-	
-
-	
+	// TODO: ne pas charger en fonction de b mais de S et L
+	if (get_l(ins)) {
+		return arm_load_to_reg(rd, address, get_b(ins));
+	} else { 
+		return arm_store_from_reg(rd, address, get_b(ins));
+	}
 }
 
+// Load and store mulitple
+// TODO: a quoi sert le bit S
 int arm_load_store_multiple(arm_core p, uint32_t ins) {
-    debug("arm_load_store_multiple: %d\n", (int)ins);
-    return UNDEFINED_INSTRUCTION;
+	debug("arm_load_store_multiple: %d\n", (int)ins);
+
+	if (get_bit(ins, 22)) {
+		debug("not implemented (LDM(2), LDM(3), STM(2), STM(3))");
+    	return UNDEFINED_INSTRUCTION;
+	}
+	
+	int result, i;
+	uint8_t rn = get_rn(ins);
+	int val_rn = arm_read_register(p, rn);
+	int reg_list = get_register_list(ins);
+	int n = number_of_set_bits(reg_list);
+	int32_t start_address;
+	// int32_t end_address; (not used but describe by the manual)
+	int32_t address, value;
+
+	if (get_u(ins)) { // Increment
+		if (get_p(ins)) { // before
+			start_address = val_n + 4;
+			//end_address = val_n + (n * 4);
+		} else { // after
+			start_address = val_n;
+			//end_address = val_n + (n * 4) - 4;
+		}
+		if (instruction_check_condition(p, ins) && get_w(ins)) {
+			val_rn = val_rn + (n * 4);
+			arm_write_register(p, rn, val_rn);
+    	}
+	} else { // Decrement
+		if (get_p(ins)) { // before
+			start_address = val_n - (n * 4);
+			//end_address = val_n - 4;
+		} else { // after
+			start_address = val_n - (n * 4) + 4;
+			//end_address = val_n;
+		}
+		if (instruction_check_condition(p, ins) && get_w(ins)) {
+			val_rn = val_rn - (n * 4);
+			arm_write_register(p, rn, val_rn);
+    	}
+	}
+
+	if (get_l(ins)) { // LDM(1)
+		for (i=0; i<=15 && !result, i++) {
+			if (get_bit(reg_list, i)) {
+				address += 4;
+				result = arm_read_word(p, address, &value);
+				result ||= arm_write_register(p, i, value);
+			}
+		}
+	} else { // STM(1)
+		for (i=0; i<=15 && !result, i++) {
+			if (get_bit(reg_list, i)) {
+				address += 4;
+				int value = arm_read_register(p, i);
+				result = arm_write_word(p, address, &value);
+			}
+		}
+	}
+
+	return result;	
 }
 
 int arm_coprocessor_load_store(arm_core p, uint32_t ins) {
     debug("arm_coprocessor_load_store: %d\n", (int)ins);
+	debug("instruction is not implemented");
     return UNDEFINED_INSTRUCTION;
 }
 
-//blablabla

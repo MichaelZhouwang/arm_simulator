@@ -31,6 +31,36 @@ Contact: Guillaume.Huard@imag.fr
 #include <debug.h>
 #include "arm_core.h"
 
+
+// Immediate operand value
+inline uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t* shift_C) {
+	uint32_t imm_8 = ins & 255;
+	uint8_t rotate_imm = (ins >> 8) & 15;
+	uint32_t result = ror(imm_8,(rotate_imm * 2));
+	if(rotate_imm == 0) *shift_C = arm_read_c(p);
+	else *shift_C = get_bit(result,31);
+	return result;
+}
+// Shifted register operand value
+inline uint32_t get_shifted(arm_core p, uint32_t ins, uint8_t* shift_C) {
+		uint8_t rm = get_rm(ins);
+    uint8_t shift_imm = get_shift_imm(ins);
+		uint8_t shift_code = get_shift_code(ins);
+    uint32_t result = arm_read_register(p, rm);
+    if(shift_imm || shift_code) {
+		  uint8_t bit4 = get_bit(ins,4);
+    	uint8_t shift_value;
+    	if(!bit4) shift_value = shift_imm;
+    	else {
+				uint8_t rs = get_rs(ins);
+				shift_value = arm_read_register(p, rs);
+		  }
+		  result = shift(p, result, shift_code, shift_value);
+		}
+		return result;
+}
+
+
 // Condition field
 
 inline uint8_t instruction_get_cond_field(uint32_t instruction) {
@@ -69,8 +99,8 @@ int instruction_check_cond_field(arm_core p, uint8_t field) {
 }
 
 int instruction_check_condition(arm_core p, uint32_t inst) {
-   uint8_t field = instruction_get_condition_field(inst);
-    return instruction_check_cond_field(field);
+	uint8_t field = instruction_get_cond_field(inst);
+    return instruction_check_cond_field(p, field);
 }
 
 // Instruction handlers
@@ -110,7 +140,7 @@ static int arm_execute_instruction(arm_core p) {
 	debug("fetch\n");
     result = arm_fetch(p, &instruction);
     if (result) {
-	    debug("error during fetch %x\n");
+	    debug("error during fetch %d\n", result);
         return result;
     }
 

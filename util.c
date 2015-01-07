@@ -21,6 +21,7 @@ Contact: Guillaume.Huard@imag.fr
          38330 Montbonnot Saint-Martin
 */
 #include "util.h"
+#include "arm_core.h"
 
 /* We implement asr because shifting a signed is non portable in ANSI C */
 uint32_t asr(uint32_t value, uint8_t shift) {

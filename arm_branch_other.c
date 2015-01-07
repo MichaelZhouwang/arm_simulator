@@ -24,13 +24,14 @@ Contact: Guillaume.Huard@imag.fr
 #include "arm_branch_other.h"
 #include "arm_constants.h"
 #include "util.h"
+#include "arm_instruction.h"
 #include <debug.h>
 #include <stdlib.h>
 
 int arm_branch(arm_core p, uint32_t ins) {
 	if (instruction_check_condition(p, ins))
 	{
-		if (get_bit(24)) //Link
+		if (get_bit(ins, 24)) //Link
 		{
 			debug("Branch and Link\n");
 			arm_write_register(p, 14, arm_read_register(p, 15)); //R14 = R15
@@ -76,6 +77,8 @@ int arm_mrs(arm_core p, uint32_t ins) {
 	if (instruction_check_condition(p, ins))
 	{
 		uint8_t rd = get_bits(ins, 15, 12);
+		uint8_t shift_C;
+		uint32_t op = get_immediate(p, ins, &shift_C);
 
 		//if (rd == 15)
 		//UNPREDICTABLE
@@ -83,7 +86,7 @@ int arm_mrs(arm_core p, uint32_t ins) {
 		//b19-b16 => SBO
 		//b11-b0 => SBZ
 
-		if (get_bit(22)) // R
+		if (get_bit(ins, 22)) // R
 			arm_write_register(p, rd, arm_read_spsr(p));
 		else
 			arm_write_register(p, rd, arm_read_cpsr(p));
@@ -92,11 +95,13 @@ int arm_mrs(arm_core p, uint32_t ins) {
 	return 0;
 }
 
-int arm_msr(arm_core p, uint32_t ins, uint8_t op) {
+int arm_msr(arm_core p, uint32_t ins) {
 	if (instruction_check_condition(p, ins))
 	{
-		uint8_t rd = get_bits(ins, 15, 12);
-		uint32_t byte_mask, mask;
+		uint32_t byte_mask, mask = 0;
+
+		uint8_t shift_C;
+		uint32_t op = get_immediate(p, ins, &shift_C);
 		
 		byte_mask = (get_bit(ins, 16) ? 0x000000FF : 0) | //C
 							 (get_bit(ins, 17) ? 0x0000FF00 : 0) | //X

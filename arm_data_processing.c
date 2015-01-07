@@ -63,9 +63,6 @@ int instruction_check_condition(arm_core p, uint8_t field) {
 
 typedef int(* dp_instruction_handler_t)(arm_core, uint8_t, uint32_t, uint32_t, uint8_t);
 
-uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, bit4, bit7;
-int op1, op2;
-
 // Data processing instruction parsing
 static inline int get_op_code(uint32_t ins) {
 	return (ins >> 21) & 15;
@@ -210,6 +207,8 @@ void mvn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
 int arm_data_processing_shift(arm_core p, uint32_t ins) {
     debug("arm_data_processing_shift: %d\n", (int)ins);    
     
+	uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, bit4, bit7;
+	int op1, op2;
     uint8_t cond_field = instruction_get_condition_field(ins);
     int result = instruction_check_condition(p, cond_field);
     if(result) return result;
@@ -255,12 +254,58 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
 
 int arm_data_processing_immediate(arm_core p, uint32_t ins) {
     debug("arm_data_processing_immediate: %d\n", (int)ins);
-    
+
+	uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, bit4, bit7;
+	int op1, op2;
+
+    int op_code = get_op_code(ins);
+	//recuperation de l'opperande
+	if (get_bit(ins, 25)) //immediate
+		op2 = ror(get_bits(ins, 7, 0), get_bits(ins, 8, 11) * 2); 
+	else //register
+	{
+		rm = get_bits(3, 0);
+		op2 = arm_read_register(p, rm);
+	}
+
+	//redirection sur MRS et MSR
+	if (get_bits(ins, 24, 23) == 0x02 && !get_bit(ins, 20))
+	{
+		if (get_bit(ins, 21))
+			arm_msr(p, ins, op2);
+		else
+			arm_mrs(p, ins, op2);
+	}
+	else
+	{
+
+		dp_instruction_handler_t handler = decode(op_code);
+
+		rd = get_rd(ins);
+
+		if(op_code != MOV && op_code != MVN) {
+			rn = get_rn(ins);
+			op1 = arm_read_register(p, rn);
+		}
+		
+		if(op_code == CMP || op_code == CMN  || op_code == TST || op_code == TEQ) {
+			S = 1;
+		}
+		else {
+			S = get_S(ins);
+		}
+
+		handler(p, rd, op1, op2, S);
+	}
+
+
     /*
-    	Attention : bit25 == 0 &&	bit7 == 1 && bit4 == 1 	=> load/store ou MRS
+    	Attention : bit25 == 0 &&	bit7 == 1 && bit4 == 1 	=> load/store 
     	cf. p.443, 144 et 146
     */
+
+
     
-    return UNDEFINED_INSTRUCTION;
+    return 0;
 }
 

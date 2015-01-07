@@ -98,10 +98,10 @@ uint8_t get_bit7(uint32_t ins) {
 	return (ins >> 7) & 1;
 }
 // Immediate operand value
-int get_immediate(uint32_t ins) {
-	int imm_8 = ins & 255;
-	int rotate_imm = (ins >> 8) & 15;
-	return imm_8 >> (rotate_imm * 2) ;
+uint32_t get_immediate(uint32_t ins) {
+	uint32_t imm_8 = ins & 255;
+	uint8_t rotate_imm = (ins >> 8) & 15;
+	return ror(imm_8,(rotate_imm * 2)) ;
 }
 
 

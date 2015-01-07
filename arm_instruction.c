@@ -43,19 +43,19 @@ inline uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t* shift_C) {
 }
 // Shifted register operand value
 inline uint32_t get_shifted(arm_core p, uint32_t ins, uint8_t* shift_C) {
-		uint8_t rm = get_rm(ins);
-    uint8_t shift_imm = get_shift_imm(ins);
-		uint8_t shift_code = get_shift_code(ins);
-    uint32_t result = arm_read_register(p, rm);
-    if(shift_imm || shift_code) {
-		  uint8_t bit4 = get_bit(ins,4);
+    uint8_t shift_imm = (ins >> 7) & 31;
+		uint8_t shift_code = (ins >> 5) & 3;
+    uint32_t result = arm_read_register(p, ins & 15);
+    if(!shift_imm && !shift_code) {
+    	*shift_C = arm_read_c(p);
+    }
+    else {
     	uint8_t shift_value;
-    	if(!bit4) shift_value = shift_imm;
+    	if(!get_bit(ins,4)) shift_value = shift_imm;
     	else {
-				uint8_t rs = get_rs(ins);
-				shift_value = arm_read_register(p, rs);
+				shift_value = arm_read_register(p, (ins >> 8) & 15);
 		  }
-		  result = shift(p, result, shift_code, shift_value);
+		  result = shift(p, result, shift_code, shift_value, shift_C);
 		}
 		return result;
 }

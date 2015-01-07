@@ -6,8 +6,8 @@
 main:
 @ Immediate offset
   ldr r0, ptr_a
-  add r0, r0, #1
-  ldr r1, [r0, #-1] @ A est chargé dans r1
+  sub r0, r0, #1
+  ldr r1, [r0, #1] @ A est chargé dans r1
   
 @ Register offset
   ldr r0, ptr_b
@@ -64,8 +64,8 @@ main:
   
   
   swi 0x123456
-  
-@.data
+
+
   A: .word 10
   B: .word 11
   C: .word 12

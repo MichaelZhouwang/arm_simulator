@@ -29,6 +29,10 @@ Contact: Guillaume.Huard@imag.fr
 // Execution of instructions
 int arm_step(arm_core p);
 
+// Calculating the second operand
+static inline uint32_t get_immediate(uint32_t ins, uint8_t* shift_C);
+static inline uint32_t get_shifted(uint32_t ins, uint8_t* shift_C)
+
 // Condition of instructions
 uint8_t instruction_get_cond_field(uint32_t instruction);
 int instruction_check_cond_field(arm_core p, uint8_t field);

@@ -256,19 +256,19 @@ void arm_print_state(arm_core p, FILE *out) {
 // NZCV flags helpers
 
 inline int arm_read_n(arm_core p) {
-    return arm_read_register(p, N);
+    return get_bit(arm_read_cpsr(p), N);
 }
 
 inline int arm_read_z(arm_core p) {
-    return arm_read_register(p, Z);
+    return get_bit(arm_read_cpsr(p), Z);
 }
 
 inline int arm_read_c(arm_core p) {
-    return arm_read_register(p, C);
+    return get_bit(arm_read_cpsr(p), C);
 }
 
 inline int arm_read_v(arm_core p) {
-    return arm_read_register(p, V);
+    return get_bit(arm_read_cpsr(p), V);
 }
 
 inline int is_n_clear(arm_core p) {
@@ -303,7 +303,17 @@ inline int is_v_set(arm_core p) {
     return (arm_read_v(p) == 1);
 }
 
-void update_flags(arm_core p, uint32_t value) {
-	
+void set_n(arm_core p){}
+void set_z(arm_core p){}
+void set_c(arm_core p){}
+void set_v(arm_core p){}
+
+void clear_n(arm_core p){}
+void clear_z(arm_core p){}
+void clear_c(arm_core p){}
+void clear_v(arm_core p){}
+
+inline void update_flags(arm_core p, uint32_t value) {
+	if(value == 0) 
 }
 

@@ -48,14 +48,13 @@ inline uint32_t get_shifted(arm_core p, uint32_t ins, uint8_t* shift_C) {
 		uint8_t shift_code = get_shift_code(ins);
     uint32_t result = arm_read_register(p, rm);
     if(shift_imm || shift_code) {
-		  uint8_t bit4 = get_bit(ins,4);
     	uint8_t shift_value;
-    	if(!bit4) shift_value = shift_imm;
+    	if(!get_bit(ins,4)) shift_value = shift_imm;
     	else {
 				uint8_t rs = get_rs(ins);
 				shift_value = arm_read_register(p, rs);
 		  }
-		  result = shift(p, result, shift_code, shift_value);
+		  result = shift(p, result, shift_code, shift_value, shift_C);
 		}
 		return result;
 }

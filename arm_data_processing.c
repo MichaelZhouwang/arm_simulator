@@ -116,7 +116,7 @@ dp_instruction_handler_t decode(int op_code) {
 void and(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	uint64_t result = op1 & op2;
 	if(S) {
-		if(rd != 15){
+		if(rd != 15){ // à compléter
 			uint32_t cpsr = arm_read_cpsr(p);
 			cpsr = clear_n(cpsr);
 			cpsr = clear_z(cpsr);
@@ -338,20 +338,20 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
     
     op2 = get_shifted(ins, &shift_C);
     
-		  //redirection sur MRS et MSR
-		if (get_bits(ins, 24, 23) == 0x02 && !get_bit(ins, 20))
+    S = get_S(ins);
+    
+		// Redirecting on MRS and MSR
+		if ((op_code == TST || op_code == TEQ || op_code == CMP || op_code == CMN) && !S)
 		{
 			if (get_bit(ins, 21))
 				arm_msr(p, ins);
 			else
 				arm_mrs(p, ins);
 		}
-    
-    
-    
-        
-    // Specific instruction call
+    else {
+    // DP instruction call
     handler(p, rd, op1, op2, S, shift_C);
+    }
     return result;
 }
 

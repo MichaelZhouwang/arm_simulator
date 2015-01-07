@@ -38,26 +38,32 @@ inline uint8_t instruction_get_cond_field(uint32_t instruction) {
 }
 
 int instruction_check_cond_field(arm_core p, uint8_t field) {
-    int res;
-    switch(field) {
-        case 0:  res = is_z_set(p);                                     break;
-        case 1:  res = is_z_clear(p);                                   break;
-        case 2:  res = is_c_set(p);                                     break;
-        case 3:  res = is_c_clear(p);                                   break;
-        case 4:  res = is_n_set(p);                                     break;
-        case 5:  res = is_n_clear(p);                                   break;
-        case 6:  res = is_v_set(p);                                     break;
-        case 7:  res = is_v_clear(p);                                   break;
-        case 8:  res = is_c_set(p) && is_z_clear(p);                    break;
-        case 9:  res = is_c_clear(p) && is_z_set(p);                    break;
-        case 10: res = arm_read_n(p) == arm_read_v(p);                  break;
-        case 11: res = arm_read_n(p) != arm_read_v(p);                  break;
-        case 12: res = is_z_set(p) && arm_read_n(p) == arm_read_v(p);   break;
-        case 13: res = is_z_clear(p) && arm_read_n(p) != arm_read_v(p); break;
+    uint32_t cpsr = arm_read_cpsr(p);
+	int n = get_bit(cpsr, N);
+	int z = get_bit(cpsr, Z);
+	int c = get_bit(cpsr, C);
+	int v = get_bit(cpsr, V);
+	int res;
+
+	switch (field) {
+		case 0 : res = (z == 1);           break;
+		case 1 : res = (z == 0);           break;
+		case 2 : res = (c == 1);           break;
+		case 3 : res = (c == 0);           break;
+		case 4 : res = (n == 1);           break;
+		case 5 : res = (n == 0); 		   break;
+		case 6 : res = (v == 1);           break;
+		case 7 : res = (v == 0);           break;
+		case 8 : res = (c == 1 && z == 0); break;
+		case 9 : res = (c == 0 && z == 1); break;
+		case 10: res = (n == v);           break;
+		case 11: res = (n != v);           break;
+		case 12: res = (z == 0 && n == v); break;
+		case 13: res = (z == 1 || n != v); break;
         case 14: res =  1; break; // always
         case 15: res = -1; break; // undefined
         default: res =  0; break; // impossible
-    }
+	}
 	debug("condition : %x, %d\n", field, res);
     return res;
 }

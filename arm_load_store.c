@@ -62,37 +62,34 @@ static inline uint8_t get_rm(uint32_t ins) {
 }
 
 static inline int get_shift(uint32_t ins) {
-	return (int)((ins >> 5) & 3);
+	return (int)((ins >> 5) & 0x3);
 }
 
 static inline int get_shift_imm(uint32_t ins) {
-	return (int)((ins >> 7) & 15);
+	return (int)((ins >> 7) & 0xF);
 }
 
 static inline int get_offset(uint32_t ins) {
 	return (int)(ins & 0x7FF);
 }
 
-
-// Addressing mode
-
-typedef enum {
-    addressing_offset,
-    addressing_pre_indexed,
-    addressing_post_indexed
-} addressing_t;
-
-static inline addressing_t get_addressing(uint32_t ins) {
-	if (get_p(ins)) {
-	    return addressing_post_indexed;
-	} else if (get_w(ins)) {
-	    return addressing_pre_indexed;
-	} else {
-	    return addressing_offset;
-	}
+static inline int get_immed_h(uint32_t ins) {
+	return (int)((ins >> 8) & 0xF);
 }
 
-// Load and store reg
+static inline int get_immed_l(uint32_t ins) {
+	return (int)(ins & 0xF);
+}
+
+static inline int get_s(uint32_t ins) {
+	return (int)((ins >> 6) & 1);
+}
+
+static inline int get_h(uint32_t ins) {
+	return (int)((ins >> 5) & 1);
+}
+
+// Load to reg / store from reg
 
 int arm_load_to_reg(int8_t reg, int32_t address, int b) {
 	int result;
@@ -113,8 +110,9 @@ int arm_store_from_reg(int8_t reg, int32_t address, int b) {
 	}
 }
 
-// Public
+// Load store
 // TODO: Gestion de l'exeption data abort
+
 int arm_load_store(arm_core p, uint32_t ins) {
     debug("arm_load_store: %d\n", (int)ins);
 
@@ -128,30 +126,21 @@ int arm_load_store(arm_core p, uint32_t ins) {
 	int shift = get_shift(ins);
 	int shift_imm = get_shift_imm(ins);
 
-	switch(get_addressing(ins)) {
-        case addressing_post_indexed:
-  			address = val_rn;
-			if (instruction_check_condition(p, ins)) {
-       			address = (get_u(ins)) ? val_rn + val_rm : val_rn - val_rm;   
-    		}
-			break;
-
-        case addressing_pre_indexed:
-            index = shift(p, val_rm, shift, shift_imm);
-			address = (get_u(ins)) ? val_rn + index : val_rn - index;
-			if (instruction_check_condition(p, ins)) {
-				arm_write_register(p, rn, address);
-    		}                  
-			break;
-
-        case addressing_offset:
-        	index = shift(p, val_rm, shift, shift_imm);
-			address = (get_u(ins)) ? val_rn + index : val_rn - index;
-			if (rn == 15) address += 8;        
-			break;
-
-        default:
-			break;
+	if (get_p(ins)) { // post_indexed
+  		address = val_rn;
+		if (instruction_check_condition(p, ins)) {
+       		address = (get_u(ins)) ? val_rn + val_rm : val_rn - val_rm;   
+    	}
+	} else if (get_w(ins)) { // pre_indexed
+        index = shift(p, val_rm, shift, shift_imm);
+		address = (get_u(ins)) ? val_rn + index : val_rn - index;
+		if (instruction_check_condition(p, ins)) {
+			arm_write_register(p, rn, address);
+    	}
+    } else { // offset and scaled offser
+        index = shift(p, val_rm, shift, shift_imm);
+		address = (get_u(ins)) ? val_rn + index : val_rn - index;
+		if (rn == 15) address += 8;        
     }
 	
 	if (get_l(ins)) {
@@ -171,34 +160,22 @@ int arm_load_store_immediate(arm_core p, uint32_t ins) {
 	int val_rm = arm_read_register(p, rn);
 	uint32_t offset = get_offset(ins);
 
-	switch(get_addressing(ins)) {
-        case addressing_post_indexed:
-  			address = val_rn;
-			if (instruction_check_condition(p, ins)) {
-				if (get_u(ins)) {
-					arm_write_register(p, rn, val_rn+offset);
-				} else {
-					arm_write_register(p, rn, val_rn-offset);
-				}
-			}
-			if (rn == 15) {
-				address += 8;
-			}
-			break;
-
-        case addressing_pre_indexed:
-         	address = (get_u(ins) ? val_rn + offset : val_rn - offset;      
-			if (instruction_check_condition(p, ins)) {
-				arm_write_register(p, rn, address);
-			}           
-			break;
-
-        case addressing_offset:
-           	address = (get_u(ins)) ? val_rn + offset : val_rn - offset;
-			break;
-
-        default:
-			break;
+	if (get_p(ins)) { // post_indexed
+  		address = val_rn;
+		if (instruction_check_condition(p, ins)) {
+			val_rn = (get_u(ins)) ? val_rn+offset : val_rn-offset;
+			arm_write_register(p, rn, val_rn);
+		}
+		if (rn == 15) {
+			address += 8;
+		}
+	} else if (get_w(ins)) { // pre_indexed
+    	address = (get_u(ins) ? val_rn + offset : val_rn - offset;      
+		if (instruction_check_condition(p, ins)) {
+			arm_write_register(p, rn, address);
+		}           
+    } else { // offset
+    	address = (get_u(ins)) ? val_rn + offset : val_rn - offset;
     }
 
 	if (get_l(ins)) {
@@ -206,6 +183,40 @@ int arm_load_store_immediate(arm_core p, uint32_t ins) {
 	} else { 
 		return arm_store_from_reg(rd, address, get_b(ins));
 	}
+}
+
+// Load store miscellaneous
+
+int arm_load_store_miscellaneous(arm_core p, uint32_t ins) {
+	debug("arm_load_store: %d\n", (int)ins);
+	
+	uint32 address;
+	uint8_t rd = get_rd(ins);
+	uint8_t rn = get_rn(ins);
+	int val_rn = arm_read_register(p, rn);
+	int val_rm = arm_read_register(p, rn);
+	int offset_type = (get_bit(ins, 24) << 1) & get_bit(ins, 21);
+	
+	if (get_bit(ins, 22)) { // immediate
+		if (offset_type == 0) { // post_indexed
+		
+		} else if (offset_type == 1) { // pre_indexed
+
+		} else { // offset
+
+		}
+	} else { // register
+		if (offset_type == 0) { // post_indexed
+		
+		} else if (offset_type == 1) { // pre_indexed
+
+		} else { // offset
+
+		}
+	}
+	
+
+	
 }
 
 int arm_load_store_multiple(arm_core p, uint32_t ins) {

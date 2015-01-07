@@ -200,15 +200,19 @@ int arm_load_store_miscellaneous(arm_core p, uint32_t ins) {
 	if (get_bit(ins, 22)) { // immediate
 		if (offset_type == 0) { // post_indexed
 		
-		} else if (offset_type == 1) { // pre_indexed
+		} else if (offset_type == 2) { // pre_indexed
 
 		} else { // offset
-
+			int offset_8 = (immedH << 4) OR immedL
+			if U == 1 then
+				address = Rn + offset_8
+			else /* U == 0 */
+				address = Rn - offset_8
 		}
 	} else { // register
 		if (offset_type == 0) { // post_indexed
 		
-		} else if (offset_type == 1) { // pre_indexed
+		} else if (offset_type == 2) { // pre_indexed
 
 		} else { // offset
 

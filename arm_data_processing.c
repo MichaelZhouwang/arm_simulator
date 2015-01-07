@@ -380,7 +380,7 @@ int arm_data_processing_immediate(arm_core p, uint32_t ins) {
     int op_code = get_op_code(ins);
 	//recuperation de l'opperande
 	if (get_bit(ins, 25)) //immediate
-		op2 = ror(get_bits(ins, 7, 0), get_bits(ins, 8, 11) * 2); 
+		op2 = get_immediate(ins);
 	else //register
 	{
 		rm = get_bits(3, 0);

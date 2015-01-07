@@ -69,8 +69,8 @@ int instruction_check_cond_field(arm_core p, uint8_t field) {
 }
 
 int instruction_check_condition(arm_core p, uint32_t inst) {
-   uint8_t field = instruction_get_condition_field(inst);
-    return instruction_check_cond_field(field);
+	uint8_t field = instruction_get_cond_field(inst);
+    return instruction_check_cond_field(p, field);
 }
 
 // Instruction handlers
@@ -110,7 +110,7 @@ static int arm_execute_instruction(arm_core p) {
 	debug("fetch\n");
     result = arm_fetch(p, &instruction);
     if (result) {
-	    debug("error during fetch %x\n");
+	    debug("error during fetch %d\n", result);
         return result;
     }
 

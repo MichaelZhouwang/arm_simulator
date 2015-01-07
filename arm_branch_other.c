@@ -78,8 +78,8 @@ int arm_mrs(arm_core p, uint32_t ins) {
 	{
 		uint8_t rd = (ins >> 12) & 0x0f;
 
-		if (rd == 15)
-			return UNDEFINED_INSTRUCTION;
+		//if (rd == 15)
+		//UNPREDICTABLE
 
 		//b19-b16 => SBO
 		//b11-b0 => SBZ

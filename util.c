@@ -36,7 +36,7 @@ int is_big_endian() {
     return ((* (uint8_t *) &one) == 0);
 }
 
-int shift(arm_core p,int op, int code, uint8_t value) {
+int shift(arm_core p,int op, int code, int value) {
 	switch(code){
 		case 0: // LSL
 			op <<= value;

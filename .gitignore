@@ -20,6 +20,8 @@ Makefile.in
 /Examples/example2
 /Examples/example3
 /Examples/example4
+/Examples/exampleMRS
+/Examples/exampleLDR
 /Examples/insertion_sort
 /Examples/stamp-h1
 /autom4te.cache/

@@ -27,6 +27,7 @@ Contact: Guillaume.Huard@imag.fr
 #include "util.h"
 #include "debug.h"
 
+
 // Get different parts of instruction
 
 static inline int get_p(uint32_t ins) {

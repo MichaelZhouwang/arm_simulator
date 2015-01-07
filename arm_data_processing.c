@@ -61,9 +61,7 @@ int instruction_check_condition(arm_core p, uint8_t field) {
 
 
 
-typedef int(* dp_instruction_handler_t)(arm_core, uint8_t, uint32_t, uint32_t, uint8_t);
-
-
+typedef int(* dp_instruction_handler_t)(arm_core, uint8_t, uint32_t, uint32_t, uint8_t, uint8_t);
 
 // Data processing instruction parsing
 static inline int get_op_code(uint32_t ins) {
@@ -90,20 +88,14 @@ static inline uint8_t get_shift_imm(uint32_t ins) {
 static inline int get_shift_code(uint32_t ins) {
 	return (ins >> 5) & 3;
 }
-static inline uint8_t get_bit4(uint32_t ins) {
-	return (ins >> 4) & 1;
-}
-static inline uint8_t get_bit7(uint32_t ins) {
-	return (ins >> 7) & 1;
-}
-static inline uint8_t get_bit25(uint32_t ins) {
-	return (ins >> 25) & 1;
-}
 // Immediate operand value
-static inline uint32_t get_immediate(uint32_t ins) {
+static inline uint32_t get_immediate(uint32_t ins, uint8_t* shift_C) {
 	uint32_t imm_8 = ins & 255;
 	uint8_t rotate_imm = (ins >> 8) & 15;
-	return ror(imm_8,(rotate_imm * 2)) ;
+	uint32_t result = ror(imm_8,(rotate_imm * 2));
+	if(rotate_imm == 0) *shift_C = arm_read_c(p);
+	else *shift_C = get_bit(result,31);
+	return result;
 }
 
 
@@ -131,76 +123,205 @@ dp_instruction_handler_t decode(int op_code) {
 
 // Instructions
 
-void and(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 & op2;
-	arm_write_register(p, rd, result);
-	if(S) update_flags(p, result);
-}
-
-void eor(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 ^ op2;
-	arm_write_register(p, rd, result);
-}
-
-void sub(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 - op2;
-	arm_write_register(p, rd, result);
-}
-
-void rsb(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op2 - op1;
-	arm_write_register(p, rd, result);
-}
-
-void add(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 + op2;
-	arm_write_register(p, rd, result);
-}
-
-void adc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 + op2 + is_c_set(p);
-	arm_write_register(p, rd, result);
-}
-
-void sbc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op1 - op2 - is_c_clear(p);
+void and(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	uint64_t result = op1 & op2;
+	if(S) {
+		if(rd != 15){
+			uint32_t cpsr = arm_read_cpsr(p);
+			cpsr = clear_n(cpsr);
+			cpsr = clear_z(cpsr);
+			cpsr = clear_c(cpsr);
+			cpsr = clear_v(cpsr);
+			if(get_bit(result,31)) cpsr = set_n(cpsr);
+			if(result == 0) cpsr = set_z(cpsr);
+			if(result > UINT_MAX) cpsr = set_c(cpsr);
+			if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+				|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+				cpsr = set_v(cpsr);
+	
+			arm_write_cpsr(p, cpsr);
+		}
+		else {
+			if(arm_current_mode_has_spsr(p)) {
+				arm_write_cpsr(p,arm_read_spsr(p));
+			}
+			else {
+				// UNPREDICTABLE
+			}
+		}
+	}
 	arm_write_register(p, rd, result);
 }
 
-void rsc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
-	uint32_t result = op2 - op1 - is_c_clear(p);
+void eor(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	uint64_t result = op1 ^ op2;
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
 	arm_write_register(p, rd, result);
 }
 
-void tst(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+void sub(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	uint64_t result = op1 - op2;
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
+	arm_write_register(p, rd, result);
+}
+
+void rsb(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	uint64_t result = op2 - op1;
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
+	arm_write_register(p, rd, result);
+}
+
+void add(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	uint64_t result = op1 + op2;
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
+	arm_write_register(p, rd, result);
+}
+
+void adc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	uint64_t result = op1 + op2 + is_c_set(p);
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
+	arm_write_register(p, rd, result);
+}
+
+void sbc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	uint64_t result = op1 - op2 - is_c_clear(p);
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
+	arm_write_register(p, rd, result);
+}
+
+void rsc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	uint64_t result = op2 - op1 - is_c_clear(p);
+	if(S) {
+	uint32_t cpsr = arm_read_cpsr(p);
+	cpsr = clear_n(cpsr);
+	cpsr = clear_z(cpsr);
+	cpsr = clear_c(cpsr);
+	cpsr = clear_v(cpsr);
+	if(get_bit(result,31)) cpsr = set_n(cpsr);
+	if(result == 0) cpsr = set_z(cpsr);
+	if(result > UINT_MAX) cpsr = set_c(cpsr);
+	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
+		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
+		cpsr = set_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	}
+	arm_write_register(p, rd, result);
+}
+
+void tst(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 
 }
 
-void teq(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+void teq(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 
 }
 
-void cmp(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+void cmp(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 
 }
 
-void cmn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+void cmn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 
 }
 
-void orr(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+void orr(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 
 }
 
-void mov(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+void mov(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 
 }
 
-void bic(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+void bic(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 
 }
 
-void mvn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
+void mvn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 
 }
 
@@ -208,8 +329,9 @@ void mvn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S) {
 // Decoding functions for various classes of instructions
 int arm_data_processing_shift(arm_core p, uint32_t ins) {
     debug("arm_data_processing_shift: %d\n", (int)ins);    
-    uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, bit4, bit7;
-		int op1, op2;
+    
+	uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, shift_C;
+	int op1, op2;
     uint8_t cond_field = instruction_get_condition_field(ins);
     int result = instruction_check_condition(p, cond_field);
     if(result) return result;
@@ -248,21 +370,66 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
 		}
         
     // Specific instruction call
-    handler(p, rd, op1, op2, S);
+    handler(p, rd, op1, op2, S, shift_C);
     return result;
 }
 
 
 int arm_data_processing_immediate(arm_core p, uint32_t ins) {
     debug("arm_data_processing_immediate: %d\n", (int)ins);
-    uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, bit4, bit7;
-		int op1, op2;
+
+	uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, shift_C;
+	int op1, op2;
+
+    int op_code = get_op_code(ins);
+	//recuperation de l'opperande
+	if (get_bit(ins, 25)) //immediate
+		op2 = ror(get_bits(ins, 7, 0), get_bits(ins, 8, 11) * 2); 
+	else //register
+	{
+		rm = get_bits(3, 0);
+		op2 = arm_read_register(p, rm);
+	}
+
+	//redirection sur MRS et MSR
+	if (get_bits(ins, 24, 23) == 0x02 && !get_bit(ins, 20))
+	{
+		if (get_bit(ins, 21))
+			arm_msr(p, ins, op2);
+		else
+			arm_mrs(p, ins, op2);
+	}
+	else
+	{
+
+		dp_instruction_handler_t handler = decode(op_code);
+
+		rd = get_rd(ins);
+
+		if(op_code != MOV && op_code != MVN) {
+			rn = get_rn(ins);
+			op1 = arm_read_register(p, rn);
+		}
+		
+		if(op_code == CMP || op_code == CMN  || op_code == TST || op_code == TEQ) {
+			S = 1;
+		}
+		else {
+			S = get_S(ins);
+		}
+
+		handler(p, rd, op1, op2, S, shift_C);
+	}
+
+
     /*
-    	Attention : bit25 == 0 &&	bit7 == 1 && bit4 == 1 	=> load/store (ou MRS à voir de plus près)
+    	Attention : bit25 == 0 &&	bit7 == 1 && bit4 == 1 	=> load/store 
     	cf. p.443, 144 et 146
     	=> appel arm_load_store_miscellaneous(arm_core p, uint32_t ins)
     */
+
+
     
-    return UNDEFINED_INSTRUCTION;
+    return 0;
 }
 

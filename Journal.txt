@@ -12,3 +12,7 @@ J2 :
 J3 :
 	arm_data_processing : implémentation des instructions and, eor, ... , mvn
 	arm_core : ajout de la màj des flags
+
+Questions:
+	1- C'est quoi SBZ et SBO?
+	2- On fait quoi pour les UNPREDICTABLE

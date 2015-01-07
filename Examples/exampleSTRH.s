@@ -1,4 +1,4 @@
-@ Utilisation de tous les cas de la fonction strh
+@ Utilisation de tous les cas de la fonction STRH
 @ p.473 -- A5-33
 
 .global main
@@ -45,7 +45,7 @@ main:
 
   swi 0x123456
   
-@.data
+
   A: .hword 10
   B: .hword 11
   C: .hword 12

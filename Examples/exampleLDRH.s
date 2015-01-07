@@ -1,4 +1,4 @@
-@ Utilisation de tous les cas de la fonction LDR
+@ Utilisation de tous les cas de la fonction LDRH
 @ p.473 -- A5-33
 
 
@@ -47,7 +47,7 @@ main:
   
   swi 0x123456
   
-@.data
+
   A: .hword 10
   B: .hword 11
   C: .hword 12

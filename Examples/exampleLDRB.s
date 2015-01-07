@@ -1,4 +1,4 @@
-@ Utilisation de tous les cas de la fonction LDR
+@ Utilisation de tous les cas de la fonction LDRB
 
 .global main
 .text
@@ -65,7 +65,7 @@ main:
   
   swi 0x123456
   
-@.data
+
   A: .byte 10
   B: .byte 11
   C: .byte 12

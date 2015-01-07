@@ -64,8 +64,8 @@ main:
   
   
   swi 0x123456
-  
-@.data
+
+
   A: .word 10
   B: .word 11
   C: .word 12

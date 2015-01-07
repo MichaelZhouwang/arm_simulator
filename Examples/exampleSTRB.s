@@ -1,4 +1,4 @@
-@ Utilisation de tous les cas de la fonction strb
+@ Utilisation de tous les cas de la fonction STRB
 @ p.458 -- A5-18
 
 .global main
@@ -65,7 +65,7 @@ main:
 
   swi 0x123456
   
-@.data
+
   A: .byte 10
   B: .byte 11
   C: .byte 12

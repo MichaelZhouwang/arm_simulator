@@ -35,3 +35,25 @@ int is_big_endian() {
     static uint32_t one = 1;
     return ((* (uint8_t *) &one) == 0);
 }
+
+int shift(arm_core p,int op, int code, uint8_t value) {
+	switch(code){
+		case 0: // LSL
+			op <<= value;
+			break;
+		case 1: // LSR
+			op >>= value;
+			break;
+		case 2: // ASR
+			op = asr(op, value);
+			break;
+		case 3: 
+			if(value) // ROR
+				op = ror(op, value);
+			else // RRX
+				op >>= 1;
+				op |= is_c_set(p);
+			break;
+	}	
+	return op;
+}

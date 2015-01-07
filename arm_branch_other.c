@@ -77,7 +77,8 @@ int arm_mrs(arm_core p, uint32_t ins) {
 	if (instruction_check_condition(p, ins))
 	{
 		uint8_t rd = get_bits(ins, 15, 12);
-		uint32_t op = get_immediate(ins);
+		uint8_t shift_C;
+		uint32_t op = get_immediate(p, ins, &shift_C);
 
 		//if (rd == 15)
 		//UNPREDICTABLE
@@ -99,7 +100,8 @@ int arm_msr(arm_core p, uint32_t ins) {
 	{
 		uint32_t byte_mask, mask = 0;
 
-		uint32_t op = get_immediate(ins);
+		uint8_t shift_C;
+		uint32_t op = get_immediate(p, ins, &shift_C);
 		
 		byte_mask = (get_bit(ins, 16) ? 0x000000FF : 0) | //C
 							 (get_bit(ins, 17) ? 0x0000FF00 : 0) | //X

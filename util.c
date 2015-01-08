@@ -20,9 +20,11 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
-#include "util.h"
 
-/* We implement asr because shifting a signed is non portable in ANSI C */
+#include "util.h"
+#include "arm_core.h"
+
+// We implement asr because shifting a signed is non portable in ANSI C
 uint32_t asr(uint32_t value, uint8_t shift) {
     return (value >> shift) | (get_bit(value, 31) ? ~0<<(32-shift) : 0);
 }
@@ -31,25 +33,66 @@ uint32_t ror(uint32_t value, uint8_t rotation) {
     return (value >> rotation) | (value << (32-rotation));
 }
 
-int shift(arm_core p,int op, int code, int value) {
-	switch(code){
+int shift(arm_core p, int op, int code, int value, uint8_t *shift_C) {
+    uint8_t c;
+	switch(code) {
 		case 0: // LSL
-			op <<= value;
+			if (value == 0) {
+			    c = arm_read_c(p);
+			} else {
+				if(value < 32) {
+					c = get_bit(op, 32-value);
+					op <<= value;
+				} else {
+					c = (value == 32) ? get_bit(op, 0) : 0;
+					op = 0;
+				}				
+			}
 			break;
+			
 		case 1: // LSR
-			op >>= value;
+			if (value == 0) {
+			    c = arm_read_c(p);
+			} else {
+				if(value < 32) {
+					c = get_bit(op, value-1);
+					op >>= value;
+				} else {
+					c = (value == 32) ? get_bit(op, 31) : 0;
+					op = 0;
+				}				
+			}
 			break;
+			
 		case 2: // ASR
-			op = asr(op, value);
+			if (value == 0) {
+			    c = arm_read_c(p);
+			} else {
+				if(value < 32) {
+					c = get_bit(op, value-1);
+					op = asr(op, value);
+				} else {
+					c = get_bit(op,31);
+					op = (get_bit(op,31)) ? : 0xFFFFFFFF;
+				}				
+			}			
 			break;
+			
 		case 3: 
-			if(value) // ROR
-				op = ror(op, value);
-			else // RRX
-				op >>= 1;
-				op |= is_c_set(p);
+			if (!value) { // RRX
+				c = get_bit(op,0);
+				op = (arm_read_c(p) << 31) | (op >> 1);
+			} else { // ROR
+				if (!get_bit(value,4,0)) {
+				    c = get_bit(op, 31);
+				} else {
+					c = get_bit(op, get_bit(value,4,0) - 1);
+					op = ror(op, value);
+				}
+			}
 			break;
-	}	
+	}
+	if (shift_C) *shift_C = c;
 	return op;
 }
 
@@ -68,3 +111,4 @@ int is_big_endian() {
     static uint32_t one = 1;
     return ((* (uint8_t *) &one) == 0);
 }
+

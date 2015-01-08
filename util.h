@@ -30,6 +30,9 @@ Contact: Guillaume.Huard@imag.fr
 #define min(x,y) ((x)<(y)?(x):(y))
 #define max(x,y) ((x)>(y)?(x):(y))
 
+#define is_odd(x) ((rd & 1) == 1)
+#define is_even(x) ((rd & 1) == 0)
+
 #define get_bit(x, i) (((x)>>(i))&1)
 #define set_bit(x, i) ((x)|(1<<(i)))
 #define clr_bit(x, i) ((x)&~(1<<(i)))
@@ -44,9 +47,8 @@ Contact: Guillaume.Huard@imag.fr
 
 uint32_t asr(uint32_t value, uint8_t shift);
 uint32_t ror(uint32_t value, uint8_t rotation);
-int shift(arm_core p,int op, int code, int value);
+int shift(arm_core p, int op, int code, int value, uint8_t *shift_C);
 int number_of_set_bits(int bits_field);
-
 int is_big_endian();
 
 #endif

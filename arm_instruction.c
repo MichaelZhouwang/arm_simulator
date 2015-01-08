@@ -31,6 +31,36 @@ Contact: Guillaume.Huard@imag.fr
 #include <debug.h>
 #include "arm_core.h"
 
+
+// Immediate operand value
+inline uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t* shift_C) {
+	uint32_t imm_8 = ins & 255;
+	uint8_t rotate_imm = (ins >> 8) & 15;
+	uint32_t result = ror(imm_8,(rotate_imm * 2));
+	if(rotate_imm == 0) *shift_C = arm_read_c(p);
+	else *shift_C = get_bit(result,31);
+	return result;
+}
+// Shifted register operand value
+inline uint32_t get_shifted(arm_core p, uint32_t ins, uint8_t* shift_C) {
+    uint8_t shift_imm = (ins >> 7) & 31;
+		uint8_t shift_code = (ins >> 5) & 3;
+    uint32_t result = arm_read_register(p, ins & 15);
+    if(!shift_imm && !shift_code) {
+    	*shift_C = arm_read_c(p);
+    }
+    else {
+    	uint8_t shift_value;
+    	if(!get_bit(ins,4)) shift_value = shift_imm;
+    	else {
+				shift_value = arm_read_register(p, (ins >> 8) & 15);
+		  }
+		  result = shift(p, result, shift_code, shift_value, shift_C);
+		}
+		return result;
+}
+
+
 // Condition field
 
 inline uint8_t instruction_get_cond_field(uint32_t instruction) {
@@ -44,7 +74,7 @@ int instruction_check_cond_field(arm_core p, uint8_t field) {
 	int c = get_bit(cpsr, C);
 	int v = get_bit(cpsr, V);
 	int res;
-
+	
 	switch (field) {
 		case 0 : res = (z == 1);           break;
 		case 1 : res = (z == 0);           break;
@@ -69,19 +99,19 @@ int instruction_check_cond_field(arm_core p, uint8_t field) {
 }
 
 int instruction_check_condition(arm_core p, uint32_t inst) {
-   uint8_t field = instruction_get_condition_field(inst);
-    return instruction_check_cond_field(field);
+	uint8_t field = instruction_get_cond_field(inst);
+    return instruction_check_cond_field(p, field);
 }
 
 // Instruction handlers
 
 typedef int(* instruction_handler_t)(arm_core, uint32_t);
 
-inline uint8_t instruction_get_handler_field(uint32_t instruction) {
+static inline uint8_t instruction_get_handler_field(uint32_t instruction) {
     return (uint8_t)((instruction>>25) & 7);
 }
 
-instruction_handler_t instruction_field_get_handler(uint8_t field) {
+static instruction_handler_t instruction_field_get_handler(uint8_t field) {
     instruction_handler_t handler;
     switch(field) {
         case 0: handler = arm_data_processing_shift;         break;
@@ -110,23 +140,24 @@ static int arm_execute_instruction(arm_core p) {
 	debug("fetch\n");
     result = arm_fetch(p, &instruction);
     if (result) {
-	    debug("error during fetch %x\n");
+	    debug("error during fetch %d\n", result);
         return result;
     }
 
 	debug("instruction %x\n", instruction);
     cond_field = instruction_get_cond_field(instruction);
+	result = instruction_check_cond_field(p, cond_field);
 	
-    if (cond_field != 0x0f) {
+    if (result == 1) {
         ins_class_field = instruction_get_handler_field(instruction);
 		debug("handler : %x\n", ins_class_field);
         handler = instruction_field_get_handler(ins_class_field);
-    } else {
+    } else if (result == -1){
 		debug("The condition is undefined\n");
         handler = arm_miscellaneous;
     }
     
-    return (handler != NULL) ? handler(p, instruction) : -1;
+    return (handler != NULL) ? handler(p, instruction) : 0;
 }
 
 int arm_step(arm_core p) {

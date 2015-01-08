@@ -1,14 +1,22 @@
-J-1 :
-	Complétion de memory.c & arm_instruction.c(Jeremy)
-	
 J1 : 
 	Prise en main de Git
 	Prise en main des fichiers fournis
+	Complétion de memory.c & arm_instruction.c
 	
 J2 :
 	arm_data_processing : décodage des instructions, des registres / valeurs immédiates
 	arm_branch_other : implémentation des instructions B, BL et MRS
+	arm_load_store : debut de l'implementation de LDR / STR
 	
 J3 :
 	arm_data_processing : implémentation des instructions and, eor, ... , mvn
 	arm_core : ajout de la màj des flags
+	arm_load_store : implementation des 'load et store' sauf co-processeur
+
+Questions:
+	1- C'est quoi SBZ et SBO?
+	2- On fait quoi pour les UNPREDICTABLE
+	3- Les conditions doivent etre traitées quand ? au niveau du fetch
+	4- CP15_reg1_Ubit page 194 (voir ldr)
+	5- fonctionnement des exeptions et de IRQ
+	6- fonctionnement coproc

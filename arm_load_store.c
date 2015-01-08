@@ -204,7 +204,7 @@ static int ldrsb(arm_core p, uint8_t rd, uint32_t address) {
 }
 
 static int ldrd(arm_core p, uint8_t rd, uint32_t address) {
-    if (is_odd(rd) || (rd == 14) || (address & 3) {
+    if (is_odd(rd) || (rd == 14) || (address & 3)) {
         // UNPREDICTABLE
         return 0;
     }
@@ -217,7 +217,7 @@ static int ldrd(arm_core p, uint8_t rd, uint32_t address) {
 }
 
 static int strd(arm_core p, uint8_t rd, uint32_t address) {
-    if (is_odd(rd) || (rd == 14) || (address & 3) || (address & 4) {
+    if (is_odd(rd) || (rd == 14) || (address & 3) || (address & 4)) {
         // UNPREDICTABLE
         return 0;
     }
@@ -279,7 +279,7 @@ static int stm1(arm_core p, int16_t reg_list, uint32_t start_add,
 // Parsing of different classes
 ///////////////////////////////////////////////////////////////////////////////
 
-// LDR, STR, LDRB, STRB, LDRT, STRT, LDRBT, STRBT with reg
+// LDR, STR, LDRB, STRB, LDRT, STRT, LDRBT, STRBT
 int arm_load_store(arm_core p, uint32_t ins) {
     debug("arm_load_store: %d\n", (int)ins);
 
@@ -288,61 +288,41 @@ int arm_load_store(arm_core p, uint32_t ins) {
 	uint8_t rd = get_rd(ins);
 	uint8_t rn = get_rn(ins);
 	int val_rn = arm_read_register(p, rn);
-	int val_rm = arm_read_register(p, get_rm(ins));
-	int shift = get_shift(ins);
-	int shift_imm = get_shift_imm(ins);
 
-	if (get_p(ins)) { // post_indexed
-  		address = val_rn;
-		address = (get_u(ins)) ? val_rn + val_rm : val_rn - val_rm;
-	} else if (get_w(ins)) { // pre_indexed
-        index = shift(p, val_rm, shift, shift_imm);
-		address = (get_u(ins)) ? val_rn + index : val_rn - index;
-		arm_write_register(p, rn, address);
-    } else { // offset and scaled offser
-        index = shift(p, val_rm, shift, shift_imm);
-		address = (get_u(ins)) ? val_rn + index : val_rn - index;
-		if (rn == 15) address += 8;        
-    }
+	if (get_bit(ins, 25)) { // Immmediate
+		uint32_t offset = get_offset(ins);
+
+		if (get_p(ins)) { // post_indexed
+  			address = val_rn;
+			val_rn = (get_u(ins)) ? val_rn + offset : val_rn - offset;
+			arm_write_register(p, rn, val_rn);
+			if (rn == 15) address += 8;
+		} else if (get_w(ins)) { // pre_indexed
+    		address = (get_u(ins) ? val_rn + offset : val_rn - offset;      
+			arm_write_register(p, rn, address);           
+    	} else { // offset
+    		address = (get_u(ins)) ? val_rn + offset : val_rn - offset;
+   		}
+	} else { // Registers
+		int val_rm = arm_read_register(p, get_rm(ins));
+		int shift = get_shift(ins);
+		int shift_imm = get_shift_imm(ins);
+
+		if (get_p(ins)) { // post_indexed
+  			address = val_rn;
+			address = (get_u(ins)) ? val_rn + val_rm : val_rn - val_rm;
+		} else if (get_w(ins)) { // pre_indexed
+       		index = shift(p, val_rm, shift, shift_imm);
+			address = (get_u(ins)) ? val_rn + index : val_rn - index;
+			arm_write_register(p, rn, address);
+    	} else { // offset and scaled offser
+        	index = shift(p, val_rm, shift, shift_imm);
+			address = (get_u(ins)) ? val_rn + index : val_rn - index;
+			if (rn == 15) address += 8;        
+   		}
+	}
 	
     switch ((get_b(ins)<<2) & (get_l(ins)<<1) & get_w(ins)) {
-		case 0 : result = str(p, rd, address);   break;
-		case 1 : result = strt(p, rd, address);  break;
-		case 2 : result = ldr(p, rd, address);   break;
-		case 3 : result = ldrt(p, rd, address);  break;
-		case 4 : result = strb(p, rd, address);  break;
-		case 5 : result = strbt(p, rd, address); break;
-		case 6 : result = ldrb(p, rd, address);  break;
-		case 7 : result = ldrbt(p, rd, address); break;
-        default: result =  0; break; // impossible
-	}
-	return result;
-}
-
-// LDR, STR, LDRB, STRB, LDRT, STRT, LDRBT, STRBT with imm
-int arm_load_store_immediate(arm_core p, uint32_t ins)  {
-    debug("arm_load_store_immediate: %d\n", (int)ins);
-	
-	int result;
-	uint32_t address;
-	uint8_t rd = get_rd(ins);
-	uint8_t rn = get_rn(ins);
-	int val_rn = arm_read_register(p, rn);
-	uint32_t offset = get_offset(ins);
-
-	if (get_p(ins)) { // post_indexed
-  		address = val_rn;
-		val_rn = (get_u(ins)) ? val_rn + offset : val_rn - offset;
-		arm_write_register(p, rn, val_rn);
-		if (rn == 15) address += 8;
-	} else if (get_w(ins)) { // pre_indexed
-    	address = (get_u(ins) ? val_rn + offset : val_rn - offset;      
-		arm_write_register(p, rn, address);           
-    } else { // offset
-    	address = (get_u(ins)) ? val_rn + offset : val_rn - offset;
-    }
-
-	switch ((get_b(ins)<<2) & (get_l(ins)<<1) & get_w(ins)) {
 		case 0 : result = str(p, rd, address);   break;
 		case 1 : result = strt(p, rd, address);  break;
 		case 2 : result = ldr(p, rd, address);   break;

@@ -29,7 +29,7 @@ Contact: Guillaume.Huard@imag.fr
 #include "util.h"
 #include "debug.h"
 
-typedef int(* dp_instruction_handler_t)(arm_core, uint8_t, int, int, uint8_t, uint8_t);
+typedef int(* dp_instruction_handler_t)(arm_core, uint8_t, uint32_t, uint32_t, uint8_t, uint8_t);
 
 // Data processing instruction parsing
 static inline int get_op_code(uint32_t ins) {
@@ -57,31 +57,8 @@ static inline int get_shift_code(uint32_t ins) {
 	return (ins >> 5) & 3;
 }
 
-// Decoding
-dp_instruction_handler_t decode(int op_code) {
-	switch(op_code) {
-		case AND: return and; break;
-		case EOR: return eor; break;
-		case SUB: return sub; break;
-		case RSB: return rsb; break;
-		case ADD: return add; break;
-		case ADC: return adc; break;
-		case SBC: return sbc; break;
-		case RSC: return rsc; break;
-		case TST: return tst; break;
-		case TEQ: return teq; break;
-		case CMP: return cmp; break;
-		case CMN: return cmn; break;
-		case ORR: return orr; break;
-		case MOV: return mov; break;
-		case BIC: return bic; break;
-		case MVN: return mvn; break;
-	}
-}
-
 // Instructions
-
-int and(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int and(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op1 & op2;
 	
@@ -112,7 +89,7 @@ int and(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	return exception;
 }
 
-int eor(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int eor(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op1 ^ op2;
 	if(S) {
@@ -142,7 +119,7 @@ int eor(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	return exception;
 }
 
-int sub(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int sub(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op1 - op2;
 	if(S) {
@@ -153,9 +130,9 @@ int sub(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 			// Z
 			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
 			// C
-			cpsr = (unsigned int)op1 < (unsigned int)op2 ? clear_c(cpsr) : set_c(cpsr);
+			cpsr =  op1 <  op2 ? clear_c(cpsr) : set_c(cpsr);
 			// V
-			cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+			cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31) ? set_v(cpsr) : clear_v(cpsr);
 			
 			arm_write_cpsr(p, cpsr);
 		}
@@ -172,7 +149,7 @@ int sub(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	return exception;
 }
 
-int rsb(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int rsb(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op2 - op1;
 	if(S) {
@@ -183,9 +160,9 @@ int rsb(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 			// Z
 			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
 			// C
-			cpsr = (unsigned int)op2 < (unsigned int)op1 ? clear_c(cpsr) : set_c(cpsr);
+			cpsr =  op2 <  op1 ? clear_c(cpsr) : set_c(cpsr);
 			// V
-			cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op2,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+			cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op2,31) != get_bit(result,31) ? set_v(cpsr) : clear_v(cpsr);
 			
 			arm_write_cpsr(p, cpsr);
 		}
@@ -202,7 +179,7 @@ int rsb(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	return exception;
 }
 
-int add(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int add(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op1 + op2;
 	if(S) {
@@ -215,7 +192,7 @@ int add(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 			// C
 			cpsr = result > UINT_MAX ? set_c(cpsr) : clear_c(cpsr);
 			// V
-			cpsr = get_bit(op1,31) = get_bit(op2,31) && get_bit(op2,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+			cpsr = get_bit(op1,31) == get_bit(op2,31) && get_bit(op2,31) != get_bit(result,31) ? set_v(cpsr) : clear_v(cpsr);
 			
 			arm_write_cpsr(p, cpsr);
 		}
@@ -232,7 +209,7 @@ int add(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	return exception;
 }
 
-int adc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int adc(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op1 + op2 + arm_read_c(p);
 	if(S) {
@@ -245,7 +222,7 @@ int adc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 			// C
 			cpsr = result > UINT_MAX ? set_c(cpsr) : clear_c(cpsr);
 			// V
-			cpsr = get_bit(op1,31) = get_bit(op2,31) && get_bit(op2,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+			cpsr = get_bit(op1,31) == get_bit(op2,31) && get_bit(op2,31) != get_bit(result,31) ? set_v(cpsr) : clear_v(cpsr);
 			
 			arm_write_cpsr(p, cpsr);
 		}
@@ -262,7 +239,7 @@ int adc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	return exception;
 }
 
-int sbc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int sbc(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op1 - op2 - !arm_read_c(p);
 	if(S) {
@@ -273,9 +250,9 @@ int sbc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 			// Z
 			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
 			// C
-			cpsr = (unsigned int)op1 < (unsigned int)(op2+arm_read_c(p)) ? clear_c(cpsr) : set_c(cpsr);
+			cpsr =  op1 <  (op2+arm_read_c(p)) ? clear_c(cpsr) : set_c(cpsr);
 			// V
-			cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+			cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31) ? set_v(cpsr) : clear_v(cpsr);
 			
 			arm_write_cpsr(p, cpsr);
 		}
@@ -292,7 +269,7 @@ int sbc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	return exception;
 }
 
-int rsc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int rsc(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op2 - op1 - !arm_read_c(p);
 	if(S) {
@@ -303,9 +280,9 @@ int rsc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 			// Z
 			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
 			// C
-			cpsr = (unsigned int)op2 < (unsigned int)(op1+arm_read_c(p)) ? clear_c(cpsr) : set_c(cpsr);
+			cpsr =  op2 <  (op1+arm_read_c(p)) ? clear_c(cpsr) : set_c(cpsr);
 			// V
-			cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op2,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+			cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op2,31) != get_bit(result,31) ? set_v(cpsr) : clear_v(cpsr);
 			
 			arm_write_cpsr(p, cpsr);
 		}
@@ -322,7 +299,7 @@ int rsc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	return exception;
 }
 
-int tst(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int tst(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op1 & op2;
 	uint32_t cpsr = arm_read_cpsr(p);
@@ -338,7 +315,7 @@ int tst(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	return exception;
 }
 
-int teq(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int teq(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op1 ^ op2;
 	uint32_t cpsr = arm_read_cpsr(p);
@@ -354,7 +331,7 @@ int teq(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	return exception;
 }
 
-int cmp(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int cmp(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op1 - op2;
 	uint32_t cpsr = arm_read_cpsr(p);
@@ -363,15 +340,15 @@ int cmp(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	// Z
 	cpsr = result ? clear_z(cpsr) : set_z(cpsr);
 	// C
-	cpsr = (unsigned int)op1 < (unsigned int)op2 ? clear_c(cpsr) : set_c(cpsr);
+	cpsr =  op1 <  op2 ? clear_c(cpsr) : set_c(cpsr);
 	// V
-	cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+	cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31) ? set_v(cpsr) : clear_v(cpsr);
 	
 	arm_write_cpsr(p, cpsr);
 	return exception;
 }
 
-int cmn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int cmn(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op1 + op2;
 	uint32_t cpsr = arm_read_cpsr(p);
@@ -382,13 +359,13 @@ int cmn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	// C
 	cpsr = result > UINT_MAX ? set_c(cpsr) : clear_c(cpsr);
 	// V
-	cpsr = get_bit(op1,31) = get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+	cpsr = get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31) ? set_v(cpsr) : clear_v(cpsr);
 			
 	arm_write_cpsr(p, cpsr);
 	return exception;
 }
 
-int orr(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int orr(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op1 | op2;
 	if(S) {
@@ -418,7 +395,7 @@ int orr(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	return exception;
 }
 
-int mov(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int mov(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op2;
 	
@@ -449,7 +426,7 @@ int mov(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	return exception;
 }
 
-int bic(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int bic(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = op1 & ~op2;
 	
@@ -480,7 +457,7 @@ int bic(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 	return exception;
 }
 
-int mvn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int mvn(arm_core p,uint8_t rd,uint32_t op1, uint32_t op2,uint8_t S, uint8_t shift_C) {
 	int exception = 0;
 	uint64_t result = ~op2;
 	
@@ -512,12 +489,36 @@ int mvn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 }
 
 
-// Decoding functions for various classes of instructions
+// Decoding
+dp_instruction_handler_t decode(int op_code) {
+	dp_instruction_handler_t handler = NULL;
+	switch(op_code) {
+		case AND: return handler = and; break;
+		case EOR: return handler = eor; break;
+		case SUB: return handler = sub; break;
+		case RSB: return handler = rsb; break;
+		case ADD: return handler = add; break;
+		case ADC: return handler = adc; break;
+		case SBC: return handler = sbc; break;
+		case RSC: return handler = rsc; break;
+		case TST: return handler = tst; break;
+		case TEQ: return handler = teq; break;
+		case CMP: return handler = cmp; break;
+		case CMN: return handler = cmn; break;
+		case ORR: return handler = orr; break;
+		case MOV: return handler = mov; break;
+		case BIC: return handler = bic; break;
+		case MVN: return handler = mvn; break;
+	}
+	return handler;
+}
+
+// Calculating the operands
 int arm_data_processing_shift(arm_core p, uint32_t ins) {
     debug("arm_data_processing_shift: %d\n", (int)ins);    
     
 		uint8_t rd, S, shift_C;
-		int op1, op2;
+		uint32_t op1, op2;
     int exception = 0;
     
     // Parsing the instruction
@@ -529,8 +530,9 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
     if(op_code != MOV && op_code != MVN) {
     	op1 = arm_read_register(p, get_rn(ins));
     }
+    else op1 = 0;
     
-    op2 = get_shifted(ins, &shift_C);
+    op2 = get_shifted(p, ins, &shift_C);
     
     S = get_S(ins);
     
@@ -544,7 +546,7 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
 		}
     else {
     // DP instruction call
-    exception = handler(p, rd, op1, op2, S, shift_C);
+    if(handler) exception = handler(p, rd, op1, op2, S, shift_C);
     }
     return exception;
 }
@@ -553,18 +555,18 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
 int arm_data_processing_immediate(arm_core p, uint32_t ins) {
     debug("arm_data_processing_immediate: %d\n", (int)ins);
 
-	uint8_t rd, rn, rm, S, rs, shift_imm, shift_code, shift_C;
-	int op1, op2;
+	uint8_t rd, rn, rm, S, shift_C;
+	uint32_t op1, op2;
 
     int op_code = get_op_code(ins);
-	//recuperation de l'opperande
-	if (get_bit(ins, 25)) //immediate
-		op2 = get_immediate(ins);
-	else //register
-	{
-		rm = get_bits(3, 0);
-		op2 = arm_read_register(p, rm);
-	}
+		//recuperation de l'opperande
+		if (get_bit(ins, 25)) //immediate
+			op2 = get_immediate(p, ins, &shift_C);
+		else //register
+		{
+			rm = get_bits(ins, 3, 0);
+			op2 = arm_read_register(p, rm);
+		}
 
 	
 		dp_instruction_handler_t handler = decode(op_code);
@@ -575,6 +577,7 @@ int arm_data_processing_immediate(arm_core p, uint32_t ins) {
 			rn = get_rn(ins);
 			op1 = arm_read_register(p, rn);
 		}
+    else op1 = 0;
 		
 		if(op_code == CMP || op_code == CMN  || op_code == TST || op_code == TEQ) {
 			S = 1;

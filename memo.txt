@@ -71,7 +71,7 @@ Gestion des differentes instructions :
 |     LDM(1)   | 186+481 |    oui     |-------|         exampleLDM.s         |
 |     STM(1)   | 339+481 |    oui     |-------|         exampleSTM.s         |
 |--------------|---------|------------|-------|------------------------------|
-|     MRS      |   224   |    oui     |-------|------------------------------|
+|     MRS      |   224   |    oui     |-------|         exampleMRS.s         |
 |     MSR      |   226   |    oui     |-------|------------------------------|
 |--------------|---------|------------|-------|------------------------------|
 
@@ -84,7 +84,6 @@ Ajouter en plus:
 |     STRT     |---------|    oui     |-------|------------------------------|
 |     LDRBT    |---------|    oui     |-------|------------------------------|
 |     STRBT    |---------|    oui     |-------|------------------------------|
-|     LDRSB    |---------|    oui     |-------|------------------------------|
 |     STRSB    |---------|    oui     |-------|------------------------------|
 |     LDRD     |---------|    oui     |-------|------------------------------|
 |     STRD     |---------|    oui     |-------|------------------------------|
@@ -224,11 +223,4 @@ Load and store offset :
 | Register post-indexed on page A5-30        | 1 | 
 | Scaled register post-indexed on page A5-31 | 1 | 
 |--------------------------------------------|---|
-
-
-jeremy
-a voir demain
-(refactoring dans data processing et factorisation ?
-pourquoi nouvelle fonction publique dans arm_instruction
-convertir jeremie en expliquant le cas du branch ^^)
 

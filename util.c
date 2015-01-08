@@ -34,7 +34,7 @@ uint32_t ror(uint32_t value, uint8_t rotation) {
 }
 
 int shift(arm_core p, int op, int code, int value, uint8_t *shift_C) {
-    uint8_t c;
+    uint8_t c = 0;
 	switch(code) {
 		case 0: // LSL
 			if (value == 0) {
@@ -83,10 +83,10 @@ int shift(arm_core p, int op, int code, int value, uint8_t *shift_C) {
 				c = get_bit(op,0);
 				op = (arm_read_c(p) << 31) | (op >> 1);
 			} else { // ROR
-				if (!get_bit(value,4,0)) {
+				if (!get_bits(value,4,0)) {
 				    c = get_bit(op, 31);
 				} else {
-					c = get_bit(op, get_bit(value,4,0) - 1);
+					c = get_bit(op, get_bits(value,4,0) - 1);
 					op = ror(op, value);
 				}
 			}

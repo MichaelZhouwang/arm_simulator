@@ -9,9 +9,13 @@ J2 :
 	arm_load_store : debut de l'implementation de LDR / STR
 	
 J3 :
-	arm_data_processing : implémentation des instructions and, eor, ... , mvn
 	arm_core : ajout de la màj des flags
+	arm_instruction : ajout du calcul de la 2nde opérande
 	arm_load_store : implementation des 'load et store' sauf co-processeur
+	util : ajout du shift avec calcul de C
+	
+J4 :
+	arm_data_processing : implémentation des instructions de DP
 
 Questions:
 	1- C'est quoi SBZ et SBO?

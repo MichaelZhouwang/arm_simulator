@@ -1,5 +1,4 @@
 @ Utilisation de tous les cas de la fonction STRB
-@ p.458 -- A5-18
 
 .global main
 .text

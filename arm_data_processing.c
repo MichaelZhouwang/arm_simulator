@@ -20,6 +20,7 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+#include <limits.h>
 #include "arm_instruction.h"
 #include "arm_data_processing.h"
 #include "arm_exception.h"
@@ -28,7 +29,7 @@ Contact: Guillaume.Huard@imag.fr
 #include "util.h"
 #include "debug.h"
 
-typedef int(* dp_instruction_handler_t)(arm_core, uint8_t, uint32_t, uint32_t, uint8_t, uint8_t);
+typedef int(* dp_instruction_handler_t)(arm_core, uint8_t, int, int, uint8_t, uint8_t);
 
 // Data processing instruction parsing
 static inline int get_op_code(uint32_t ins) {
@@ -59,43 +60,103 @@ static inline int get_shift_code(uint32_t ins) {
 // Decoding
 dp_instruction_handler_t decode(int op_code) {
 	switch(op_code) {
-		case 0: return and; break;
-		case 1: return eor; break;
-		case 2: return sub; break;
-		case 3: return rsb; break;
-		case 4: return add; break;
-		case 5: return adc; break;
-		case 6: return sbc; break;
-		case 7: return rsc; break;
-		case 8: return tst; break;
-		case 9: return teq; break;
-		case 10: return cmp; break;
-		case 11: return cmn; break;
-		case 12: return orr; break;
-		case 13: return mov; break;
-		case 14: return bic; break;
-		case 15: return mvn; break;
+		case AND: return and; break;
+		case EOR: return eor; break;
+		case SUB: return sub; break;
+		case RSB: return rsb; break;
+		case ADD: return add; break;
+		case ADC: return adc; break;
+		case SBC: return sbc; break;
+		case RSC: return rsc; break;
+		case TST: return tst; break;
+		case TEQ: return teq; break;
+		case CMP: return cmp; break;
+		case CMN: return cmn; break;
+		case ORR: return orr; break;
+		case MOV: return mov; break;
+		case BIC: return bic; break;
+		case MVN: return mvn; break;
 	}
 }
 
 // Instructions
 
-void and(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int and(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
 	uint64_t result = op1 & op2;
-	if(S) {
-		if(rd != 15){ // à compléter
-			uint32_t cpsr = arm_read_cpsr(p);
-			cpsr = clear_n(cpsr);
-			cpsr = clear_z(cpsr);
-			cpsr = clear_c(cpsr);
-			cpsr = clear_v(cpsr);
-			if(get_bit(result,31)) cpsr = set_n(cpsr);
-			if(result == 0) cpsr = set_z(cpsr);
-			if(result > UINT_MAX) cpsr = set_c(cpsr);
-			if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
-				|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
-				cpsr = set_v(cpsr);
 	
+	if(S) { // Flags update
+		if(rd != 15){
+			uint32_t cpsr = arm_read_cpsr(p);
+			// N
+			cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+			// Z
+			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+			// C
+			cpsr = shift_C ? set_c(cpsr) : clear_c(cpsr);
+			// V
+			// unaffected
+			arm_write_cpsr(p, cpsr);
+		}
+		else {
+			if(arm_current_mode_has_spsr(p)) {
+				arm_write_cpsr(p,arm_read_spsr(p));
+			}
+			else {
+				// UNPREDICTABLE
+			}
+		}
+	}
+	
+	arm_write_register(p, rd, result);
+	return exception;
+}
+
+int eor(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
+	uint64_t result = op1 ^ op2;
+	if(S) {
+		if(rd != 15){
+			uint32_t cpsr = arm_read_cpsr(p);
+			// N
+			cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+			// Z
+			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+			// C
+			cpsr = shift_C ? set_c(cpsr) : clear_c(cpsr);
+			// V
+			// unaffected	
+			arm_write_cpsr(p, cpsr);
+		}
+		else {
+			if(arm_current_mode_has_spsr(p)) {
+				arm_write_cpsr(p,arm_read_spsr(p));
+			}
+			else {
+				// UNPREDICTABLE
+			}
+		}
+	}
+	
+	arm_write_register(p, rd, result);
+	return exception;
+}
+
+int sub(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
+	uint64_t result = op1 - op2;
+	if(S) {
+		if(rd != 15){
+			uint32_t cpsr = arm_read_cpsr(p);
+			// N
+			cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+			// Z
+			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+			// C
+			cpsr = (unsigned int)op1 < (unsigned int)op2 ? clear_c(cpsr) : set_c(cpsr);
+			// V
+			cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+			
 			arm_write_cpsr(p, cpsr);
 		}
 		else {
@@ -108,178 +169,346 @@ void and(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
 		}
 	}
 	arm_write_register(p, rd, result);
+	return exception;
 }
 
-void eor(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
-	uint64_t result = op1 ^ op2;
-	if(S) {
-	uint32_t cpsr = arm_read_cpsr(p);
-	cpsr = clear_n(cpsr);
-	cpsr = clear_z(cpsr);
-	cpsr = clear_c(cpsr);
-	cpsr = clear_v(cpsr);
-	if(get_bit(result,31)) cpsr = set_n(cpsr);
-	if(result == 0) cpsr = set_z(cpsr);
-	if(result > UINT_MAX) cpsr = set_c(cpsr);
-	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
-		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
-		cpsr = set_v(cpsr);
-	
-	arm_write_cpsr(p, cpsr);
-	}
-	arm_write_register(p, rd, result);
-}
-
-void sub(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
-	uint64_t result = op1 - op2;
-	if(S) {
-	uint32_t cpsr = arm_read_cpsr(p);
-	cpsr = clear_n(cpsr);
-	cpsr = clear_z(cpsr);
-	cpsr = clear_c(cpsr);
-	cpsr = clear_v(cpsr);
-	if(get_bit(result,31)) cpsr = set_n(cpsr);
-	if(result == 0) cpsr = set_z(cpsr);
-	if(result > UINT_MAX) cpsr = set_c(cpsr);
-	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
-		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
-		cpsr = set_v(cpsr);
-	
-	arm_write_cpsr(p, cpsr);
-	}
-	arm_write_register(p, rd, result);
-}
-
-void rsb(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int rsb(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
 	uint64_t result = op2 - op1;
 	if(S) {
-	uint32_t cpsr = arm_read_cpsr(p);
-	cpsr = clear_n(cpsr);
-	cpsr = clear_z(cpsr);
-	cpsr = clear_c(cpsr);
-	cpsr = clear_v(cpsr);
-	if(get_bit(result,31)) cpsr = set_n(cpsr);
-	if(result == 0) cpsr = set_z(cpsr);
-	if(result > UINT_MAX) cpsr = set_c(cpsr);
-	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
-		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
-		cpsr = set_v(cpsr);
-	
-	arm_write_cpsr(p, cpsr);
+		if(rd != 15){
+			uint32_t cpsr = arm_read_cpsr(p);
+			// N
+			cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+			// Z
+			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+			// C
+			cpsr = (unsigned int)op2 < (unsigned int)op1 ? clear_c(cpsr) : set_c(cpsr);
+			// V
+			cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op2,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+			
+			arm_write_cpsr(p, cpsr);
+		}
+		else {
+			if(arm_current_mode_has_spsr(p)) {
+				arm_write_cpsr(p,arm_read_spsr(p));
+			}
+			else {
+				// UNPREDICTABLE
+			}
+		}
 	}
 	arm_write_register(p, rd, result);
+	return exception;
 }
 
-void add(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+int add(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
 	uint64_t result = op1 + op2;
 	if(S) {
-	uint32_t cpsr = arm_read_cpsr(p);
-	cpsr = clear_n(cpsr);
-	cpsr = clear_z(cpsr);
-	cpsr = clear_c(cpsr);
-	cpsr = clear_v(cpsr);
-	if(get_bit(result,31)) cpsr = set_n(cpsr);
-	if(result == 0) cpsr = set_z(cpsr);
-	if(result > UINT_MAX) cpsr = set_c(cpsr);
-	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
-		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
-		cpsr = set_v(cpsr);
-	
-	arm_write_cpsr(p, cpsr);
+		if(rd != 15){
+			uint32_t cpsr = arm_read_cpsr(p);
+			// N
+			cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+			// Z
+			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+			// C
+			cpsr = result > UINT_MAX ? set_c(cpsr) : clear_c(cpsr);
+			// V
+			cpsr = get_bit(op1,31) = get_bit(op2,31) && get_bit(op2,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+			
+			arm_write_cpsr(p, cpsr);
+		}
+		else {
+			if(arm_current_mode_has_spsr(p)) {
+				arm_write_cpsr(p,arm_read_spsr(p));
+			}
+			else {
+				// UNPREDICTABLE
+			}
+		}
 	}
 	arm_write_register(p, rd, result);
+	return exception;
 }
 
-void adc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
-	uint64_t result = op1 + op2 + is_c_set(p);
+int adc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
+	uint64_t result = op1 + op2 + arm_read_c(p);
 	if(S) {
-	uint32_t cpsr = arm_read_cpsr(p);
-	cpsr = clear_n(cpsr);
-	cpsr = clear_z(cpsr);
-	cpsr = clear_c(cpsr);
-	cpsr = clear_v(cpsr);
-	if(get_bit(result,31)) cpsr = set_n(cpsr);
-	if(result == 0) cpsr = set_z(cpsr);
-	if(result > UINT_MAX) cpsr = set_c(cpsr);
-	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
-		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
-		cpsr = set_v(cpsr);
-	
-	arm_write_cpsr(p, cpsr);
+		if(rd != 15){
+			uint32_t cpsr = arm_read_cpsr(p);
+			// N
+			cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+			// Z
+			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+			// C
+			cpsr = result > UINT_MAX ? set_c(cpsr) : clear_c(cpsr);
+			// V
+			cpsr = get_bit(op1,31) = get_bit(op2,31) && get_bit(op2,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+			
+			arm_write_cpsr(p, cpsr);
+		}
+		else {
+			if(arm_current_mode_has_spsr(p)) {
+				arm_write_cpsr(p,arm_read_spsr(p));
+			}
+			else {
+				// UNPREDICTABLE
+			}
+		}
 	}
 	arm_write_register(p, rd, result);
+	return exception;
 }
 
-void sbc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
-	uint64_t result = op1 - op2 - is_c_clear(p);
+int sbc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
+	uint64_t result = op1 - op2 - !arm_read_c(p);
 	if(S) {
-	uint32_t cpsr = arm_read_cpsr(p);
-	cpsr = clear_n(cpsr);
-	cpsr = clear_z(cpsr);
-	cpsr = clear_c(cpsr);
-	cpsr = clear_v(cpsr);
-	if(get_bit(result,31)) cpsr = set_n(cpsr);
-	if(result == 0) cpsr = set_z(cpsr);
-	if(result > UINT_MAX) cpsr = set_c(cpsr);
-	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
-		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
-		cpsr = set_v(cpsr);
-	
-	arm_write_cpsr(p, cpsr);
+		if(rd != 15){
+			uint32_t cpsr = arm_read_cpsr(p);
+			// N
+			cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+			// Z
+			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+			// C
+			cpsr = (unsigned int)op1 < (unsigned int)(op2+arm_read_c(p)) ? clear_c(cpsr) : set_c(cpsr);
+			// V
+			cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+			
+			arm_write_cpsr(p, cpsr);
+		}
+		else {
+			if(arm_current_mode_has_spsr(p)) {
+				arm_write_cpsr(p,arm_read_spsr(p));
+			}
+			else {
+				// UNPREDICTABLE
+			}
+		}
 	}
 	arm_write_register(p, rd, result);
+	return exception;
 }
 
-void rsc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
-	uint64_t result = op2 - op1 - is_c_clear(p);
+int rsc(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
+	uint64_t result = op2 - op1 - !arm_read_c(p);
 	if(S) {
-	uint32_t cpsr = arm_read_cpsr(p);
-	cpsr = clear_n(cpsr);
-	cpsr = clear_z(cpsr);
-	cpsr = clear_c(cpsr);
-	cpsr = clear_v(cpsr);
-	if(get_bit(result,31)) cpsr = set_n(cpsr);
-	if(result == 0) cpsr = set_z(cpsr);
-	if(result > UINT_MAX) cpsr = set_c(cpsr);
-	if(   add && (get_bit(op1,31) == get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31))
-		|| !add && (get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31)) )
-		cpsr = set_v(cpsr);
-	
-	arm_write_cpsr(p, cpsr);
+		if(rd != 15){
+			uint32_t cpsr = arm_read_cpsr(p);
+			// N
+			cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+			// Z
+			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+			// C
+			cpsr = (unsigned int)op2 < (unsigned int)(op1+arm_read_c(p)) ? clear_c(cpsr) : set_c(cpsr);
+			// V
+			cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op2,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+			
+			arm_write_cpsr(p, cpsr);
+		}
+		else {
+			if(arm_current_mode_has_spsr(p)) {
+				arm_write_cpsr(p,arm_read_spsr(p));
+			}
+			else {
+				// UNPREDICTABLE
+			}
+		}
 	}
 	arm_write_register(p, rd, result);
+	return exception;
 }
 
-void tst(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
-
+int tst(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
+	uint64_t result = op1 & op2;
+	uint32_t cpsr = arm_read_cpsr(p);
+	// N
+	cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+	// Z
+	cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+	// C
+	cpsr = shift_C ? set_c(cpsr) : clear_c(cpsr);
+	// V
+	// unaffected
+	arm_write_cpsr(p, cpsr);
+	return exception;
 }
 
-void teq(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
-
+int teq(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
+	uint64_t result = op1 ^ op2;
+	uint32_t cpsr = arm_read_cpsr(p);
+	// N
+	cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+	// Z
+	cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+	// C
+	cpsr = shift_C ? set_c(cpsr) : clear_c(cpsr);
+	// V
+	// unaffected
+	arm_write_cpsr(p, cpsr);
+	return exception;
 }
 
-void cmp(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
-
+int cmp(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
+	uint64_t result = op1 - op2;
+	uint32_t cpsr = arm_read_cpsr(p);
+	// N
+	cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+	// Z
+	cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+	// C
+	cpsr = (unsigned int)op1 < (unsigned int)op2 ? clear_c(cpsr) : set_c(cpsr);
+	// V
+	cpsr = get_bit(op1,31) != get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+	
+	arm_write_cpsr(p, cpsr);
+	return exception;
 }
 
-void cmn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
-
+int cmn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
+	uint64_t result = op1 + op2;
+	uint32_t cpsr = arm_read_cpsr(p);
+	// N
+	cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+	// Z
+	cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+	// C
+	cpsr = result > UINT_MAX ? set_c(cpsr) : clear_c(cpsr);
+	// V
+	cpsr = get_bit(op1,31) = get_bit(op2,31) && get_bit(op1,31) != get_bit(result,31) ? set_v(cpsr) ; clear_v(cpsr);
+			
+	arm_write_cpsr(p, cpsr);
+	return exception;
 }
 
-void orr(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
-
+int orr(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
+	uint64_t result = op1 | op2;
+	if(S) {
+		if(rd != 15){
+			uint32_t cpsr = arm_read_cpsr(p);
+			// N
+			cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+			// Z
+			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+			// C
+			cpsr = shift_C ? set_c(cpsr) : clear_c(cpsr);
+			// V
+			// unaffected	
+			arm_write_cpsr(p, cpsr);
+		}
+		else {
+			if(arm_current_mode_has_spsr(p)) {
+				arm_write_cpsr(p,arm_read_spsr(p));
+			}
+			else {
+				// UNPREDICTABLE
+			}
+		}
+	}
+	
+	arm_write_register(p, rd, result);
+	return exception;
 }
 
-void mov(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
-
+int mov(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
+	uint64_t result = op2;
+	
+	if(S) { // Flags update
+		if(rd != 15){
+			uint32_t cpsr = arm_read_cpsr(p);
+			// N
+			cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+			// Z
+			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+			// C
+			cpsr = shift_C ? set_c(cpsr) : clear_c(cpsr);
+			// V
+			// unaffected
+			arm_write_cpsr(p, cpsr);
+		}
+		else {
+			if(arm_current_mode_has_spsr(p)) {
+				arm_write_cpsr(p,arm_read_spsr(p));
+			}
+			else {
+				// UNPREDICTABLE
+			}
+		}
+	}
+	
+	arm_write_register(p, rd, result);
+	return exception;
 }
 
-void bic(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
-
+int bic(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
+	uint64_t result = op1 & ~op2;
+	
+	if(S) { // Flags update
+		if(rd != 15){
+			uint32_t cpsr = arm_read_cpsr(p);
+			// N
+			cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+			// Z
+			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+			// C
+			cpsr = shift_C ? set_c(cpsr) : clear_c(cpsr);
+			// V
+			// unaffected
+			arm_write_cpsr(p, cpsr);
+		}
+		else {
+			if(arm_current_mode_has_spsr(p)) {
+				arm_write_cpsr(p,arm_read_spsr(p));
+			}
+			else {
+				// UNPREDICTABLE
+			}
+		}
+	}
+	
+	arm_write_register(p, rd, result);
+	return exception;
 }
 
-void mvn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
-
+int mvn(arm_core p,uint8_t rd,int op1,int op2,uint8_t S, uint8_t shift_C) {
+	int exception = 0;
+	uint64_t result = ~op2;
+	
+	if(S) { // Flags update
+		if(rd != 15){
+			uint32_t cpsr = arm_read_cpsr(p);
+			// N
+			cpsr = get_bit(result ,31) ? set_n(cpsr) : clear_n(cpsr);
+			// Z
+			cpsr = result ? clear_z(cpsr) : set_z(cpsr);
+			// C
+			cpsr = shift_C ? set_c(cpsr) : clear_c(cpsr);
+			// V
+			// unaffected
+			arm_write_cpsr(p, cpsr);
+		}
+		else {
+			if(arm_current_mode_has_spsr(p)) {
+				arm_write_cpsr(p,arm_read_spsr(p));
+			}
+			else {
+				// UNPREDICTABLE
+			}
+		}
+	}
+	
+	arm_write_register(p, rd, result);
+	return exception;
 }
 
 
@@ -289,9 +518,7 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
     
 		uint8_t rd, S, shift_C;
 		int op1, op2;
-    uint8_t cond_field = instruction_get_condition_field(ins);
-    int result = instruction_check_condition(p, cond_field);
-    if(result) return result;
+    int exception = 0;
     
     // Parsing the instruction
     int op_code = get_op_code(ins);
@@ -317,9 +544,9 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
 		}
     else {
     // DP instruction call
-    handler(p, rd, op1, op2, S, shift_C);
+    exception = handler(p, rd, op1, op2, S, shift_C);
     }
-    return result;
+    return exception;
 }
 
 

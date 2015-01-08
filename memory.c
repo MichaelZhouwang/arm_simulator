@@ -29,7 +29,7 @@ Contact: Guillaume.Huard@imag.fr
 // Memory type
 
 struct memory_data {
-    int8_t *address; // Array of memory addresses
+    uint8_t *address; // Array of memory addresses
     size_t size;     // Number of adresses
 };
 

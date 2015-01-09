@@ -150,17 +150,17 @@ instruction_handler_t instruction_get_handler(uint32_t ins) {
 
     switch(get_bits(ins, 27, 25)) {
         case 0:
-			if (check_mask(ins, 0xE000000, 0x00000090))
+			if (check_mask(ins, 0x0E000000, 0x00000090))
 				handler = arm_load_store_miscellaneous;
-			else if (check_mask(ins, ))
+			else if (check_mask(ins, 0x0E900FF0, 0x0120F000))
 				handler =  arm_msr
-			else if (check_mask(ins, ))
+			else if (check_mask(ins, 0x0EB00FFF, 0x010F0000))
 				handler = arm_mrs;
 			else
 				handler = data_processing_shift; 
 			break;
         case 1:
-			 if (check_mask(ins, ))
+			 if (check_mask(ins, 0x0C900000,0x0320F000))
 				handler = arm_msr;
 			else
 				handler = arm_data_processing_immediate;
@@ -175,48 +175,3 @@ instruction_handler_t instruction_get_handler(uint32_t ins) {
     }
     return handler;
 }
-
-/*
-
-
-instruction_handler_t instruction_get_handler(uint32_t ins) {
-    instruction_handler_t handler = NULL;
-
-    switch(get_bits(ins, 27, 25)) {
-        case 0:
-			if (get_bit(ins, 7) && get_bit(ins, 4)) {
-				handler = arm_load_store_miscellaneous;
-			} else if (get_bits(ins, 24, 23) == 2 && 
-					   get_bit(ins, 20) == 0)  {
-				if (get_bit(ins, 21) && 
-					get_bits(ins, 15, 12) == 0xF &&
-					get_bits(ins, 11, 8) == 0) {
-					handler =  arm_msr
-				} else if(get_bits(ins,19,16) == 0xF &&
-						  get_bits(ins, 11, 0) == 0) {
-					handler = arm_mrs;
-				}
-			} else {
-				handler = data_processing_shift; 
-			}
-			break;
-        case 1:
-			 if (get_bits(ins, 24, 23) == 2 && 
-				 get_bit(ins, 20) == 0 && 
-				 get_bits(ins, 15, 12) == 0xF) {
-				handler = arm_msr;
-			} else {
-				handler = arm_data_processing_immediate; 
-			}
-			break;
-        case 2: handler = arm_load_store;                    break;
-        case 3: handler = arm_load_store;                    break;
-        case 4: handler = arm_load_store_multiple;           break;
-        case 5: handler = arm_branch;                        break;
-        case 6: handler = arm_coprocessor_load_store;        break;
-        case 7: handler = arm_coprocessor_others_swi;        break;
-        default: break;
-    }
-    return handler;
-}
-*/

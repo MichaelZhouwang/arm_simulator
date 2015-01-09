@@ -238,7 +238,7 @@ static int stm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     return result;
 }
 
-static int ldm3(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) { //
+static int ldm3(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     uint32_t address = s_add;
     int i, result = 0;
     

@@ -58,32 +58,16 @@ int arm_write_byte(arm_core p, uint32_t address, uint8_t value);
 int arm_write_half(arm_core p, uint32_t address, uint16_t value);
 int arm_write_word(arm_core p, uint32_t address, uint32_t value);
 
-// NZCV flags  helpers
+// CPSR flags  helpers
 int arm_read_n(arm_core p);
 int arm_read_z(arm_core p);
 int arm_read_c(arm_core p);
 int arm_read_v(arm_core p);
-
 int is_n_clear(arm_core p);
-int is_z_clear(arm_core p);
-int is_c_clear(arm_core p);
-int is_v_clear(arm_core p);
 
-int is_n_set(arm_core p);
-int is_z_set(arm_core p);
-int is_c_set(arm_core p);
-int is_v_set(arm_core p);
-
-uint32_t set_n(uint32_t cpsr);
-uint32_t set_z(uint32_t cpsr);
-uint32_t set_c(uint32_t cpsr);
-uint32_t set_v(uint32_t cpsr);
-
-uint32_t clear_n(uint32_t cpsr);
-uint32_t clear_z(uint32_t cpsr);
-uint32_t clear_c(uint32_t cpsr);
-uint32_t clear_v(uint32_t cpsr);
-
+// 0 to clear, 1 to set, -1 to unaffect
+void update_nzcv(arm_core p, int n, int z, int c, int v);
+void update_t(arm_core p, int t);
 
 #include "trace_location.h"
 #endif

@@ -17,10 +17,11 @@ J3 :
 J4 :
 	arm_data_processing : implémentation des instructions de DP
 
+J5 :
+	*.c : nettoyage
+
 Questions:
-	1- C'est quoi SBZ et SBO?
-	2- On fait quoi pour les UNPREDICTABLE
-	3- Les conditions doivent etre traitées quand ? au niveau du fetch
-	4- CP15_reg1_Ubit page 194 (voir ldr)
-	5- fonctionnement des exeptions et de IRQ
-	6- fonctionnement coproc
+	1- On fait quoi pour les UNPREDICTABLE
+	2- CP15_reg1_Ubit page 194 (voir ldr)
+	3- fonctionnement des exeptions et de IRQ
+	4- fonctionnement coproc

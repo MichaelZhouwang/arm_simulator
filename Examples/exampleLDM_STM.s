@@ -5,8 +5,12 @@
 .text
 
 main:
-@ Increment After LDMIA
-
+mov r0, #1
+mov r1, #2
+mov r2, #3
+@ Increment After LDMIA + STMIA
+LDMIA r3!, {r0, r1, r2}
+STMIA r3!, {r0, r1, r2}
 
 @ Increment Before LMDIB
 
@@ -18,4 +22,4 @@ main:
 
 
 
-  swi 0x123456
+	swi 0x123456

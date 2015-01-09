@@ -89,7 +89,7 @@ mov r1, #8
 	sub r0, r1, r2
 
 @ Logical shift left by immediate
-	sub r0, r2, #1, LSL #1
+	sub r0, r1, r2, LSL #1
 
 @ Logical shift left by register
 	mov r3, #1 
@@ -127,7 +127,7 @@ mov r1, #8
 	sbc r0, r1, r2
 
 @ Logical shift left by immediate
-	sbc r0, r2, #1, LSL #1
+	sbc r0, r1, r2, LSL #1
 
 @ Logical shift left by register
 	mov r3, #1 
@@ -165,7 +165,7 @@ mov r1, #8
 	rsb r0, r1, r2
 
 @ Logical shift left by immediate
-	rsb r0, r2, #1, LSL #1
+	rsb r0, r2, r1, LSL #1
 
 @ Logical shift left by register
 	mov r3, #1 
@@ -203,7 +203,7 @@ mov r1, #8
 	rsc r0, r1, r2
 
 @ Logical shift left by immediate
-	rsc r0, r2, #1, LSL #1
+	rsc r0, r2, r1, LSL #1
 
 @ Logical shift left by register
 	mov r3, #1 

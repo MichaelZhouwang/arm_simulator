@@ -1,5 +1,8 @@
 @ Utilisation de tous les cas de la fonction STRB
-
+.data
+  A: .byte 10
+  B: .byte 11
+  C: .byte 12
 .global main
 .text
 
@@ -53,7 +56,7 @@ main:
   ldr r0, ptr_b
   strb r1, [r0], r2 @ r1 est chargé dans B
   @ r0 modifié
-  add r0, r0, #1 @ r0 à la valeur de ptr_b
+  sub r0, r0, #1 @ r0 à la valeur de ptr_b
 
 @ Scaled register post-indexed
   @ LSL
@@ -63,12 +66,7 @@ main:
   sub r0, r0, #2 @ r0 à la valeur de ptr_c
 
   swi 0x123456
-  
 
-  A: .byte 10
-  B: .byte 11
-  C: .byte 12
-  
   ptr_a: .word A
   ptr_b: .word B
   ptr_c: .word C

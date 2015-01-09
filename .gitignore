@@ -34,6 +34,7 @@ Makefile.in
 /Examples/exampleLDRB
 /Examples/exampleLDRH
 /Examples/exampleB_BL
+/Examples/exampleMOV_MVN
 /Examples/example_operations
 /Examples/stamp-h1
 /autom4te.cache/

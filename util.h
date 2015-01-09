@@ -36,10 +36,21 @@ Contact: Guillaume.Huard@imag.fr
 #define get_bit(x, i) (((x)>>(i))&1)
 #define set_bit(x, i) ((x)|(1<<(i)))
 #define clr_bit(x, i) ((x)&~(1<<(i)))
+#define change_bit(x, i, v) ((x & (~(1<<i))) | ((v)?(1<<i):0))
 
-#define get_bits(x, h, l) (((x)>>(l))&~((~0>>((h)-(l)))<<((h)-(l))))
+#define get_bits(x, h, l) (((x)>>(l))&~(((~0)>>((h)-(l)+1))<<((h)-(l)+1)))
 #define set_bits(x, h, l, bits) \
-                 (((x)&~((~0>>(l))<<(l)))|((x)&((~0>>(h))<<(h)))|((bits)<<(l)))
+                 (((x)&~(((~0)>>(l))<<(l)))|((x)&(((~0)>>((h)+1))<<((h)+1)))| \
+		  ((bits)<<(l)))
+		  
+#define codage2(x, y) ((x<<1) & y)
+#define codage3(x, y, z) ((x<<2) & (y<<1) & z)
+
+#define codage2_bits(v, x, y) (((((v)>>(x))&1)<<1) & (((v)>>(y))&1))
+#define codage3_bits(v, x, y, z) (((((v)>>(x))&1)<<2) & \
+                                 ((((v)>>(y))&1)<<1) & (((v)>>(z))&1))
+
+#define check_mask(ins, m0, m1) (((ins) & (m0)) == 0 && ((ins) & (m1)) == (m1))
 
 #define reverse_2(x) ((((x)&0xFF)<<8)|(((x)>>8)&0xFF))
 #define reverse_4(x) ((((x)&0xFF)<<24)|((((x)>>8)&0xFF)<<16)|\
@@ -52,3 +63,4 @@ int number_of_set_bits(int bits_field);
 int is_big_endian();
 
 #endif
+

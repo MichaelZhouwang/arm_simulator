@@ -32,9 +32,9 @@ Contact: Guillaume.Huard@imag.fr
 // Available instructions
 ///////////////////////////////////////////////////////////////////////////////
 
-static int ldr(arm_core p, uint32_t ins, uint32_t address) {
-    int value;
-    result = arm_read_word(p, address, &value);
+static int ldr(arm_core p, uint8_t rd, uint32_t address) {
+    uint32_t value;
+	int result = arm_read_word(p, address, &value);
     if (!result) {
         if (rd == 15) {
             value &= 0xFFFFFFFE;
@@ -49,68 +49,68 @@ static int ldr(arm_core p, uint32_t ins, uint32_t address) {
 }
 
 static int str(arm_core p, uint8_t rd, uint32_t address) {
-    int value = arm_read_register(p, rd);
+    uint32_t value = arm_read_register(p, rd);
     return arm_write_word(p, address, value);
 }
 
 static int ldrb(arm_core p, uint8_t rd, uint32_t address) {
-    int value;
-    result = arm_read_byte(p, address, &value);
+    uint8_t value;
+    int result = arm_read_byte(p, address, &value);
     if (!result)
         arm_write_register(p, rd, value);
     return result;
 }
 
 static int strb(arm_core p, uint8_t rd, uint32_t address) {
-    int value = (arm_read_register(p, rd) & 0xFF);
+    uint8_t value = (arm_read_register(p, rd) & 0xFF);
     return arm_write_byte(p, address, value);
 }
 
-static int ldrt(arm_core p, uint32_t ins, uint32_t address) {
-    int value;
-    result = arm_read_word(p, address, &value);
+static int ldrt(arm_core p, uint8_t rd, uint32_t address) {
+    uint32_t value;
+    int result = arm_read_word(p, address, &value);
     if (!result)
         arm_write_register(p, rd, value);
     return result;
 }
 
-static int strt(arm_core p, uint32_t ins, uint32_t address) {
-    int value = arm_read_register(p, rd);
+static int strt(arm_core p, uint8_t rd, uint32_t address) {
+    uint32_t value = arm_read_register(p, rd);
     return arm_write_word(p, address, value);
 }
 
-static int ldrbt(arm_core p, uint32_t ins, uint32_t address) {
-    int value;
-    result = arm_read_byte(p, address, &value);
+static int ldrbt(arm_core p, uint8_t rd, uint32_t address) {
+    uint8_t value;
+    int result = arm_read_byte(p, address, &value);
     if (!result)
-        arm_write_register(p, rd, value);
+        arm_write_register(p, rd, (uint32_t)value);
     return result;
 }
 
-static int strbt(arm_core p, uint32_t ins, uint32_t address) {
-    int value;
-    result = arm_read_byte(p, address, &value);
+static int strbt(arm_core p, uint8_t rd, uint32_t address) {
+    uint8_t value;
+    int result = arm_read_byte(p, address, &value);
     if (!result)
-        arm_write_register(p, rd, value);
+        arm_write_register(p, rd, (uint32_t)value);
     return result;
 }
 
 static int ldrh(arm_core p, uint8_t rd, uint32_t address) {
-    int value;
-    result = arm_read_half(p, address, &value);
+    uint16_t value;
+    int result = arm_read_half(p, address, &value);
     if (!result)
-        arm_write_register(p, rd, value);
+        arm_write_register(p, rd, (uint32_t)value);
     return result;
 }
 
 static int strh(arm_core p, uint8_t rd, uint32_t address) {
-    int value = (arm_read_register(p, rd) & 0xFFFF);
+    uint16_t value = (arm_read_register(p, rd) & 0xFFFF);
     return arm_write_half(p, address, value);
 }
 
 static int ldrsh(arm_core p, uint8_t rd, uint32_t address) {
-    int value;
-    result = arm_read_half(p, address, &value);
+    uint32_t value;
+    int result = arm_read_half(p, address, (uint16_t*)&value);
     if (!result) {
         if (value & (1<<15)) {
             value |= 0xFFFF0000; 
@@ -123,15 +123,15 @@ static int ldrsh(arm_core p, uint8_t rd, uint32_t address) {
 }
 
 static int ldrsb(arm_core p, uint8_t rd, uint32_t address) {
-    int value;
-    result = arm_read_byte(p, address, &value);
+    uint8_t value;
+    int result = arm_read_byte(p, address, &value);
     if (!result) {
         if (value & (1<<7)) {
             value |= 0xFFFFFF00; 
         } else {
             value &= 0X0000F00FF;
         }
-        arm_write_register(p, rd, value);
+        arm_write_register(p, rd, (uint32_t)value);
     }
     return result;
 }
@@ -141,8 +141,8 @@ static int ldrd(arm_core p, uint8_t rd, uint32_t address) {
         UNPREDICTABLE();
         return 0;
     }
-    int value;
-    result = arm_read_word(p, address, &value);
+    uint32_t value;
+    int result = arm_read_word(p, address, &value);
     if (!result) arm_write_register(p, rd, value);
     if (!result) result = arm_read_word(p, address+4, &value);
     if (!result) arm_write_register(p, rd+1, value);
@@ -154,20 +154,21 @@ static int strd(arm_core p, uint8_t rd, uint32_t address) {
         UNPREDICTABLE();
         return 0;
     }
-    int value = arm_read_register(p, rd);
+    uint32_t value = arm_read_register(p, rd);
     int result = arm_write_word(p, address, value);
     if (!result) {
         value = arm_read_register(p, rd+1);
         result = arm_write_word(p, address+4, value);
     }
-    return result
+    return result;
 }
 
 static int ldm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     uint32_t address = s_add;
     int i, result = 0;
+	uint32_t value;
     
-    for (i=0; i<=14 && !result, i++) {
+    for (i=0; i<=14 && !result; i++) {
         if (get_bit(r_list, i)) {
             result = arm_read_word(p, address, &value);
             if (result) arm_write_register(p, i, value);
@@ -193,10 +194,11 @@ static int ldm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
 static int stm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     uint32_t address = s_add;
     int i, result = 0;
+	uint32_t value;
     
-    for (i=0; i<=15 && !result, i++) {
+    for (i=0; i<=15 && !result; i++) {
         if (get_bit(r_list, i)) {
-            int value = arm_read_register(p, i);
+            value = arm_read_register(p, i);
             result = arm_write_word(p, address, value);
             address += 4;
         }
@@ -209,8 +211,9 @@ static int stm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
 static int ldm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     uint32_t address = s_add;
     int i, result = 0;
+	uint32_t value;
     
-    for (i=0; i<=14 && !result, i++) {
+    for (i=0; i<=14 && !result; i++) {
         if (get_bit(r_list, i)) {
             result = arm_read_word(p, address, &value);
             if (result) arm_write_usr_register(p, i, value);
@@ -225,10 +228,11 @@ static int ldm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
 static int stm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     uint32_t address = s_add;
     int i, result = 0;
+	uint32_t value;
     
-    for (i=0; i<=15 && !result, i++) {
+    for (i=0; i<=15 && !result; i++) {
         if (get_bit(r_list, i)) {
-            int value = arm_read_usr_register(p, i);
+            uint32_t value = arm_read_usr_register(p, i);
             result = arm_write_word(p, address, value);
             address += 4;
         }
@@ -238,11 +242,12 @@ static int stm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     return result;
 }
 
-static int ldm3(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) { //
+static int ldm3(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     uint32_t address = s_add;
     int i, result = 0;
+	uint32_t value;
     
-    for (i=0; i<=14 && !result, i++) {
+    for (i=0; i<=14 && !result; i++) {
         if (get_bit(r_list, i)) {
             result = arm_read_word(p, address, &value);
             if (result) arm_write_register(p, i, value);
@@ -272,7 +277,7 @@ static int ldm3(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) { //
 int arm_load_store(arm_core p, uint32_t ins) {
     debug("arm_load_store: %d\n", (int)ins);
 
-    uint32 address;
+    uint32_t address;
     int index, result;
     uint8_t rd = get_bits(ins, 15, 12);
     uint8_t rn = get_bits(ins, 19, 16);
@@ -285,7 +290,7 @@ int arm_load_store(arm_core p, uint32_t ins) {
             val_rn = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
             arm_write_register(p, rn, val_rn);
         } else if (get_bit(ins, 21)) { // pre_indexed
-            address = (get_bit(ins, 23) ? val_rn + offset : val_rn - offset;   
+            address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;   
             arm_write_register(p, rn, address);           
         } else { // offset
             address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
@@ -294,7 +299,7 @@ int arm_load_store(arm_core p, uint32_t ins) {
         int rm = get_bits(ins, 3, 0);
         int val_rm = arm_read_register(p, rm);
         int shift = get_bits(ins, 6, 5);
-        int shift_imm = get_bits(11, 7);
+        int shift_imm = get_bits(ins 11, 7);
 
         if (get_bit(ins, 24)) { // post_indexed
             address = val_rn;
@@ -327,7 +332,7 @@ int arm_load_store(arm_core p, uint32_t ins) {
 int arm_load_store_miscellaneous(arm_core p, uint32_t ins) {
     debug("arm_store_miscellaneous: %d\n", (int)ins);
     
-    uint32 address;
+    uint32_t address;
     uint8_t rd = get_bits(ins, 15, 12);
     uint8_t rn = get_bits(ins, 19, 16);
     int val_rn = arm_read_register(p, rn);
@@ -370,7 +375,7 @@ int arm_load_store_multiple(arm_core p, uint32_t ins) {
     int result;
     uint8_t rn = get_bits(ins, 19, 16);
     int val_rn = arm_read_register(p, rn);
-    int reg_list = get_bits(15, 0);
+    int reg_list = get_bits(ins, 15, 0);
     int n = number_of_set_bits(reg_list);
     int32_t start_add, end_add;
 

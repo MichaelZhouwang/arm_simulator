@@ -275,58 +275,19 @@ inline int arm_read_v(arm_core p) {
 inline int is_n_clear(arm_core p) {
     return (arm_read_n(p) == 0);
 }
-
-inline int is_z_clear(arm_core p) {
-    return (arm_read_z(p) == 0);
+void update_nzcv(arm_core p, int n, int z, int c, int v) {
+    uint32_t cpsr = arm_read_cpsr(p);
+    if (n != -1) cpsr = (n == 1) ? set_bit(cpsr, N) : clr_bit(cpsr, N);
+    if (z != -1) cpsr = (z == 1) ? set_bit(cpsr, Z) : clr_bit(cpsr, Z);
+    if (c != -1) cpsr = (c == 1) ? set_bit(cpsr, C) : clr_bit(cpsr, C);
+    if (v != -1) cpsr = (v == 1) ? set_bit(cpsr, V) : clr_bit(cpsr, V);
+    arm_write_cpsr(p, cpsr);
 }
 
-inline int is_c_clear(arm_core p) {
-    return (arm_read_c(p) == 0);
-}
-
-inline int is_v_clear(arm_core p) {
-    return (arm_read_v(p) == 0);
-}
-
-inline int is_n_set(arm_core p) {
-    return (arm_read_n(p) == 1);
-}
-
-inline int is_z_set(arm_core p) {
-    return (arm_read_z(p) == 1);
-}
-
-inline int is_c_set(arm_core p) {
-    return (arm_read_c(p) == 1);
-}
-
-inline int is_v_set(arm_core p) {
-    return (arm_read_v(p) == 1);
-}
-
-inline uint32_t set_n(uint32_t cpsr) {
-	return set_bit(cpsr, N);
-}
-inline uint32_t set_z(uint32_t cpsr) {
-	return set_bit(cpsr, Z);
-}
-inline uint32_t set_c(uint32_t cpsr) {
-	return set_bit(cpsr, C);
-}
-inline uint32_t set_v(uint32_t cpsr) {
-	return set_bit(cpsr, V);
-}
-
-inline uint32_t clear_n(uint32_t cpsr) {
-	return clr_bit(cpsr, N);
-}
-inline uint32_t clear_z(uint32_t cpsr) {
-	return clr_bit(cpsr, Z);
-}
-inline uint32_t clear_c(uint32_t cpsr) {
-	return clr_bit(cpsr, C);
-}
-inline uint32_t clear_v(uint32_t cpsr) {
-	return clr_bit(cpsr, V);
+void update_t(arm_core p, int t) {
+    uint32_t cpsr = arm_read_cpsr(p);
+    if (t != -1) 
+		cpsr = (t == 1) ? set_bit(cpsr, T) : clr_bit(cpsr, T);
+    arm_write_cpsr(p, cpsr);
 }
 

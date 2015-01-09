@@ -20,8 +20,10 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
 #ifndef __ARM_CONSTANTS_H__
 #define __ARM_CONSTANTS_H__
+
 #include <stdint.h>
 
 /* ARM Modes */
@@ -47,6 +49,13 @@ Contact: Guillaume.Huard@imag.fr
 #define Z 30
 #define C 29
 #define V 28
+
+#define Q 27
+#define E 9
+#define A 8
+#define I 7
+#define F 6
+#define T 5
 
 /* shift operations */
 #define LSL 0

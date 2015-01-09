@@ -20,26 +20,27 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
 #include <stdlib.h>
 #include "arm_constants.h"
 
-static char *arm_mode_names[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                          0, "USR", "FIQ", "IRQ", "SVC", 0, 0, 0,
-                          "ABT", 0, 0, 0, "UND", 0, 0, 0, "SYS"};
-static char *arm_register_names[] = {"R00", "R01", "R02", "R03", "R04", "R05",
-                              "R06", "R07", "R08", "R09", "R10", "R11",
-                              "R12", "SP", "LR", "PC", "CPSR", "SPSR"};
+static char *arm_mode_names[] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "USR", "FIQ", "IRQ", "SVC",
+    0, 0, 0,"ABT", 0, 0, 0, "UND", 0, 0, 0, "SYS"
+};
 
-static char *arm_exception_names[] = {NULL, "reset", "undefined instruction",
-                                      "software interrupt", "prefetch abort",
-                                      "data abort", "interrupt",
-                                      "fast interrupt"};
+static char *arm_register_names[] = {
+    "R00", "R01", "R02", "R03", "R04", "R05", "R06", "R07", "R08", "R09", 
+    "R10", "R11","R12", "SP", "LR", "PC", "CPSR", "SPSR"
+};
+
+static char *arm_exception_names[] = {
+    NULL, "reset", "undefined instruction", "software interrupt", 
+    "prefetch abort", "data abort", "interrupt", "fast interrupt"
+};
 
 char *arm_get_exception_name(unsigned char exception) {
-    if (exception < 8)
-        return arm_exception_names[exception];
-    else
-        return NULL;
+    return (exception < 8) ? arm_exception_names[exception] : NULL;
 }
 
 char *arm_get_mode_name(uint8_t mode) {
@@ -49,3 +50,4 @@ char *arm_get_mode_name(uint8_t mode) {
 char *arm_get_register_name(uint8_t reg) {
     return arm_register_names[reg];
 }
+

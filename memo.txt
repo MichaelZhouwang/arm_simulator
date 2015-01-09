@@ -42,25 +42,25 @@ Gestion des differentes instructions :
 |--------------|---------|------------|-------|------------------------------|
 | Instructions |   Doc   | Implemente | Teste | Nom du test                  |
 |--------------|---------|------------|-------|------------------------------|
-|   B          |   160   |    oui     |-------|        exampleB_BL.s         |
-|   BL         |   160   |    oui     |-------|        exampleB_BL.s         |
+|     B        |   160   |    oui     |-------|        exampleB_BL.s         |
+|     BL       |   160   |    oui     |-------|        exampleB_BL.s         |
 |--------------|---------|------------|-------|------------------------------|
-|     TEQ      | 378+442 |    oui     |-------|     exampleTST_TEQ_CMP.s     |
-|     CMP      | 178+442 |    oui     |-------|     exampleTST_TEQ_CMP.s     |
-|     CMN      | 176+442 |    oui     |-------|------------------------------|
+|     TEQ      | 378+442 |    oui     |-------|   exampleTST_TEQ_CMP_CMN.s   |
+|     CMP      | 178+442 |    oui     |-------|   exampleTST_TEQ_CMP_CMN.s   |
+|     CMN      | 176+442 |    oui     |-------|   exampleTST_TEQ_CMP_CMN.s   |
 |     ORR      | 234+442 |    oui     |-------|------------------------------|
 |     MOV      | 218+442 |    oui     |-------|------------------------------|
 |     BIC      | 162+442 |    oui     |-------|------------------------------|
 |     MVN      | 232+442 |    oui     |-------|------------------------------|
 |     AND      | 115+442 |    oui     |-------|------------------------------|
 |     EOR      | 182+442 |    oui     |-------|------------------------------|
-|     SUB      | 358+442 |    oui     |-------|------------------------------|
-|     RSB      | 265+442 |    oui     |-------|------------------------------|
-|     ADD      | 156+442 |    oui     |-------|------------------------------|
-|     ADC      | 154+442 |    oui     |-------|------------------------------|
-|     SBC      | 275+442 |    oui     |-------|------------------------------|
-|     RSC      | 265+442 |    oui     |-------|------------------------------|
-|     TST      | 380+442 |    oui     |-------|     exampleTST_TEQ_CMP.s     |
+|     SUB      | 358+442 |    oui     |-------|     example_operations.s     |
+|     RSB      | 265+442 |    oui     |-------|     example_operations.s     |
+|     ADD      | 156+442 |    oui     |-------|     example_operations.s     |
+|     ADC      | 154+442 |    oui     |-------|     example_operations.s     |
+|     SBC      | 275+442 |    oui     |-------|     example_operations.s     |
+|     RSC      | 265+442 |    oui     |-------|     example_operations.s     |
+|     TST      | 380+442 |    oui     |-------|   exampleTST_TEQ_CMP_CMN.s   |
 |--------------|---------|------------|-------|------------------------------|
 |     LDR      | 193+458 |    oui     |-------|         exampleLDR.s         |
 |     LDRB     | 196+458 |    oui     |-------|         exampleLDRB.s        |
@@ -68,8 +68,8 @@ Gestion des differentes instructions :
 |     STR      | 343+458 |    oui     |-------|         exampleSTR.s         |
 |     STRB     | 345+458 |    oui     |-------|         exampleSTRB.s        |
 |     STRH     | 354+473 |    oui     |-------|         exampleSTRH.s        |
-|     LDM(1)   | 186+481 |    oui     |-------|         exampleLDM.s         |
-|     STM(1)   | 339+481 |    oui     |-------|         exampleSTM.s         |
+|     LDM(1)   | 186+481 |    oui     |-------|       exampleLDM_STM.s       |
+|     STM(1)   | 339+481 |    oui     |-------|       exampleSTM_STM.s       |
 |--------------|---------|------------|-------|------------------------------|
 |     MRS      |   224   |    oui     |-------|         exampleMRS.s         |
 |     MSR      |   226   |    oui     |-------|         exampleMRS.s         |

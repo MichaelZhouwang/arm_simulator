@@ -21,6 +21,7 @@ Contact: Guillaume.Huard@imag.fr
          38330 Montbonnot Saint-Martin
 */
 
+#include <debug.h>
 #include "arm_instruction.h"
 #include "arm_exception.h"
 #include "arm_data_processing.h"
@@ -28,7 +29,6 @@ Contact: Guillaume.Huard@imag.fr
 #include "arm_branch_other.h"
 #include "arm_constants.h"
 #include "util.h"
-#include <debug.h>
 #include "arm_core.h"
 
 
@@ -81,6 +81,7 @@ static int arm_execute_instruction(arm_core p) {
 
     result = arm_fetch(p, &ins);
 	debug("instruction %x\n", ins);
+	
     if (result) {
 	    debug("error during fetch %d\n", result);
         return result;

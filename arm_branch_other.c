@@ -28,32 +28,40 @@ Contact: Guillaume.Huard@imag.fr
 #include <debug.h>
 #include <stdlib.h>
 
+#define LR 14
+#define PC 15
+
 int arm_branch(arm_core p, uint32_t ins) {
-    debug("arm_branch: %d\n", (int)ins);
+    debug("arm_branch\n");
     
-    uint32_t val_pc = arm_read_register(p, 15);
+    uint32_t val_pc = arm_read_register(p, PC);
 	if (get_bit(ins, 24)) { //Link
 	    debug("BL\n");
-		arm_write_register(p, 14, val_pc); //R14 = R15
+		arm_write_register(p, LR, val_pc - 4); //R14 = R15
 	} else {
 		debug("B\n");
     }
     
 	//int32_t address = val_pc + ((((ins & 0xffffff) << 8) >> 8) << 2);
-	int32_t address = get_bits(ins, 23, 0);
+	uint32_t address = get_bits(ins, 23, 0);
 	address = address << 8;
-	address = address >> 8;
+	address = asr(address,8);
 	address = address << 2;
-	address += val_pc;
+	address += val_pc ;
 
-	debug("branch to add %x\n", address);
-    arm_write_register(p, 15, address);
+	debug("branch to address %x\n", address);
+    arm_write_register(p, PC, address);
 	
     return 0;
 }
 
+
+
+
+
+
 int arm_coprocessor_others_swi(arm_core p, uint32_t ins) {
-    debug("arm_coprocessor_other_swi: %d\n", (int)ins);
+    debug("arm_coprocessor_other_swi\n");
     
     if (get_bit(ins, 24)) {
         debug("SWI\n");

@@ -80,12 +80,12 @@ static int arm_execute_instruction(arm_core p) {
 	instruction_handler_t handler = NULL;
 
     result = arm_fetch(p, &ins);
+	debug("instruction %x\n", ins);
     if (result) {
 	    debug("error during fetch %d\n", result);
         return result;
     }
 
-	debug("instruction %x\n", ins);
 	result = instruction_check_condition(p, ins);
 
     if (result == 1) {

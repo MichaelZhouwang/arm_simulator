@@ -1,7 +1,11 @@
 @ Utilisation de tous les cas de la fonction LDRH
 @ p.473 -- A5-33
 
-
+.data
+  A: .hword 10
+  B: .hword 11
+  C: .hword 12
+  
 .global main
 .text
 
@@ -48,10 +52,6 @@ main:
   swi 0x123456
   
 
-  A: .hword 10
-  B: .hword 11
-  C: .hword 12
-  
   ptr_a: .word A
   ptr_b: .word B
   ptr_c: .word C

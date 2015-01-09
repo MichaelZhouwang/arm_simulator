@@ -27,23 +27,6 @@ Contact: Guillaume.Huard@imag.fr
 #include <stdint.h>
 #include "arm_core.h"
 
-#define AND 0
-#define EOR 1
-#define SUB 2
-#define RSB 3
-#define ADD 4
-#define ADC 5
-#define SBC 6
-#define RSC 7
-#define TST 8
-#define TEQ 9
-#define CMP 10
-#define CMN 11
-#define ORR 12
-#define MOV 13
-#define BIC 14
-#define MVN 15
-
 int arm_data_processing_shift(arm_core p, uint32_t ins);
 int arm_data_processing_immediate(arm_core p, uint32_t ins);
 

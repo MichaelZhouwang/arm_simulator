@@ -38,11 +38,11 @@ Contact: Guillaume.Huard@imag.fr
 #define clr_bit(x, i) ((x)&~(1<<(i)))
 #define change_bit(x, i, v) ((x & (~(1<<i))) | ((v)?(1<<i):0))
 
-#define get_bits(x, h, l) \
-            (((x)>>(l))&~((~0>>((h)-(l)))<<((h)-(l))))
+#define get_bits(x, h, l) (((x)>>(l))&~(((~0)>>((h)-(l)+1))<<((h)-(l)+1)))
 #define set_bits(x, h, l, bits) \
-            (((x)&~((~0>>(l))<<(l)))|((x)&((~0>>(h))<<(h)))|((bits)<<(l)))
-
+                 (((x)&~(((~0)>>(l))<<(l)))|((x)&(((~0)>>((h)+1))<<((h)+1)))| \
+		  ((bits)<<(l)))
+		  
 #define codage2(x, y) ((x<<1) & y)
 #define codage3(x, y, z) ((x<<2) & (y<<1) & z)
 

@@ -20,6 +20,7 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
 #include "csapp.h"
 #include "arm_constants.h"
 
@@ -35,17 +36,19 @@ int main(int argc, char *argv[]) {
 			"%s host port [ IRQ name ]\n\n"
 			"Sends an IRQ signal to the ARM simulator executing on the given host using the given port.\n"
 			"The IRQ name is one of :\n", argv[0]);
-	for (irq = RESET; (irq_name = arm_get_exception_name(irq)); irq++) {
-		fprintf(stderr, "%s", irq_name);
-		if (irq == INTERRUPT)
-			fprintf(stderr, "\t\t(default)");
-		fprintf(stderr, "\n");
-	}
+	    
+	    for (irq = RESET; (irq_name = arm_get_exception_name(irq)); irq++) {
+		    fprintf(stderr, "%s", irq_name);
+		    if (irq == INTERRUPT)
+			    fprintf(stderr, "\t\t(default)");
+		    fprintf(stderr, "\n");
+	    }
         exit(1);
     }
-    if (argc < 4)
+    
+    if (argc < 4) {
         irq = INTERRUPT;
-    else {
+    } else {
         irq = RESET;
         irq_name = arm_get_exception_name(irq);
         while (irq_name && (strcmp(irq_name, argv[3]) != 0)) {
@@ -57,8 +60,12 @@ int main(int argc, char *argv[]) {
             exit(2);
         }
     }
+    
     sock = Socket(PF_INET, SOCK_STREAM, 0);
-    Setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &option_value,
+    Setsockopt(sock,
+               SOL_SOCKET, 
+               SO_REUSEADDR, 
+               &option_value,
                sizeof(option_value));
     bzero(&addr, sizeof(addr));
     addr.sin_port = htons(atoi(argv[2]));
@@ -69,5 +76,7 @@ int main(int argc, char *argv[]) {
     Write(sock, &irq, 1);
     shutdown(sock, SHUT_RDWR);
     close(sock);
+    
     return 0;
 }
+

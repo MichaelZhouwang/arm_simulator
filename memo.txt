@@ -42,25 +42,25 @@ Gestion des differentes instructions :
 |--------------|---------|------------|-------|------------------------------|
 | Instructions |   Doc   | Implemente | Teste | Nom du test                  |
 |--------------|---------|------------|-------|------------------------------|
-|     B        |   160   |    oui     |-------|        exampleB_BL.s         |
-|     BL       |   160   |    oui     |-------|        exampleB_BL.s         |
+|   B          |   160   |    oui     |-------|        exampleB_BL.s         |
+|   BL         |   160   |    oui     |-------|        exampleB_BL.s         |
 |--------------|---------|------------|-------|------------------------------|
-|     TEQ      | 378+442 |    oui     |-------|   exampleTST_TEQ_CMP_CMN.s   |
-|     CMP      | 178+442 |    oui     |-------|   exampleTST_TEQ_CMP_CMN.s   |
-|     CMN      | 176+442 |    oui     |-------|   exampleTST_TEQ_CMP_CMN.s   |
+|     TEQ      | 378+442 |    oui     |-------|------------------------------|
+|     CMP      | 178+442 |    oui     |-------|------------------------------|
+|     CMN      | 176+442 |    oui     |-------|------------------------------|
 |     ORR      | 234+442 |    oui     |-------|------------------------------|
 |     MOV      | 218+442 |    oui     |-------|------------------------------|
 |     BIC      | 162+442 |    oui     |-------|------------------------------|
 |     MVN      | 232+442 |    oui     |-------|------------------------------|
 |     AND      | 115+442 |    oui     |-------|------------------------------|
 |     EOR      | 182+442 |    oui     |-------|------------------------------|
-|     SUB      | 358+442 |    oui     |-------|     example_operations.s     |
-|     RSB      | 265+442 |    oui     |-------|     example_operations.s     |
-|     ADD      | 156+442 |    oui     |-------|     example_operations.s     |
-|     ADC      | 154+442 |    oui     |-------|     example_operations.s     |
-|     SBC      | 275+442 |    oui     |-------|     example_operations.s     |
-|     RSC      | 265+442 |    oui     |-------|     example_operations.s     |
-|     TST      | 380+442 |    oui     |-------|   exampleTST_TEQ_CMP_CMN.s   |
+|     SUB      | 358+442 |    oui     |-------|------------------------------|
+|     RSB      | 265+442 |    oui     |-------|------------------------------|
+|     ADD      | 156+442 |    oui     |-------|------------------------------|
+|     ADC      | 154+442 |    oui     |-------|------------------------------|
+|     SBC      | 275+442 |    oui     |-------|------------------------------|
+|     RSC      | 265+442 |    oui     |-------|------------------------------|
+|     TST      | 380+442 |    oui     |-------|------------------------------|
 |--------------|---------|------------|-------|------------------------------|
 |     LDR      | 193+458 |    oui     |-------|         exampleLDR.s         |
 |     LDRB     | 196+458 |    oui     |-------|         exampleLDRB.s        |
@@ -68,11 +68,11 @@ Gestion des differentes instructions :
 |     STR      | 343+458 |    oui     |-------|         exampleSTR.s         |
 |     STRB     | 345+458 |    oui     |-------|         exampleSTRB.s        |
 |     STRH     | 354+473 |    oui     |-------|         exampleSTRH.s        |
-|     LDM(1)   | 186+481 |    oui     |-------|       exampleLDM_STM.s       |
-|     STM(1)   | 339+481 |    oui     |-------|       exampleSTM_STM.s       |
+|     LDM(1)   | 186+481 |    oui     |-------|         exampleLDM.s         |
+|     STM(1)   | 339+481 |    oui     |-------|         exampleSTM.s         |
 |--------------|---------|------------|-------|------------------------------|
 |     MRS      |   224   |    oui     |-------|         exampleMRS.s         |
-|     MSR      |   226   |    oui     |-------|         exampleMRS.s         |
+|     MSR      |   226   |    oui     |-------|------------------------------|
 |--------------|---------|------------|-------|------------------------------|
 
 Ajouter en plus:
@@ -225,4 +225,114 @@ Load and store offset :
 | Register post-indexed on page A5-30        | 1 | 
 | Scaled register post-indexed on page A5-31 | 1 | 
 |--------------------------------------------|---|
+
+
+
+
+A GARDER AVANT VALIDATION:
+
+
+DANS INSTRUCTION
+
+// Immediate operand value
+inline uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t* shift_C) {
+	uint32_t imm_8 = ins & 255;
+	uint8_t rotate_imm = (ins >> 8) & 15;
+	uint32_t result = ror(imm_8,(rotate_imm * 2));
+	if(rotate_imm == 0) *shift_C = arm_read_c(p);
+	else *shift_C = get_bit(result,31);
+	return result;
+}
+
+
+// Shifted register operand value
+inline uint32_t get_shifted(arm_core p, uint32_t ins, uint8_t* shift_C) {
+    uint8_t shift_imm = (ins >> 7) & 31;
+		uint8_t shift_code = (ins >> 5) & 3;
+    uint32_t result = arm_read_register(p, ins & 15);
+    if(!shift_imm && !shift_code) {
+    	*shift_C = arm_read_c(p);
+    }
+    else {
+    	uint8_t shift_value;
+    	if(!get_bit(ins,4)) shift_value = shift_imm;
+    	else {
+				shift_value = arm_read_register(p, (ins >> 8) & 15);
+		  }
+		  result = shift(p, result, shift_code, shift_value, shift_C);
+		}
+		return result;
+}
+
+
+DANS BRANCH
+
+int arm_mrs(arm_core p, uint32_t ins) {
+	if (instruction_check_condition(p, ins))
+	{
+		uint8_t rd = get_bits(ins, 15, 12);
+		uint8_t shift_C;
+		uint32_t op = get_immediate(p, ins, &shift_C);
+
+		//if (rd == 15)
+		//UNPREDICTABLE
+
+		//b19-b16 => SBO
+		//b11-b0 => SBZ
+
+		if (get_bit(ins, 22)) // R
+			arm_write_register(p, rd, arm_read_spsr(p));
+		else
+			arm_write_register(p, rd, arm_read_cpsr(p));
+	}
+
+	return 0;
+}
+
+int arm_msr(arm_core p, uint32_t ins) {
+	if (instruction_check_condition(p, ins))
+	{
+		uint32_t byte_mask, mask = 0;
+
+		uint8_t shift_C;
+		uint32_t op = get_immediate(p, ins, &shift_C);
+		
+		byte_mask = (get_bit(ins, 16) ? 0x000000FF : 0) | //C
+							 (get_bit(ins, 17) ? 0x0000FF00 : 0) | //X
+							 (get_bit(ins, 18) ? 0x00FF0000 : 0) | //S
+							 (get_bit(ins, 19) ? 0xFF000000 : 0);  //F
+
+		if (get_bit(ins, 22)) //R
+		{
+			if (arm_current_mode_has_spsr(p))
+			{
+				mask = byte_mask & (UserMask | PrivMask | StateMask);
+				arm_write_spsr(p, (arm_read_spsr(p) & ~mask) | (op & mask));
+			}
+			//else
+				//UNPREDICTABLE
+		}
+		else
+		{
+			if (arm_in_a_privileged_mode(p))
+			{
+				if ((op & StateMask) == 0)
+					mask = byte_mask & (UserMask & PrivMask);
+				//else
+					//UNPREDICTABLE
+
+			}
+			else
+				mask = byte_mask & UserMask;
+			arm_write_spsr(p, (arm_read_spsr(p) & ~mask) | (op & mask));
+		}
+		
+	}
+
+	return 0;
+}
+
+DANS DATA PROCESSING
+
+
 

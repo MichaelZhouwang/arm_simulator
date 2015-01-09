@@ -77,21 +77,24 @@ static int arm_execute_instruction(arm_core p) {
 	
 	int result;
     uint32_t ins;
+	instruction_handler_t handler = NULL;
+
     result = arm_fetch(p, &ins);
     if (result) {
 	    debug("error during fetch %d\n", result);
         return result;
     }
-    
+
 	debug("instruction %x\n", ins);
 	result = instruction_check_condition(p, ins);
+
     if (result == 1) {
-        handler = instruction_get_handler(ins_class_field);
+        handler = instruction_get_handler(ins);
     } else if (result == -1){
         handler = arm_miscellaneous;
     }
     
-    return (handler != NULL) ? handler(p, instruction) : 0;
+    return (handler != NULL) ? handler(p, ins) : 0;
 }
 
 int arm_step(arm_core p) {
@@ -136,7 +139,7 @@ int instruction_check_condition(arm_core p, uint32_t ins) {
         default: result =  0; break; // impossible
 	}
 	debug("condition : %x, %d\n", cond_field, result);
-    return res;
+    return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -153,11 +156,11 @@ instruction_handler_t instruction_get_handler(uint32_t ins) {
 			if (check_mask(ins, 0x0E000000, 0x00000090))
 				handler = arm_load_store_miscellaneous;
 			else if (check_mask(ins, 0x0E900FF0, 0x0120F000))
-				handler =  arm_msr
+				handler =  arm_msr;
 			else if (check_mask(ins, 0x0EB00FFF, 0x010F0000))
 				handler = arm_mrs;
 			else
-				handler = data_processing_shift; 
+				handler = arm_data_processing_shift; 
 			break;
         case 1:
 			 if (check_mask(ins, 0x0C900000,0x0320F000))

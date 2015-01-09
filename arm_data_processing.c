@@ -39,7 +39,7 @@ static int and(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 	uint64_t result = op1 & op2;
 	if (s) {
 		if (rd != 15) {
-		    update_nzcv(get_bit(result ,31), !result, c, -1);
+		    update_nzcv(p, get_bit(result ,31), !result, c, -1);
 		} else {
 			if(arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -57,7 +57,7 @@ static int eor(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
     uint64_t result = op1 ^ op2;
 	if (s) {
 		if (rd != 15) {
-		    update_nzcv(get_bit(result ,31), !result, c, -1);
+		    update_nzcv(p, get_bit(result ,31), !result, c, -1);
 		} else {
 			if(arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -77,7 +77,7 @@ static int sub(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 		if (rd != 15) {
 		    int overflow = get_bit(op1,31) != get_bit(op2,31) &&
 		                   get_bit(op1,31) != get_bit(result,31);
-		    update_nzcv(get_bit(result, 31), // N
+		    update_nzcv(p, get_bit(result, 31), // N
 		                !result,             // Z
 		                !(op1<op2),          // C
 		                overflow);           // V
@@ -100,7 +100,7 @@ static int rsb(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 		if (rd != 15) {
 		    int overflow = get_bit(op1,31) != get_bit(op2,31) &&
 		                   get_bit(op2,31) != get_bit(result,31);
-		    update_nzcv(get_bit(result, 31), // N
+		    update_nzcv(p, get_bit(result, 31), // N
 		                !result,             // Z
 		                !(op2<op1),          // C
 		                overflow);           // V
@@ -123,7 +123,7 @@ static int add(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 		if (rd != 15) {
 		    int overflow = get_bit(op1,31) == get_bit(op2,31) &&
 		                   get_bit(op2,31) != get_bit(result,31);
-		    update_nzcv(get_bit(result, 31), // N
+		    update_nzcv(p, get_bit(result, 31), // N
 		                !result,             // Z
 		                (result > UINT_MAX), // C
 		                overflow);           // V
@@ -162,7 +162,7 @@ static int adc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 		}
 	}
 	arm_write_register(p, rd, result);
-	return exception;
+	return 0;
 }
 
 static int sbc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
@@ -175,7 +175,7 @@ static int sbc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 		                   get_bit(op1,31) != get_bit(result,31);
 			cpsr = change_bit(cpsr, N, get_bit(result ,31));         // N
 			cpsr = change_bit(cpsr, Z, !result);                     // Z
-			cpsr = change_bit(cpsr, C, !(op1 <  (op2+arm_read_c(p)));// C
+			cpsr = change_bit(cpsr, C, !(op1 <  (op2+arm_read_c(p))));// C
 			cpsr = change_bit(cpsr, V, overflow);                    // V
 			arm_write_cpsr(p, cpsr);
 		} else {
@@ -200,7 +200,7 @@ static int rsc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 		                   get_bit(op2,31) != get_bit(result,31);
 			cpsr = change_bit(cpsr, N, get_bit(result ,31));         // N
 			cpsr = change_bit(cpsr, Z, !result);                     // Z
-			cpsr = change_bit(cpsr, C, !(op2 <  (op1+arm_read_c(p)));// C
+			cpsr = change_bit(cpsr, C, !(op2 <  (op1+arm_read_c(p))));// C
 			cpsr = change_bit(cpsr, V, overflow);                    // V
 			arm_write_cpsr(p, cpsr);
 		}
@@ -219,14 +219,14 @@ static int rsc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 static int tst(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t c) {
 	uint64_t result = op1 & op2;
-	update_nzcv(get_bit(result, 31), !result, c, -1);
+	update_nzcv(p, get_bit(result, 31), !result, c, -1);
 	return 0;
 }
 
 static int teq(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t c) {
 	uint64_t result = op1 ^ op2;
-	update_nzcv(get_bit(result, 31), !result, c, -1);
+	update_nzcv(p, get_bit(result, 31), !result, c, -1);
 	return 0;
 }
 
@@ -235,7 +235,7 @@ static int cmp(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 	uint64_t result = op1 - op2;
 	int overflow = get_bit(op1,31) != get_bit(op2,31) &&
 		           get_bit(op1,31) != get_bit(result, 31);
-	update_nzcv(get_bit(result, 31), // N
+	update_nzcv(p, get_bit(result, 31), // N
 		        !result,             // Z
 		        !(op1 <  op2),       // C
 		        overflow);           // V
@@ -247,11 +247,10 @@ static int cmn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 	uint64_t result = op1 + op2;
 	int overflow = get_bit(op1,31) == get_bit(op2,31) &&
 		           get_bit(op1,31) != get_bit(result, 31);
-	update_nzcv(get_bit(result, 31), // N
+	update_nzcv(p, get_bit(result, 31), // N
 		        !result,             // Z
 		        (result > UINT_MAX), // C
 		        overflow);           // V	
-	arm_write_cpsr(p, cpsr);
 	return 0;
 }
 
@@ -260,7 +259,7 @@ static int orr(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 	uint64_t result = op1 | op2;
 	if (s) {
 		if(rd != 15) {
-	        update_nzcv(get_bit(result, 31), !result, c, -1);
+	        update_nzcv(p, get_bit(result, 31), !result, c, -1);
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -278,7 +277,7 @@ static int mov(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 	uint64_t result = op2;
 	if (s) {
 		if (rd != 15) {
-	        update_nzcv(get_bit(result, 31), !result, c, -1);
+	        update_nzcv(p, get_bit(result, 31), !result, c, -1);
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -296,7 +295,7 @@ static int bic(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 	uint64_t result = op1 & ~op2;
 	if (s) {
 		if (rd != 15) {
-		    update_nzcv(get_bit(result, 31), !result, c, -1);
+		    update_nzcv(p, get_bit(result, 31), !result, c, -1);
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -314,7 +313,7 @@ static int mvn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 	uint64_t result = ~op2;
 	if (s) {
 		if (rd != 15) {
-		    update_nzcv(get_bit(result, 31), !result, c, -1);
+		    update_nzcv(p, get_bit(result, 31), !result, c, -1);
 		} else {
 			if(arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -405,7 +404,7 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
     
     // Parsing the instruction
     int op_code = get_op_code(ins);
-    dp_instruction_handler_t handler = decode(op_code);
+    dp_op_handler_t handler = decode(op_code);
     
     rd = get_rd(ins);
     
@@ -518,7 +517,7 @@ static void logical_shift_left_reg(arm_core p, uint32_t ins, uint32_t *op,
         *carry = 0;
 	}
 }
-/*
+
 static void logical_shift_right_imm(arm_core p, uint32_t ins, uint32_t *op,
              uint32_t *carry) {
     if shift_imm == 0 then

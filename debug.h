@@ -50,7 +50,7 @@ static int VARIABLE_IS_NOT_USED is_debugged_result = 0;
 #endif /* CACHE_DEBUG_FLAG */
 
 
-#define UNPREDICABLE() ((void) (is_debugged(__FILE__) && \
+#define UNPREDICTABLE() ((void) (is_debugged(__FILE__) && \
                                 fprintf(stderr, "UNPREDICABLE")))
 #define SHOULD_BE_ONE() ((void) (is_debugged(__FILE__) && \
                                 fprintf(stderr, "SHOULD_BE_ONE")))
@@ -66,7 +66,7 @@ static int VARIABLE_IS_NOT_USED is_debugged_result = 0;
                                      __debug_raw_binary(data, len)))
 #else
 
-#define UNPREDICABLE()
+#define UNPREDICTABLE()
 #define SHOULD_BE_ONE()
 #define SHOULD_BE_ZERO()
 

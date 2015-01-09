@@ -150,30 +150,20 @@ instruction_handler_t instruction_get_handler(uint32_t ins) {
 
     switch(get_bits(ins, 27, 25)) {
         case 0:
-			if (get_bit(ins, 7) && get_bit(ins, 4)) {
+			if (check_mask(ins, 0xE000000, 0x00000090))
 				handler = arm_load_store_miscellaneous;
-			} else if (get_bits(ins, 24, 23) == 2 && 
-					   get_bit(ins, 20) == 0)  {
-				if (get_bit(ins, 21) && 
-					get_bits(ins, 15, 12) == 0xF &&
-					get_bits(ins, 11, 8) == 0) {
-					handler =  arm_msr
-				} else if(get_bits(ins,19,16) == 0xF &&
-						  get_bits(ins, 11, 0) == 0) {
-					handler = arm_mrs;
-				}
-			} else {
+			else if (check_mask(ins, ))
+				handler =  arm_msr
+			else if (check_mask(ins, ))
+				handler = arm_mrs;
+			else
 				handler = data_processing_shift; 
-			}
 			break;
         case 1:
-			 if (get_bits(ins, 24, 23) == 2 && 
-				 get_bit(ins, 20) == 0 && 
-				 get_bits(ins, 15, 12) == 0xF) {
+			 if (check_mask(ins, ))
 				handler = arm_msr;
-			} else {
-				handler = arm_data_processing_immediate; 
-			}
+			else
+				handler = arm_data_processing_immediate;
 			break;
         case 2: handler = arm_load_store;                    break;
         case 3: handler = arm_load_store;                    break;

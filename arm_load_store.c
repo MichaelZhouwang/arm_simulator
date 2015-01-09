@@ -232,7 +232,7 @@ static int stm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     
     for (i=0; i<=15 && !result; i++) {
         if (get_bit(r_list, i)) {
-            uint32_t value = arm_read_usr_register(p, i);
+            value = arm_read_usr_register(p, i);
             result = arm_write_word(p, address, value);
             address += 4;
         }
@@ -298,18 +298,18 @@ int arm_load_store(arm_core p, uint32_t ins) {
     } else { // Registers
         int rm = get_bits(ins, 3, 0);
         int val_rm = arm_read_register(p, rm);
-        int shift = get_bits(ins, 6, 5);
-        int shift_imm = get_bits(ins 11, 7);
+        int shift_val = get_bits(ins, 6, 5);
+        int shift_imm = get_bits(ins, 11, 7);
 
         if (get_bit(ins, 24)) { // post_indexed
             address = val_rn;
             address = (get_bit(ins, 23)) ? val_rn + val_rm : val_rn - val_rm;
         } else if (get_bit(ins, 21)) { // pre_indexed
-            index = shift(p, val_rm, shift, shift_imm);
+            index = shift(p, val_rm, shift_val, shift_imm, NULL);
             address = (get_bit(ins, 23)) ? val_rn + index : val_rn - index;
             arm_write_register(p, rn, address);
         } else { // offset and scaled offser
-            index = shift(p, val_rm, shift, shift_imm);
+            index = shift(p, val_rm, shift_val, shift_imm, NULL);
             address = (get_bit(ins, 23)) ? val_rn + index : val_rn - index;   
         }
     }
@@ -381,11 +381,11 @@ int arm_load_store_multiple(arm_core p, uint32_t ins) {
 
     if (get_bit(ins, 23)) { // Increment
         if (get_bit(ins, 24)) { // before
-            start_add = val_n + 4;
-            end_add = val_n + (n * 4);
+            start_add = val_rn + 4;
+            end_add = val_rn + (n * 4);
         } else { // after
-            start_add = val_n;
-            end_add = val_n + (n * 4) - 4;
+            start_add = val_rn;
+            end_add = val_rn + (n * 4) - 4;
         }
         if (get_bit(ins, 21)) {
             val_rn = val_rn + (n * 4);
@@ -393,11 +393,11 @@ int arm_load_store_multiple(arm_core p, uint32_t ins) {
         }
     } else { // Decrement
         if (get_bit(ins, 24)) { // before
-            start_add = val_n - (n * 4);
-            end_add = val_n - 4;
+            start_add = val_rn - (n * 4);
+            end_add = val_rn - 4;
         } else { // after
-            start_add = val_n - (n * 4) + 4;
-            end_add = val_n;
+            start_add = val_rn - (n * 4) + 4;
+            end_add = val_rn;
         }
         if (get_bit(ins, 21)) {
             val_rn = val_rn - (n * 4);

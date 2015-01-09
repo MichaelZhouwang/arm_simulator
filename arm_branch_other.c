@@ -39,7 +39,13 @@ int arm_branch(arm_core p, uint32_t ins) {
 		debug("B\n");
     }
     
-	int32_t address = val_pc + ((((ins & 0xffffff) << 8) >> 8) << 2);
+	//int32_t address = val_pc + ((((ins & 0xffffff) << 8) >> 8) << 2);
+	int32_t address = get_bits(ins, 23, 0);
+	address = address << 8;
+	address = address >> 8;
+	address = address << 2;
+	address += val_pc;
+
 	debug("branch to add %x\n", address);
     arm_write_register(p, 15, address);
 	
@@ -78,10 +84,10 @@ int arm_mrs(arm_core p, uint32_t ins) {
         SHOULD_BE_ZERO();
     
     int32_t value;
-    if (get_bit(ins, 22)
+    if (get_bit(ins, 22))
         value = arm_read_spsr(p);
     else
-        arm_read_cpsr(p);
+        value = arm_read_cpsr(p);
     
     arm_write_register(p, rd, value);
 	return 0;
@@ -91,11 +97,13 @@ int arm_msr(arm_core p, uint32_t ins) {
     debug("arm_msr: %d\n", (int)ins);
 	
 	uint32_t op;
+	uint32_t byte_mask, mask = 0;
+
 	if (get_bit(ins, 25)) {
         op = get_immediate(p, ins, NULL);
     } else {
         uint8_t rm = get_bits(ins, 3, 0);
-        op = arm_read_register(p, rm)
+        op = arm_read_register(p, rm);
     }
     
 	if ((op & UnallocMask) != 0) 

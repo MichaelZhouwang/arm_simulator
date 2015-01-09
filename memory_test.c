@@ -23,6 +23,7 @@ Contact: Guillaume.Huard@imag.fr
 #include <stdio.h>
 #include <stdlib.h>
 #include "memory.h"
+#include "arm_core.h"
 #include "util.h"
 
 void print_test(int result) {

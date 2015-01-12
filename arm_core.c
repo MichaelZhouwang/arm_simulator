@@ -63,8 +63,9 @@ arm_core arm_create(memory mem) {
         p->registers[UND][14] = &p->registers_storage[21];
         p->registers[IRQ][13] = &p->registers_storage[22];
         p->registers[IRQ][14] = &p->registers_storage[23];
-        for (j=8; j<15; j++)
+        for (j=8; j<15; j++) {
              p->registers[FIQ][j] = &p->registers_storage[j+16];
+		}
         arm_exception(p, RESET);
         p->cycle_count = 0;
     }
@@ -161,7 +162,7 @@ int arm_fetch(arm_core p, uint32_t *value) {
     result = memory_read_word(p->mem, get_bit(p->cpsr, 9), address, value);
     trace_memory(p->cycle_count, READ, 4, OPCODE_FETCH, address, *value);
     arm_write_register(p, 15, address + 4);
-    return result;
+    return (result) ? PREFETCH_ABORT : NO_EXCEPTION;
 }
 
 int arm_address_current_instruction(arm_core p) {
@@ -177,7 +178,7 @@ int arm_read_byte(arm_core p, uint32_t address, uint8_t *value) {
 
     result = memory_read_byte(p->mem, address, value);
     trace_memory(p->cycle_count, READ, 1, OTHER_ACCESS, address, *value);
-    return result;
+    return (result) ? DATA_ABORT : NO_EXCEPTION;
 }
 
 /* Data access endianess should comply with bit 9 of cpsr (E), see ARM
@@ -188,7 +189,7 @@ int arm_read_half(arm_core p, uint32_t address, uint16_t *value) {
 
     result = memory_read_half(p->mem, get_bit(p->cpsr, 9), address, value);
     trace_memory(p->cycle_count, READ, 2, OTHER_ACCESS, address, *value);
-    return result;
+    return (result) ? DATA_ABORT : NO_EXCEPTION;
 }
 
 int arm_read_word(arm_core p, uint32_t address, uint32_t *value) {
@@ -196,7 +197,7 @@ int arm_read_word(arm_core p, uint32_t address, uint32_t *value) {
 
     result = memory_read_word(p->mem, get_bit(p->cpsr, 9), address, value);
     trace_memory(p->cycle_count, READ, 4, OTHER_ACCESS, address, *value);
-    return result;
+    return (result) ? DATA_ABORT : NO_EXCEPTION;
 }
 
 int arm_write_byte(arm_core p, uint32_t address, uint8_t value) {
@@ -204,7 +205,7 @@ int arm_write_byte(arm_core p, uint32_t address, uint8_t value) {
 
     result = memory_write_byte(p->mem, address, value);
     trace_memory(p->cycle_count, WRITE, 1, OTHER_ACCESS, address, value);
-    return result;
+    return (result) ? DATA_ABORT : NO_EXCEPTION;
 }
 
 int arm_write_half(arm_core p, uint32_t address, uint16_t value) {
@@ -212,7 +213,7 @@ int arm_write_half(arm_core p, uint32_t address, uint16_t value) {
 
     result = memory_write_half(p->mem, get_bit(p->cpsr, 9), address, value);
     trace_memory(p->cycle_count, WRITE, 2, OTHER_ACCESS, address, value);
-    return result;
+    return (result) ? DATA_ABORT : NO_EXCEPTION;
 }
 
 int arm_write_word(arm_core p, uint32_t address, uint32_t value) {
@@ -220,7 +221,7 @@ int arm_write_word(arm_core p, uint32_t address, uint32_t value) {
 
     result = memory_write_word(p->mem, get_bit(p->cpsr, 9), address, value);
     trace_memory(p->cycle_count, WRITE, 4, OTHER_ACCESS, address, value);
-    return result;
+    return (result) ? DATA_ABORT : NO_EXCEPTION;
 }
 
 void arm_print_state(arm_core p, FILE *out) {

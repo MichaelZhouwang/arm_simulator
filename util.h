@@ -44,12 +44,12 @@ Contact: Guillaume.Huard@imag.fr
                  ((x)&(((~0)>>((h)+1))<<((h)+1)))| \
                  ((bits)<<(l)))
 
-#define codage2(x, y) ((x<<1) & y)
-#define codage3(x, y, z) ((x<<2) & (y<<1) & z)
+#define codage2(x, y) ((x<<1) | y)
+#define codage3(x, y, z) ((x<<2) | (y<<1) | z)
 
-#define codage2_bits(v, x, y) (((((v)>>(x))&1)<<1) & (((v)>>(y))&1))
-#define codage3_bits(v, x, y, z) (((((v)>>(x))&1)<<2) & \
-                                 ((((v)>>(y))&1)<<1) & (((v)>>(z))&1))
+#define codage2_bits(v, x, y) (((((v)>>(x))&1)<<1) | (((v)>>(y))&1))
+#define codage3_bits(v, x, y, z) (((((v)>>(x))&1)<<2) | \
+                                 ((((v)>>(y))&1)<<1) | (((v)>>(z))&1))
 
 #define check_mask(ins, m0, m1) (((ins) & (m0)) == 0 && ((ins) & (m1)) == (m1))
 

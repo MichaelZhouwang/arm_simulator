@@ -48,20 +48,19 @@ static int arm_execute_instruction(arm_core p) {
     }
 
     result = instruction_check_condition(p, ins);
-    instruction_handler_t handler = NULL;
-    
     if (result == 0) {
     	debug("Cond false \n");
-    	return NO_EXCEPTION;
+    	result = NO_EXCEPTION;
     } else if (result == 1) {
 		debug("Cond true \n");
-	    handler = instruction_get_handler(ins);
+    	instruction_handler_t handler = instruction_get_handler(ins);
+		result = (handler) ? handler(p, ins) : UNDEFINED_INSTRUCTION;
 	} else if (result == -1) {
 		debug("Cond undefined \n");
-		handler = arm_miscellaneous;
+		result = arm_miscellaneous(p, ins);
 	}
     
-    return (handler) ? handler(p, ins) : UNDEFINED_INSTRUCTION;
+    return result;
 }
 
 int arm_step(arm_core p) {

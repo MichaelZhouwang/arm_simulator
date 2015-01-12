@@ -34,89 +34,86 @@ Contact: Guillaume.Huard@imag.fr
 // Helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-int shift(arm_core p, int op, int code, int value, uint8_t *shift_C) {
-    uint8_t c = 0;
-	switch(code) {
-		case 0: // LSL
-			if (value == 0) {
-			    c = arm_read_c(p);
-			} else {
-				if(value < 32) {
-					c = get_bit(op, 32-value);
-					op <<= value;
-				} else {
-					c = (value == 32) ? get_bit(op, 0) : 0;
-					op = 0;
-				}				
-			}
-			break;
-			
-		case 1: // LSR
-			if (value == 0) {
-			    c = arm_read_c(p);
-			} else {
-				if(value < 32) {
-					c = get_bit(op, value-1);
-					op >>= value;
-				} else {
-					c = (value == 32) ? get_bit(op, 31) : 0;
-					op = 0;
-				}				
-			}
-			break;
-			
-		case 2: // ASR
-			if (value == 0) {
-			    c = arm_read_c(p);
-			} else {
-				if(value < 32) {
-					c = get_bit(op, value-1);
-					op = asr(op, value);
-				} else {
-					c = get_bit(op,31);
-					op = (!get_bit(op,31)) ? 0 : 0xFFFFFFFF;
-				}				
-			}			
-			break;
-			
-		case 3: 
-			if (!value) { // RRX
-				c = get_bit(op,0);
-				op = (arm_read_c(p) << 31) | (op >> 1);
-			} else { // ROR
-				if (!get_bits(value,4,0)) {
-				    c = get_bit(op, 31);
-				} else {
-					c = get_bit(op, get_bits(value,4,0) - 1);
-					op = ror(op, value);
-				}
-			}
-			break;
-	}
-	if (shift_C) *shift_C = c;
+static int dp_lsl(arm_core p, int op, int value, uint8_t *shift_carry_out) {
+	if (value == 0) {
+	    *shift_carry_out = arm_read_c(p);
+    } else {
+        if(value < 32) {
+            *shift_carry_out = get_bit(op, 32-value);
+            op <<= value;
+        } else {
+            *shift_carry_out = (value == 32) ? get_bit(op, 0) : 0;
+            op = 0;
+        }				
+    }
 	return op;
 }
 
-uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t *shift_C) {
+static int dp_lsr(arm_core p, int op, int value, uint8_t *shift_carry_out) {
+    if (value == 0) {
+	    *shift_carry_out = arm_read_c(p);
+	} else {
+	    if (value < 32) {
+		    *shift_carry_out = get_bit(op, value-1);
+			op >>= value;
+	    } else {
+            *shift_carry_out = (value == 32) ? get_bit(op, 31) : 0;
+	        op = 0;
+		}				
+	}
+	return op;
+}
+
+static int dp_asr(arm_core p, int op, int value, uint8_t *shift_carry_out) {
+    if (value == 0) {
+	    *shift_carry_out = arm_read_c(p);
+	} else {
+		if(value < 32) {
+			*shift_carry_out = get_bit(op, value-1);
+			op = asr(op, value);
+	    } else {
+			*shift_carry_out = get_bit(op,31);
+			op = (get_bit(op,31)) ? 0xFFFFFFFF : 0;
+		}				
+	}
+	return op;
+}
+
+static int dp_ror_rrx(arm_core p, int op, int value, uint8_t *shift_carry_out) {
+    if (value == 0) { // RRX
+		*shift_carry_out = get_bit(op,0);
+	    op = (arm_read_c(p) << 31) | (op >> 1);
+	} else { // ROR
+		if (!get_bits(value,4,0)) {
+	        *shift_carry_out = get_bit(op, 31);
+	    } else {
+		    *shift_carry_out = get_bit(op, get_bits(value,4,0) - 1);
+			op = ror(op, value);
+		}
+	}
+	return op;
+}
+
+uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t *shift_carry_out) {
 	uint32_t imm_8 = get_bits(ins,7,0);
 	uint8_t rotate_imm = get_bits(ins,11,8);
 	uint32_t res = ror(imm_8,(rotate_imm * 2));
 
-	if (shift_C) {
+	if (shift_carry_out) {
 		if(rotate_imm == 0)
-			*shift_C = arm_read_c(p);
+			*shift_carry_out = arm_read_c(p);
 		else 
-			*shift_C = get_bit(res,31);
+			*shift_carry_out = get_bit(res,31);
 	}
 	return res;
 }
 
-uint32_t get_shifted(arm_core p, uint32_t ins, uint8_t* shift_C) {
+uint32_t get_shifted(arm_core p, uint32_t ins, uint8_t* shift_carry_out) {
     uint8_t shift_imm = get_bits(ins,11,7);
 	uint8_t shift_code = get_bits(ins,6,5);
     uint32_t res = arm_read_register(p, get_bits(ins,3,0));
     if(!shift_imm && !shift_code) { // No shift
-    	*shift_C = arm_read_c(p);
+    	*shift_carry_out = arm_read_c(p);
     }
     else {
     	uint8_t shift_value;
@@ -125,7 +122,14 @@ uint32_t get_shifted(arm_core p, uint32_t ins, uint8_t* shift_C) {
     	} else {
             shift_value = arm_read_register(p, get_bits(ins,11,8));
         }
-        res = shift(p, res, shift_code, shift_value, shift_C);
+        
+        switch(shift_code) {
+		    case 0: res = dp_lsl(p, res, shift_value, shift_carry_out);     break;
+		    case 1: res = dp_lsr(p, res, shift_value, shift_carry_out);     break;
+		    case 2: res = dp_asr(p, res, shift_value, shift_carry_out);     break;
+		    case 3: res = dp_ror_rrx(p, res, shift_value, shift_carry_out); break;
+		    default: break;
+	    }
     }
     return res;
 }
@@ -146,7 +150,7 @@ int overflow_from_sub(int32_t op1, int32_t op2, int64_t res) {
 ///////////////////////////////////////////////////////////////////////////////
 
 static int and(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t carry_out) {
+                 uint8_t shift_carry_out) {
 	debug("AND%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op1 & op2;
 	if (s) {
@@ -154,7 +158,7 @@ static int and(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 		    update_nzcv(p, 
 		                get_bit(res ,31), // Z
 		                (res == 0),       // N
-		                carry_out,        // C
+		                shift_carry_out,        // C
 		                UNAFFECT_FLAG);   // V
 		} else {
 			if(arm_current_mode_has_spsr(p)) {
@@ -169,15 +173,15 @@ static int and(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 }
 
 static int eor(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t carry_out) {
+                 uint8_t shift_carry_out) {
 	debug("EOR%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
     uint64_t res = op1 ^ op2;
 	if (s) {
 		if (rd != 15) {
 		    update_nzcv(p,
-		                get_bit(res ,31), // Z
-		                (res == 0),       // N
-		                carry_out,        // C
+		                get_bit(res ,31), // N
+		                (res == 0),       // Z
+		                shift_carry_out,        // C
 		                UNAFFECT_FLAG);   // V
 		} else {
 			if(arm_current_mode_has_spsr(p)) {
@@ -192,7 +196,7 @@ static int eor(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 }
 
 static int sub(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t shift_carry_out) {
 	debug("SUB%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op1 - op2;
 	if (s) {
@@ -215,7 +219,7 @@ static int sub(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 }
 
 static int rsb(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t shift_carry_out) {
 	debug("RSB%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op2 - op1;
 	if (s) {
@@ -238,7 +242,7 @@ static int rsb(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 }
 
 static int add(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t shift_carry_out) {
 	debug("ADD%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op1 + op2;
 	if (s) {
@@ -261,7 +265,7 @@ static int add(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 }
 
 static int adc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-               uint8_t shift_c) {
+               uint8_t shift_carry_out) {
 	debug("ADC%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
     int c = arm_read_c(p);
 	uint64_t res = op1 + op2 + c;
@@ -286,7 +290,7 @@ static int adc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 }
 
 static int sbc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t shift_carry_out) {
 	debug("SBC%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
     int c = arm_read_c(p);
 	uint64_t res = op1 - op2 - !c;
@@ -310,7 +314,7 @@ static int sbc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 }
 
 static int rsc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t shift_carry_out) {
 	debug("RSC%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
     int c = arm_read_c(p);
 	uint64_t res = op2 - op1 - !c;
@@ -335,23 +339,23 @@ static int rsc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 }
 
 static int tst(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t shift_carry_out) {
 	debug("TST %d %d\n", op1, op2);
 	uint64_t res = op1 & op2;
-	update_nzcv(p, get_bit(res, 31), (res == 0), shift_c, UNAFFECT_FLAG);
+	update_nzcv(p, get_bit(res, 31), (res == 0), shift_carry_out, UNAFFECT_FLAG);
 	return 0;
 }
 
 static int teq(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t shift_carry_out) {
 	debug("TEQ %d %d\n", op1, op2);
 	uint64_t res = op1 ^ op2;
-	update_nzcv(p, get_bit(res, 31), (res == 0), shift_c, UNAFFECT_FLAG);
+	update_nzcv(p, get_bit(res, 31), (res == 0), shift_carry_out, UNAFFECT_FLAG);
 	return 0;
 }
 
 static int cmp(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t shift_carry_out) {
 	debug("CMP %d %d\n", op1, op2);
 	uint64_t res = op1 - op2;
 	update_nzcv(p,
@@ -363,7 +367,7 @@ static int cmp(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 }
 
 static int cmn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t shift_carry_out) {
 	debug("CMN %d %d\n", op1, op2);
 	uint64_t res = op1 + op2;
 	update_nzcv(p,
@@ -375,7 +379,7 @@ static int cmn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 }
 
 static int orr(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t shift_carry_out) {
 	debug("ORR%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op1 | op2;
 	if (s) {
@@ -383,7 +387,7 @@ static int orr(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 	        update_nzcv(p,
 	                    get_bit(res, 31), // N
 	                    (res == 0),       // Z
-	                    shift_c,          // C
+	                    shift_carry_out,            // C
 	                    UNAFFECT_FLAG);   // V
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
@@ -398,7 +402,7 @@ static int orr(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 }
 
 static int mov(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t shift_carry_out) {
 	debug("MOV%s %s %d\n", s ? "S" : "", arm_get_register_name(rd), op2);
 
 	uint64_t res = op2;
@@ -407,7 +411,7 @@ static int mov(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 	        update_nzcv(p,
 	                    get_bit(res, 31), // N
 	                    (res == 0),       // Z
-	                    shift_c,          // C
+	                    shift_carry_out,            // C
 	                    UNAFFECT_FLAG);   // V
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
@@ -422,7 +426,7 @@ static int mov(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 }
 
 static int bic(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t shift_carry_out) {
 	debug("BIC%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op1 & ~op2;
 	if (s) {
@@ -430,7 +434,7 @@ static int bic(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 		    update_nzcv(p,
 	                    get_bit(res, 31), // N
 	                    (res == 0),       // Z
-	                    shift_c,          // C
+	                    shift_carry_out,            // C
 	                    UNAFFECT_FLAG);   // V
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
@@ -445,7 +449,7 @@ static int bic(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 }
 
 static int mvn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t shift_carry_out) {
 	debug("MVN%s %s %d\n", s ? "S" : "", arm_get_register_name(rd), op2);
 	uint64_t res = ~op2;
 	if (s) {
@@ -453,7 +457,7 @@ static int mvn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 		    update_nzcv(p,
 	                    get_bit(res, 31), // N
 	                    (res == 0),       // Z
-	                    shift_c,          // C
+	                    shift_carry_out,            // C
 	                    UNAFFECT_FLAG);   // V
 		} else {
 			if(arm_current_mode_has_spsr(p)) {
@@ -540,7 +544,7 @@ static inline uint8_t get_S(uint32_t ins) {
 int arm_data_processing_shift(arm_core p, uint32_t ins) {
     debug("arm_data_processing_shift\n");    
     
-	uint8_t rd, s, shift_C;
+	uint8_t rd, s, shift_carry_out;
 	uint32_t op1, op2;
     
     dp_op_handler_t handler = arm_get_dp_handler(ins);
@@ -555,25 +559,25 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
     	op1 = 0;
     }
     
-    op2 = get_shifted(p, ins, &shift_C);
+    op2 = get_shifted(p, ins, &shift_carry_out);
     
     s = get_S(ins);
 
 	debug("opcode:%x S:%d rd:%s op1:%d op2:%d\n", op_code, s, arm_get_register_name(rd), op1, op2);
     
-    return (handler) ? handler(p, rd, op1, op2, s, shift_C) : 0;
+    return (handler) ? handler(p, rd, op1, op2, s, shift_carry_out) : 0;
 }
 
 
 int arm_data_processing_immediate(arm_core p, uint32_t ins) {
 	debug("arm_data_processing_immediate\n");
 
-	uint8_t rd, s, shift_C;
+	uint8_t rd, s, shift_carry_out;
 	uint32_t op1, op2;
 
 	dp_op_handler_t handler = arm_get_dp_handler(ins);
 	
-	op2 = get_immediate(p, ins, &shift_C);	
+	op2 = get_immediate(p, ins, &shift_carry_out);	
 
 	rd = get_rd(ins);
 
@@ -589,7 +593,7 @@ int arm_data_processing_immediate(arm_core p, uint32_t ins) {
 
 	debug("opcode:%x S:%d rd:%s op1:%d op2:%d\n", op_code, s, arm_get_register_name(rd), op1, op2);
 
-	return (handler) ? handler(p, rd, op1, op2, s, shift_C) : 0;
+	return (handler) ? handler(p, rd, op1, op2, s, shift_carry_out) : 0;
 }
 
 
@@ -602,22 +606,22 @@ int arm_data_processing_immediate(arm_core p, uint32_t ins) {
 ///////////////////////////////////////////////////////////////////////////////
 /*
 static void logical_shift_left_imm(arm_core p, uint32_t ins, uint32_t *op,
-             uint32_t *carry) {
+             uint32_t *shift_carry_out) {
 	int shift_imm = get_bits(ins, 11, 7);
 	int8_t rm = get_bits(ins, 3, 0);
 	int32_t val_rm = arm_read_register(rm);
 
     if (shift_imm == 0) {
         *op = val_rm;
-        *carry = arm_read_c(arm_core p);
+        *shift_carry_out = arm_read_c(arm_core p);
     } else {
         op = val_rm >> shift_imm;
-        *carry = get_bit(val_rm, 32-shift_imm);
+        *shift_carry_out = get_bit(val_rm, 32-shift_imm);
 	}
 }
 
 static void logical_shift_left_reg(arm_core p, uint32_t ins, uint32_t *op,
-             uint32_t *carry) {
+             uint32_t *shift_carry_out) {
 	int shift_imm = get_bits(ins, 11, 7);
 	int8_t rm = get_bits(ins, 3, 0);
 	int8_t rs = get_bits(ins, 11, 8)
@@ -626,97 +630,97 @@ static void logical_shift_left_reg(arm_core p, uint32_t ins, uint32_t *op,
 
     if (Rs[7:0] == 0) {
         *op = Rm
-        *carry = C Flag
+        *shift_carry_out = C Flag
     } else if (Rs[7:0] < 32) {
         *op = Rm Logical_Shift_Left Rs[7:0]
-        *carry = Rm[32 - Rs[7:0]]
+        *shift_carry_out = Rm[32 - Rs[7:0]]
     } else if (Rs[7:0] == 32) {
         *op = 0;
-        *carry = get_bit(val_rm, 0);
+        *shift_carry_out = get_bit(val_rm, 0);
     } else {
         *op = 0;
-        *carry = 0;
+        *shift_carry_out = 0;
 	}
 }
 
 static void logical_shift_right_imm(arm_core p, uint32_t ins, uint32_t *op,
-             uint32_t *carry) {
+             uint32_t *shift_carry_out) {
     if shift_imm == 0 then
          = 0
-        *carry = Rm[31]
+        *shift_carry_out = Rm[31]
     else
         *op = Rm Logical_Shift_Right shift_imm
-        *carry = Rm[shift_imm - 1]
+        *shift_carry_out = Rm[shift_imm - 1]
 }
 
 static void logical_shift_right_reg(arm_core p, uint32_t ins, uint32_t *op,
-             uint32_t *carry) {
+             uint32_t *shift_carry_out) {
     if Rs[7:0] == 0 then
         *op = Rm
-        *carry = C Flag
+        *shift_carry_out = C Flag
     else if Rs[7:0] < 32 then
         *op = Rm Logical_Shift_Right Rs[7:0]
-        *carry = Rm[Rs[7:0] - 1]
+        *shift_carry_out = Rm[Rs[7:0] - 1]
     else if Rs[7:0] == 32 then
         *op = 0
-        *carry = Rm[31]
+        *shift_carry_out = Rm[31]
     else
         *op = 0
-        *carry = 0
+        *shift_carry_out = 0
 }
 //
 static void arithm_shift_right_imm(arm_core p, uint32_t ins, uint32_t *op,
-             uint32_t *carry) {
+             uint32_t *shift_carry_out) {
     if shift_imm == 0 then
         if Rm[31] == 0 then
             *op = 0
-            *carry = Rm[31]
+            *shift_carry_out = Rm[31]
         else
             *op = 0xFFFFFFFF
-            *carry = Rm[31]
+            *shift_carry_out = Rm[31]
     else
         *op = Rm Arithmetic_Shift_Right <shift_imm>
-        *carry = Rm[shift_imm - 1]
+        *shift_carry_out = Rm[shift_imm - 1]
 }
 
 static void arithm_shift_right_reg(arm_core p, uint32_t ins, uint32_t *op,
-             uint32_t *carry) {
+             uint32_t *shift_carry_out) {
     if Rs[7:0] == 0 then
         *op = Rm
-        *carry = C Flag
+        *shift_carry_out = C Flag
     else if Rs[7:0] < 32 then
         *op = Rm Arithmetic_Shift_Right Rs[7:0]
-        *carry = Rm[Rs[7:0] - 1]
+        *shift_carry_out = Rm[Rs[7:0] - 1]
     else
         if Rm[31] == 0 then
             *op = 0
-            *carry = Rm[31]
+            *shift_carry_out = Rm[31]
         else
             *op = 0xFFFFFFFF
-            *carry = Rm[31]
+            *shift_carry_out = Rm[31]
 }
 
 static void rotate_right_imm(arm_core p, uint32_t ins, uint32_t *op,
-             uint32_t *carry) {
+             uint32_t *shift_carry_out) {
     if shift_imm == 0 then
         *op = (C Flag Logical_Shift_Left 31) OR (Rm Logical_Shift_Right 1)
-        *carry = Rm[0]
+        *shift_carry_out = Rm[0]
     else 
         *op = Rm Rotate_Right shift_imm
-        *carry = Rm[shift_imm - 1]
+        *shift_carry_out = Rm[shift_imm - 1]
 }
 
 static void rotate_right_reg(arm_core p, uint32_t ins, uint32_t *op,
-             uint32_t *carry) {
+             uint32_t *shift_carry_out) {
     if Rs[7:0] == 0 then
         *op = Rm
-        *carry = C Flag
+        *shift_carry_out = C Flag
     else if Rs[4:0] == 0 then
         *op = Rm
-        *carry = Rm[31]
+        *shift_carry_out = Rm[31]
     else
         *op = Rm Rotate_Right Rs[4:0]
-        *carry = Rm[Rs[4:0] - 1]
+        *shift_carry_out = Rm[Rs[4:0] - 1]
 }
 */
 ///////////////////////////////////////////////////////////////////////////////
@@ -752,8 +756,8 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
     int res = 0;
     dp_shift_handler_t shift_handler = arm_dp_get_shift_handler(ins);
     if (shift_handler) {
-        int32_t *op, carry_out;
-        shift_handler(p, ins, &*op, &carry_out);
+        int32_t *op, shift_carry_out;
+        shift_handler(p, ins, &*op, &shift_carry_out);
         dp_op_handler_t op_handler = arm_dp_get_op_handler(ins);
         if (op_handler) {
             res = op_handler();
@@ -768,9 +772,9 @@ int arm_data_processing_immediate(arm_core p, uint32_t ins) {
     
     *op = immed_8 Rotate_Right (rotate_imm * 2)
     if rotate_imm == 0 then
-        *carry = C flag
+        *shift_carry_out = C flag
     else
-        *carry = *op[31]
+        *shift_carry_out = *op[31]
     
     // HANDLING
     dp_op_handler_t op_handler = arm_dp_get_op_handler(ins);

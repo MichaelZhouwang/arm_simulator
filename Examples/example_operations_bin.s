@@ -28,10 +28,10 @@ and r0, r2, r1, LSR #1
 and r0, r2, r1, LSR r2
 
 @ Arithmetic shift right by immediate
-and r0, r1, r2, ASR #1
+and r0, r1, r2, ARS #1
 
 @ Arithmetic shift right by register
-and r0, r1, r2, ASR r2
+and r0, r1, r2, ARS r2
 
 @ Rotate right by immediate
 and r0, r1, r2, ROR #1

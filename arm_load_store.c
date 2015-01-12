@@ -36,8 +36,8 @@ static int ldr(arm_core p, uint8_t rd, uint32_t address) {
 	debug("LDR rd:r%d %x\n", rd, address);
     uint32_t value;
     int result = arm_read_word(p, address, &value);
-    if (!result) {
-        if (rd == 15) {
+    if (result == NO_EXCEPTION) {
+        if (rd == PC) {
             update_flag_t(p, get_bit(value, 0));
             value &= 0xFFFFFFFE;
         }
@@ -56,7 +56,7 @@ static int ldrb(arm_core p, uint8_t rd, uint32_t address) {
 	debug("LDRB rd:r%d %x\n", rd, address);
     uint8_t value;
     int result = arm_read_byte(p, address, &value);
-    if (!result)
+    if (result == NO_EXCEPTION)
         arm_write_register(p, rd, value);
     return result;
 }
@@ -71,7 +71,7 @@ static int ldrt(arm_core p, uint8_t rd, uint32_t address) {
 	debug("LDRT rd:r%d %x\n", rd, address);
     uint32_t value;
     int result = arm_read_word(p, address, &value);
-    if (!result)
+    if (result == NO_EXCEPTION)
         arm_write_register(p, rd, value);
     return result;
 }
@@ -86,7 +86,7 @@ static int ldrbt(arm_core p, uint8_t rd, uint32_t address) {
 	debug("LBRBT rd:r%d %x\n", rd, address);
     uint8_t value;
     int result = arm_read_byte(p, address, &value);
-    if (!result)
+    if (result == NO_EXCEPTION)
         arm_write_register(p, rd, (uint32_t)value);
     return result;
 }
@@ -95,7 +95,7 @@ static int strbt(arm_core p, uint8_t rd, uint32_t address) {
 	debug("STRBT rd:r%d %x\n", rd, address);
     uint8_t value;
     int result = arm_read_byte(p, address, &value);
-    if (!result)
+    if (result == NO_EXCEPTION)
         arm_write_register(p, rd, (uint32_t)value);
     return result;
 }
@@ -104,7 +104,7 @@ static int ldrh(arm_core p, uint8_t rd, uint32_t address) {
 	debug("LDRH rd:r%d %x\n", rd, address);
     uint16_t value;
     int result = arm_read_half(p, address, &value);
-    if (!result)
+    if (result == NO_EXCEPTION)
         arm_write_register(p, rd, (uint32_t)value);
     return result;
 }
@@ -119,7 +119,7 @@ static int ldrsh(arm_core p, uint8_t rd, uint32_t address) {
 	debug("LDRSH rd:r%d %x\n", rd, address);
     uint32_t value;
     int result = arm_read_half(p, address, (uint16_t*)&value);
-    if (!result) {
+    if (result == NO_EXCEPTION) {
         if (value & (1<<15)) {
             value |= 0xFFFF0000; 
         } else {
@@ -134,7 +134,7 @@ static int ldrsb(arm_core p, uint8_t rd, uint32_t address) {
 	debug("LDRSB rd:r%d %x\n", rd, address);
     uint8_t value;
     int result = arm_read_byte(p, address, &value);
-    if (!result) {
+    if (result == NO_EXCEPTION) {
         if (value & (1<<7)) {
             value |= 0xFFFFFF00; 
         } else {
@@ -153,9 +153,9 @@ static int ldrd(arm_core p, uint8_t rd, uint32_t address) {
     }
     uint32_t value;
     int result = arm_read_word(p, address, &value);
-    if (!result) arm_write_register(p, rd, value);
-    if (!result) result = arm_read_word(p, address+4, &value);
-    if (!result) arm_write_register(p, rd+1, value);
+    if (result == NO_EXCEPTION) arm_write_register(p, rd, value);
+    if (result == NO_EXCEPTION) result = arm_read_word(p, address+4, &value);
+    if (result == NO_EXCEPTION) arm_write_register(p, rd+1, value);
     return result;
 }
 
@@ -167,7 +167,7 @@ static int strd(arm_core p, uint8_t rd, uint32_t address) {
     }
     uint32_t value = arm_read_register(p, rd);
     int result = arm_write_word(p, address, value);
-    if (!result) {
+    if (result == NO_EXCEPTION) {
         value = arm_read_register(p, rd+1);
         result = arm_write_word(p, address+4, value);
     }
@@ -180,15 +180,15 @@ static int ldm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     int i, result = 0;
     uint32_t value;
     
-    for (i=0; i<=14 && !result; i++) {
+    for (i=0; i<=14 && result == NO_EXCEPTION; i++) {
         if (get_bit(r_list, i)) {
             result = arm_read_word(p, address, &value);
-            if (result) arm_write_register(p, i, value);
+            if (result == NO_EXCEPTION) arm_write_register(p, i, value);
             address += 4;
         }
     }
 
-    if (!result && get_bit(r_list, 15)) {
+    if (result == NO_EXCEPTION && get_bit(r_list, 15)) {
         result = arm_read_word(p, address, &value);
         update_flag_t(p, get_bit(value, 0));
         value &= 0xFFFFFFFE;
@@ -206,7 +206,7 @@ static int stm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     int i, result = 0;
     uint32_t value;
     
-    for (i=0; i<=15 && !result; i++) {
+    for (i=0; i<=15 && result == NO_EXCEPTION; i++) {
         if (get_bit(r_list, i)) {
             value = arm_read_register(p, i);
             result = arm_write_word(p, address, value);
@@ -224,10 +224,10 @@ static int ldm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     int i, result = 0;
     uint32_t value;
 
-    for (i=0; i<=14 && !result; i++) {
+    for (i=0; i<=14 && result == NO_EXCEPTION; i++) {
         if (get_bit(r_list, i)) {
             result = arm_read_word(p, address, &value);
-            if (result) arm_write_usr_register(p, i, value);
+            if (result == NO_EXCEPTION) arm_write_usr_register(p, i, value);
             address += 4;
         }
     }
@@ -242,7 +242,7 @@ static int stm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     int i, result = 0;
     uint32_t value;
 
-    for (i=0; i<=15 && !result; i++) {
+    for (i=0; i<=15 && result == NO_EXCEPTION; i++) {
         if (get_bit(r_list, i)) {
             value = arm_read_usr_register(p, i);
             result = arm_write_word(p, address, value);
@@ -260,22 +260,22 @@ static int ldm3(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     int i, result = 0;
     uint32_t value;
 
-    for (i=0; i<=14 && !result; i++) {
+    for (i=0; i<=14 && result == NO_EXCEPTION; i++) {
         if (get_bit(r_list, i)) {
             result = arm_read_word(p, address, &value);
-            if (result) arm_write_register(p, i, value);
+            if (result == NO_EXCEPTION) arm_write_register(p, i, value);
             address += 4;
         }
     }
 
-    if (!result) {
+    if (result == NO_EXCEPTION) {
         if (arm_current_mode_has_spsr(p)) {
             arm_write_cpsr(p, arm_read_spsr(p));
         } else {
             UNPREDICTABLE();
         }
         result = arm_read_word(p, address, &value);
-        if (result) arm_write_register(p, 15, value);
+        if (result == NO_EXCEPTION) arm_write_register(p, 15, value);
         address += 4;
     }
     assert(e_add == (address - 4));

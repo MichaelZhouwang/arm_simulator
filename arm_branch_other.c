@@ -67,12 +67,12 @@ int arm_coprocessor_others_swi(arm_core p, uint32_t ins) {
 }
 
 int arm_miscellaneous(arm_core p, uint32_t ins) {
-    debug("arm_miscellaneous: %d\n", (int)ins);
+    debug("arm_miscellaneous: \n");
     return UNDEFINED_INSTRUCTION;
 }
 
 int arm_mrs(arm_core p, uint32_t ins) {
-    debug("arm_mrs: %d\n", (int)ins);
+    debug("arm_mrs\n");
     debug_raw("================> MRS\n");
 
     uint8_t rd = get_bits(ins, 15, 12);
@@ -94,7 +94,7 @@ int arm_mrs(arm_core p, uint32_t ins) {
 }
 
 int arm_msr(arm_core p, uint32_t ins) {
-    debug("arm_msr: %d\n", (int)ins);
+    debug("arm_msr\n");
     debug_raw("================> MSR\n");
 
     uint32_t operand;

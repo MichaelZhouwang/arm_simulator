@@ -9,7 +9,7 @@ main:
 
 
 	msr CPSR_c, #5
-	mov r1, #4
+	@ movs r1, #0
 	msr CPSR_x, r1
 	msr SPSR_s, #5
 	msr SPSR_f, r1

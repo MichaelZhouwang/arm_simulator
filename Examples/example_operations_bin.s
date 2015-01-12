@@ -63,7 +63,7 @@ bic r0, r1, r2, LSR #1
 bic r0, r1, r2, LSR r2
 
 @ Arithmetic shift right by immediate
-bic r0, r1, r2, ARS #1
+bic r0, r1, r2, ASR #1
 
 @ Arithmetic shift right by register
 bic r0, r1, r2, ASR r2

@@ -147,7 +147,7 @@ int overflow_from_sub(int32_t op1, int32_t op2, int64_t res) {
 
 static int and(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t carry_out) {
-	debug("AND r%d %d %d\n", rd, op1, op2);
+	debug("AND%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op1 & op2;
 	if (s) {
 		if (rd != 15) {
@@ -170,7 +170,7 @@ static int and(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int eor(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t carry_out) {
-	debug("EOR r%d %d %d\n", rd, op1, op2);
+	debug("EOR%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
     uint64_t res = op1 ^ op2;
 	if (s) {
 		if (rd != 15) {
@@ -193,7 +193,7 @@ static int eor(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int sub(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("SUB r%d %d %d\n", rd, op1, op2);
+	debug("SUB%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op1 - op2;
 	if (s) {
 		if (rd != 15) {
@@ -216,7 +216,7 @@ static int sub(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int rsb(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("RSB r%d %d %d\n", rd, op1, op2);
+	debug("RSB%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op2 - op1;
 	if (s) {
 		if (rd != 15) {
@@ -239,7 +239,7 @@ static int rsb(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int add(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("ADD r%d %d %d\n", rd, op1, op2);
+	debug("ADD%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op1 + op2;
 	if (s) {
 		if (rd != 15) {
@@ -262,7 +262,7 @@ static int add(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int adc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                uint8_t shift_c) {
-	debug("ADC r%d %d %d\n", rd, op1, op2);
+	debug("ADC%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
     int c = arm_read_c(p);
 	uint64_t res = op1 + op2 + c;
 	if (s) {
@@ -287,7 +287,7 @@ static int adc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int sbc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("SBC r%d %d %d\n", rd, op1, op2);
+	debug("SBC%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
     int c = arm_read_c(p);
 	uint64_t res = op1 - op2 - !c;
 	if (s) {
@@ -311,7 +311,7 @@ static int sbc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int rsc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("RSC r%d %d %d\n", rd, op1, op2);
+	debug("RSC%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
     int c = arm_read_c(p);
 	uint64_t res = op2 - op1 - !c;
 	if (s) {
@@ -376,7 +376,7 @@ static int cmn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int orr(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("ORR r%d %d %d\n", rd, op1, op2);
+	debug("ORR%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op1 | op2;
 	if (s) {
 		if(rd != 15) {
@@ -399,7 +399,7 @@ static int orr(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int mov(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("MOV r%d %d\n", rd, op2);
+	debug("MOV%s %s %d\n", s ? "S" : "", arm_get_register_name(rd), op2);
 
 	uint64_t res = op2;
 	if (s) {
@@ -423,7 +423,7 @@ static int mov(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int bic(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("BIC r%d %d %d\n", rd, op1, op2);
+	debug("BIC%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op1 & ~op2;
 	if (s) {
 		if (rd != 15) {
@@ -446,7 +446,7 @@ static int bic(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int mvn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("MVN r%d %d\n", rd, op2);
+	debug("MVN%s %s %d\n", s ? "S" : "", arm_get_register_name(rd), op2);
 	uint64_t res = ~op2;
 	if (s) {
 		if (rd != 15) {
@@ -559,7 +559,7 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
     
     s = get_S(ins);
 
-	debug("opcode:%x S:%d rd:r%d op1:%d op2:%d\n", op_code, s, rd, op1, op2);
+	debug("opcode:%x S:%d rd:%s op1:%d op2:%d\n", op_code, s, arm_get_register_name(rd), op1, op2);
     
     return (handler) ? handler(p, rd, op1, op2, s, shift_C) : 0;
 }
@@ -587,7 +587,7 @@ int arm_data_processing_immediate(arm_core p, uint32_t ins) {
 	
 	s = get_S(ins);
 
-	debug("opcode:%x S:%d rd:r%d op1:%d op2:%d\n", op_code, s, rd, op1, op2);
+	debug("opcode:%x S:%d rd:%s op1:%d op2:%d\n", op_code, s, arm_get_register_name(rd), op1, op2);
 
 	return (handler) ? handler(p, rd, op1, op2, s, shift_C) : 0;
 }

@@ -34,9 +34,9 @@ Avancement du projet :
 
 Tâches :
     - gestion de la memoire         : implemente et teste
-    - fetch d'une instruction       : implemente et pas teste
-    - execution des instructions    : pas implemente et pas teste
-    - gestion des interruptions IRQ : pas implemente et pas teste
+    - fetch d'une instruction       : implemente et teste
+    - execution des instructions    : implemente et en cours de test
+    - gestion des interruptions IRQ : implemente et pas teste
     - compte rendu final            : en cours
     
 Gestion des differentes instructions :
@@ -348,3 +348,6 @@ uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t *shift_C) {
 	return result;
 }
 
+
+TODO :
+	- rendre les debug plus lisibles (écriture hexa => texte)

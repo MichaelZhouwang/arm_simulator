@@ -287,7 +287,7 @@ static int adc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int sbc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("SBC r%d %d\n", op1, op2);
+	debug("SBC r%d %d %d\n", rd, op1, op2);
     int c = arm_read_c(p);
 	uint64_t res = op1 - op2 - !c;
 	if (s) {
@@ -311,7 +311,7 @@ static int sbc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int rsc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("RSC r%d %d\n", op1, op2);
+	debug("RSC r%d %d %d\n", rd, op1, op2);
     int c = arm_read_c(p);
 	uint64_t res = op2 - op1 - !c;
 	if (s) {
@@ -336,7 +336,7 @@ static int rsc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int tst(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("TST r%d %d\n", op1, op2);
+	debug("TST %d %d\n", op1, op2);
 	uint64_t res = op1 & op2;
 	update_nzcv(p, get_bit(res, 31), (res == 0), shift_c, UNAFFECT_FLAG);
 	return 0;
@@ -344,7 +344,7 @@ static int tst(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int teq(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("TEQ r%d %d\n", op1, op2);
+	debug("TEQ %d %d\n", op1, op2);
 	uint64_t res = op1 ^ op2;
 	update_nzcv(p, get_bit(res, 31), (res == 0), shift_c, UNAFFECT_FLAG);
 	return 0;
@@ -352,7 +352,7 @@ static int teq(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int cmp(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("CMP r%d %d\n", op1, op2);
+	debug("CMP %d %d\n", op1, op2);
 	uint64_t res = op1 - op2;
 	update_nzcv(p,
 	            get_bit(res, 31),                  // N
@@ -364,7 +364,7 @@ static int cmp(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int cmn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("CMN r%d %d\n", op1, op2);
+	debug("CMN %d %d\n", op1, op2);
 	uint64_t res = op1 + op2;
 	update_nzcv(p,
 	            get_bit(res, 31),                  // N
@@ -376,7 +376,7 @@ static int cmn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int orr(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("ORR r%d %d\n", rd, op2);
+	debug("ORR r%d %d %d\n", rd, op1, op2);
 	uint64_t res = op1 | op2;
 	if (s) {
 		if(rd != 15) {
@@ -423,7 +423,7 @@ static int mov(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int bic(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("BIC r%d %d\n", rd, op2);
+	debug("BIC r%d %d %d\n", rd, op1, op2);
 	uint64_t res = op1 & ~op2;
 	if (s) {
 		if (rd != 15) {
@@ -446,7 +446,7 @@ static int bic(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int mvn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
-	debug("MVN r%d %d\n", op1, op2);
+	debug("MVN r%d %d\n", rd, op2);
 	uint64_t res = ~op2;
 	if (s) {
 		if (rd != 15) {

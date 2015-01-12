@@ -53,7 +53,7 @@ void arm_branch_exception_vector(arm_core p, int8_t vector) {
 /////////////////////////////////////////////////////////////////////////////
 
 static void handle_reset(arm_core p) {
-    debug("exception called : RESET");
+    debug("exception called : RESET\n");
 
     int32_t cpsr = arm_read_cpsr(p);
     cpsr = set_bits(cpsr, 4, 0, 0x19);        // Enter Supervisor mode
@@ -67,7 +67,7 @@ static void handle_reset(arm_core p) {
 }
 
 static void handle_undefined_instruction(arm_core p) {
-    debug("exception called : UNDEFINED INSTRUCTION");
+    debug("exception called : UNDEFINED INSTRUCTION\n");
 
     int32_t address_next_ins = arm_address_next_instruction(p);
     int32_t cpsr = arm_read_cpsr(p);
@@ -86,7 +86,7 @@ static void handle_undefined_instruction(arm_core p) {
 }
 
 static void handle_software_interrup(arm_core p) {
-    debug("exception called : SOFTWARE INTERRUP");
+    debug("exception called : SOFTWARE INTERRUP\n");
 
     int32_t address_next_ins = arm_address_next_instruction(p);
     int32_t cpsr = arm_read_cpsr(p);
@@ -105,7 +105,7 @@ static void handle_software_interrup(arm_core p) {
 }
 
 static void handle_prefetch_abord(arm_core p) {
-    debug("exception called : PREFETCH ABORD");
+    debug("exception called : PREFETCH ABORD\n");
 
     int32_t address_current_ins = arm_address_current_instruction(p);
     int32_t cpsr = arm_read_cpsr(p);
@@ -124,7 +124,7 @@ static void handle_prefetch_abord(arm_core p) {
 }
 
 static void handle_data_abort(arm_core p) {
-    debug("exception called : DATA ABORD");
+    debug("exception called : DATA ABORD\n");
 
     int32_t cpsr = arm_read_cpsr(p);
     if (get_bit(cpsr, A)) {
@@ -148,7 +148,7 @@ static void handle_data_abort(arm_core p) {
 }
 
 static void handle_irq(arm_core p) {
-    debug("exception called : INTERRUPT REQUEST (IRQ)");
+    debug("exception called : INTERRUPT REQUEST (IRQ)\n");
 
     int32_t cpsr = arm_read_cpsr(p);
     if (get_bit(cpsr, I)) {
@@ -172,7 +172,7 @@ static void handle_irq(arm_core p) {
 }
 
 static void handle_fiq(arm_core p) {
-    debug("exception called : FAST INTERRUPT REQUEST (FIQ)");
+    debug("exception called : FAST INTERRUPT REQUEST (FIQ)\n");
     
     int32_t cpsr = arm_read_cpsr(p);
     if (get_bit(cpsr, F)) {

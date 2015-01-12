@@ -35,10 +35,6 @@ Contact: Guillaume.Huard@imag.fr
 
 #define High_vectors_configured 0
 
-
-// TODO: implement co processor to remove lines below
-
-
 /////////////////////////////////////////////////////////////////////////////
 // Helpers
 /////////////////////////////////////////////////////////////////////////////
@@ -172,11 +168,7 @@ static void handle_irq(arm_core p) {
     arm_write_register(p, LR, address_next_ins + 4);
     arm_write_spsr(p, cpsr_copie);
     
-    //if (VE == 0) {
-        arm_branch_exception_vector(p, 0x0018);
-    //} else {
-    //    IMPLEMENTATION_DEFINED();
-    //}
+    arm_branch_exception_vector(p, 0x0018);
 }
 
 static void handle_fiq(arm_core p) {
@@ -201,11 +193,7 @@ static void handle_fiq(arm_core p) {
     arm_write_register(p, LR, address_next_ins + 4);
     arm_write_spsr(p, cpsr_copie);
 
-    // if (VE == 0) {
-        arm_branch_exception_vector(p, 0x001C);
-    // } else {
-    //    IMPLEMENTATION_DEFINED();
-    // }
+    arm_branch_exception_vector(p, 0x001C);
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -34,7 +34,7 @@ Contact: Guillaume.Huard@imag.fr
 // Helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-static int dp_lsl(arm_core p, int op, int value, uint8_t *shift_carry_out) {
+static uint32_t dp_lsl(arm_core p, uint32_t op, uint8_t value, uint8_t *shift_carry_out) {
 	if (value == 0) {
 	    *shift_carry_out = arm_read_c(p);
     } else {
@@ -49,7 +49,7 @@ static int dp_lsl(arm_core p, int op, int value, uint8_t *shift_carry_out) {
 	return op;
 }
 
-static int dp_lsr(arm_core p, int op, int value, uint8_t *shift_carry_out) {
+static uint32_t dp_lsr(arm_core p, uint32_t op, uint8_t value, uint8_t *shift_carry_out) {
     if (value == 0) {
 	    *shift_carry_out = arm_read_c(p);
 	} else {
@@ -64,7 +64,7 @@ static int dp_lsr(arm_core p, int op, int value, uint8_t *shift_carry_out) {
 	return op;
 }
 
-static int dp_asr(arm_core p, int op, int value, uint8_t *shift_carry_out) {
+static uint32_t dp_asr(arm_core p, uint32_t op, uint8_t value, uint8_t *shift_carry_out) {
     if (value == 0) {
 	    *shift_carry_out = arm_read_c(p);
 	} else {
@@ -79,8 +79,9 @@ static int dp_asr(arm_core p, int op, int value, uint8_t *shift_carry_out) {
 	return op;
 }
 
-static int dp_ror_rrx(arm_core p, int op, int value, uint8_t *shift_carry_out) {
+static uint32_t dp_ror_rrx(arm_core p, uint32_t op, uint8_t value, uint8_t *shift_carry_out) {
     if (value == 0) { // RRX
+		//debug("C = %d\n", arm_read_c(p)); // A SUPPRIMER
 		*shift_carry_out = get_bit(op,0);
 	    op = (arm_read_c(p) << 31) | (op >> 1);
 	} else { // ROR
@@ -135,12 +136,12 @@ uint32_t get_shifted(arm_core p, uint32_t ins, uint8_t* shift_carry_out) {
 }
 
 
-int overflow_from_add(int32_t op1, int32_t op2, int64_t res) {
+int overflow_from_add(uint32_t op1, uint32_t op2, uint64_t res) {
     return get_bit(op1, 31) == get_bit(op2, 31) &&
 		   get_bit(op1, 31) != get_bit(res, 31);
 }
 
-int overflow_from_sub(int32_t op1, int32_t op2, int64_t res) {
+int overflow_from_sub(uint32_t op1, uint32_t op2, uint64_t res) {
     return get_bit(op1, 31) != get_bit(op2, 31) &&
 		   get_bit(op1, 31) != get_bit(res, 31);
 }
@@ -151,14 +152,14 @@ int overflow_from_sub(int32_t op1, int32_t op2, int64_t res) {
 
 static int and(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("AND%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
+	debug("AND%s %s 0x%x 0x%x\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op1 & op2;
 	if (s) {
 		if (rd != 15) {
 		    update_nzcv(p, 
 		                get_bit(res ,31), // Z
 		                (res == 0),       // N
-		                shift_carry_out,        // C
+		                shift_carry_out,  // C
 		                UNAFFECT_FLAG);   // V
 		} else {
 			if(arm_current_mode_has_spsr(p)) {
@@ -174,14 +175,14 @@ static int and(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int eor(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("EOR%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
+	debug("EOR%s %s 0x%x 0x%x\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
     uint64_t res = op1 ^ op2;
 	if (s) {
 		if (rd != 15) {
 		    update_nzcv(p,
 		                get_bit(res ,31), // N
 		                (res == 0),       // Z
-		                shift_carry_out,        // C
+		                shift_carry_out,  // C
 		                UNAFFECT_FLAG);   // V
 		} else {
 			if(arm_current_mode_has_spsr(p)) {
@@ -197,8 +198,8 @@ static int eor(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int sub(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("SUB%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
-	uint64_t res = op1 - op2;
+	debug("SUB%s %s 0x%x 0x%x\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
+	uint64_t res = (uint64_t)op1 - (uint64_t)op2;
 	if (s) {
 		if (rd != 15) {
 		    update_nzcv(p,
@@ -220,8 +221,8 @@ static int sub(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int rsb(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("RSB%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
-	uint64_t res = op2 - op1;
+	debug("RSB%s %s 0x%x 0x%x\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
+	uint64_t res = (uint64_t)op2 - (uint64_t)op1;
 	if (s) {
 		if (rd != 15) {
 		    update_nzcv(p,
@@ -243,8 +244,8 @@ static int rsb(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int add(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("ADD%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
-	uint64_t res = op1 + op2;
+	debug("ADD%s %s 0x%x 0x%x\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
+	uint64_t res = (uint64_t)op1 + (uint64_t)op2;
 	if (s) {
 		if (rd != 15) {
 		    update_nzcv(p, 
@@ -266,9 +267,9 @@ static int add(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int adc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                uint8_t shift_carry_out) {
-	debug("ADC%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
+	debug("ADC%s %s 0x%x 0x%x\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
     int c = arm_read_c(p);
-	uint64_t res = op1 + op2 + c;
+	uint64_t res = (uint64_t)op1 + (uint64_t)op2 + (uint64_t)c;
 	if (s) {
 		if (rd != 15) {
 			update_nzcv(p, 
@@ -291,9 +292,9 @@ static int adc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int sbc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("SBC%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
+	debug("SBC%s %s 0x%x 0x%x\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
     int c = arm_read_c(p);
-	uint64_t res = op1 - op2 - !c;
+	uint64_t res = (uint64_t)op1 - (uint64_t)op2 - !(uint64_t)c;
 	if (s) {
 		if(rd != 15){
 		    update_nzcv(p,
@@ -315,9 +316,9 @@ static int sbc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int rsc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("RSC%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
+	debug("RSC%s %s 0x%x 0x%x\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
     int c = arm_read_c(p);
-	uint64_t res = op2 - op1 - !c;
+	uint64_t res = (uint64_t)op2 - (uint64_t)op1 - !(uint64_t)c;
 	if (s) {
 		if (rd != 15) {
 		    update_nzcv(p,
@@ -340,7 +341,7 @@ static int rsc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int tst(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("TST %d %d\n", op1, op2);
+	debug("TST 0x%x 0x%x\n", op1, op2);
 	uint64_t res = op1 & op2;
 	update_nzcv(p, get_bit(res, 31), (res == 0), shift_carry_out, UNAFFECT_FLAG);
 	return 0;
@@ -348,7 +349,7 @@ static int tst(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int teq(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("TEQ %d %d\n", op1, op2);
+	debug("TEQ 0x%x 0x%x\n", op1, op2);
 	uint64_t res = op1 ^ op2;
 	update_nzcv(p, get_bit(res, 31), (res == 0), shift_carry_out, UNAFFECT_FLAG);
 	return 0;
@@ -356,8 +357,8 @@ static int teq(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int cmp(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("CMP %d %d\n", op1, op2);
-	uint64_t res = op1 - op2;
+	debug("CMP 0x%x 0x%x\n", op1, op2);
+	uint64_t res = (uint64_t)op1 - (uint64_t)op2;
 	update_nzcv(p,
 	            get_bit(res, 31),                  // N
 		        (res == 0),                        // Z
@@ -368,8 +369,8 @@ static int cmp(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int cmn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("CMN %d %d\n", op1, op2);
-	uint64_t res = op1 + op2;
+	debug("CMN 0x%x 0x%x\n", op1, op2);
+	uint64_t res = (uint64_t)op1 + (uint64_t)op2;
 	update_nzcv(p,
 	            get_bit(res, 31),                  // N
 		        (res == 0),                        // Z
@@ -380,14 +381,14 @@ static int cmn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int orr(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("ORR%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
+	debug("ORR%s %s 0x%x 0x%x\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op1 | op2;
 	if (s) {
 		if(rd != 15) {
 	        update_nzcv(p,
 	                    get_bit(res, 31), // N
 	                    (res == 0),       // Z
-	                    shift_carry_out,            // C
+	                    shift_carry_out,  // C
 	                    UNAFFECT_FLAG);   // V
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
@@ -403,15 +404,14 @@ static int orr(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int mov(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("MOV%s %s %d\n", s ? "S" : "", arm_get_register_name(rd), op2);
-
+	debug("MOV%s %s 0x%x\n", s ? "S" : "", arm_get_register_name(rd), op2);
 	uint64_t res = op2;
 	if (s) {
 		if (rd != 15) {
 	        update_nzcv(p,
 	                    get_bit(res, 31), // N
 	                    (res == 0),       // Z
-	                    shift_carry_out,            // C
+	                    shift_carry_out,  // C
 	                    UNAFFECT_FLAG);   // V
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
@@ -427,14 +427,14 @@ static int mov(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int bic(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("BIC%s %s %d %d\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
+	debug("BIC%s %s 0x%x 0x%x\n", s ? "S" : "", arm_get_register_name(rd), op1, op2);
 	uint64_t res = op1 & ~op2;
 	if (s) {
 		if (rd != 15) {
 		    update_nzcv(p,
 	                    get_bit(res, 31), // N
 	                    (res == 0),       // Z
-	                    shift_carry_out,            // C
+	                    shift_carry_out,  // C
 	                    UNAFFECT_FLAG);   // V
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
@@ -450,14 +450,14 @@ static int bic(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 
 static int mvn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
-	debug("MVN%s %s %d\n", s ? "S" : "", arm_get_register_name(rd), op2);
+	debug("MVN%s %s 0x%x\n", s ? "S" : "", arm_get_register_name(rd), op2);
 	uint64_t res = ~op2;
 	if (s) {
 		if (rd != 15) {
 		    update_nzcv(p,
 	                    get_bit(res, 31), // N
 	                    (res == 0),       // Z
-	                    shift_carry_out,            // C
+	                    shift_carry_out,  // C
 	                    UNAFFECT_FLAG);   // V
 		} else {
 			if(arm_current_mode_has_spsr(p)) {
@@ -563,7 +563,7 @@ int arm_data_processing_shift(arm_core p, uint32_t ins) {
     
     s = get_S(ins);
 
-	debug("opcode:%x S:%d rd:%s op1:%d op2:%d\n", op_code, s, arm_get_register_name(rd), op1, op2);
+	debug("opcode:0x%x S:%d rd:%s op1:%d op2:%d\n", op_code, s, arm_get_register_name(rd), op1, op2);
     
     return (handler) ? handler(p, rd, op1, op2, s, shift_carry_out) : 0;
 }
@@ -591,7 +591,7 @@ int arm_data_processing_immediate(arm_core p, uint32_t ins) {
 	
 	s = get_S(ins);
 
-	debug("opcode:%x S:%d rd:%s op1:%d op2:%d\n", op_code, s, arm_get_register_name(rd), op1, op2);
+	debug("opcode:0x%x S:%d rd:%s op1:%d op2:%d\n", op_code, s, arm_get_register_name(rd), op1, op2);
 
 	return (handler) ? handler(p, rd, op1, op2, s, shift_carry_out) : 0;
 }

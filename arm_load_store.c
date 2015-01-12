@@ -33,6 +33,7 @@ Contact: Guillaume.Huard@imag.fr
 ///////////////////////////////////////////////////////////////////////////////
 
 static int ldr(arm_core p, uint8_t rd, uint32_t address) {
+	debug("LDR rd:r%d %x\n", rd, address);
     uint32_t value;
     int result = arm_read_word(p, address, &value);
     if (!result) {
@@ -46,11 +47,13 @@ static int ldr(arm_core p, uint8_t rd, uint32_t address) {
 }
 
 static int str(arm_core p, uint8_t rd, uint32_t address) {
+	debug("STR rd:r%d %x\n", rd, address);
     uint32_t value = arm_read_register(p, rd);
     return arm_write_word(p, address, value);
 }
 
 static int ldrb(arm_core p, uint8_t rd, uint32_t address) {
+	debug("LDRB rd:r%d %x\n", rd, address);
     uint8_t value;
     int result = arm_read_byte(p, address, &value);
     if (!result)
@@ -59,11 +62,13 @@ static int ldrb(arm_core p, uint8_t rd, uint32_t address) {
 }
 
 static int strb(arm_core p, uint8_t rd, uint32_t address) {
+	debug("STRB rd:r%d %x\n", rd, address);
     uint8_t value = (arm_read_register(p, rd) & 0xFF);
     return arm_write_byte(p, address, value);
 }
 
 static int ldrt(arm_core p, uint8_t rd, uint32_t address) {
+	debug("LDRT rd:r%d %x\n", rd, address);
     uint32_t value;
     int result = arm_read_word(p, address, &value);
     if (!result)
@@ -72,11 +77,13 @@ static int ldrt(arm_core p, uint8_t rd, uint32_t address) {
 }
 
 static int strt(arm_core p, uint8_t rd, uint32_t address) {
+	debug("STRT rd:r%d %x\n", rd, address);
     uint32_t value = arm_read_register(p, rd);
     return arm_write_word(p, address, value);
 }
 
 static int ldrbt(arm_core p, uint8_t rd, uint32_t address) {
+	debug("LBRBT rd:r%d %x\n", rd, address);
     uint8_t value;
     int result = arm_read_byte(p, address, &value);
     if (!result)
@@ -85,6 +92,7 @@ static int ldrbt(arm_core p, uint8_t rd, uint32_t address) {
 }
 
 static int strbt(arm_core p, uint8_t rd, uint32_t address) {
+	debug("STRBT rd:r%d %x\n", rd, address);
     uint8_t value;
     int result = arm_read_byte(p, address, &value);
     if (!result)
@@ -93,6 +101,7 @@ static int strbt(arm_core p, uint8_t rd, uint32_t address) {
 }
 
 static int ldrh(arm_core p, uint8_t rd, uint32_t address) {
+	debug("LDRH rd:r%d %x\n", rd, address);
     uint16_t value;
     int result = arm_read_half(p, address, &value);
     if (!result)
@@ -101,11 +110,13 @@ static int ldrh(arm_core p, uint8_t rd, uint32_t address) {
 }
 
 static int strh(arm_core p, uint8_t rd, uint32_t address) {
+	debug("STRH rd:r%d %x\n", rd, address);
     uint16_t value = (arm_read_register(p, rd) & 0xFFFF);
     return arm_write_half(p, address, value);
 }
 
 static int ldrsh(arm_core p, uint8_t rd, uint32_t address) {
+	debug("LDRSH rd:r%d %x\n", rd, address);
     uint32_t value;
     int result = arm_read_half(p, address, (uint16_t*)&value);
     if (!result) {
@@ -120,6 +131,7 @@ static int ldrsh(arm_core p, uint8_t rd, uint32_t address) {
 }
 
 static int ldrsb(arm_core p, uint8_t rd, uint32_t address) {
+	debug("LDRSB rd:r%d %x\n", rd, address);
     uint8_t value;
     int result = arm_read_byte(p, address, &value);
     if (!result) {
@@ -134,6 +146,7 @@ static int ldrsb(arm_core p, uint8_t rd, uint32_t address) {
 }
 
 static int ldrd(arm_core p, uint8_t rd, uint32_t address) {
+	debug("LDRD rd:r%d %x\n", rd, address);
     if (is_odd(rd) || (rd == 14) || (address & 3)) {
         UNPREDICTABLE();
         return 0;
@@ -147,6 +160,7 @@ static int ldrd(arm_core p, uint8_t rd, uint32_t address) {
 }
 
 static int strd(arm_core p, uint8_t rd, uint32_t address) {
+	debug("STRD rd:r%d %x\n", rd, address);
     if (is_odd(rd) || (rd == 14) || (address & 3) || (address & 4)) {
         UNPREDICTABLE();
         return 0;
@@ -161,6 +175,7 @@ static int strd(arm_core p, uint8_t rd, uint32_t address) {
 }
 
 static int ldm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
+	debug("LDM1 rdList:%x startAdd:%x endAdd:%x\n", r_list, s_add, e_add);
     uint32_t address = s_add;
     int i, result = 0;
     uint32_t value;
@@ -186,6 +201,7 @@ static int ldm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
 }
 
 static int stm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
+	debug("STM2 rdList:%x startAdd:%x endAdd:%x\n", r_list, s_add, e_add);
     uint32_t address = s_add;
     int i, result = 0;
     uint32_t value;
@@ -203,6 +219,7 @@ static int stm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
 }
 
 static int ldm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
+	debug("LDM2 rdList:%x startAdd:%x endAdd:%x\n", r_list, s_add, e_add);
     uint32_t address = s_add;
     int i, result = 0;
     uint32_t value;
@@ -220,6 +237,7 @@ static int ldm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
 }
 
 static int stm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
+	debug("STM2 rdList:%x startAdd:%x endAdd:%x\n", r_list, s_add, e_add);
     uint32_t address = s_add;
     int i, result = 0;
     uint32_t value;
@@ -237,6 +255,7 @@ static int stm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
 }
 
 static int ldm3(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
+	debug("LDM3 rdList:%x startAdd:%x endAdd:%x\n", r_list, s_add, e_add);
     uint32_t address = s_add;
     int i, result = 0;
     uint32_t value;
@@ -302,7 +321,7 @@ uint32_t scaled_shift(arm_core p, uint8_t shift, uint8_t shift_imm,
 
 // LDR, STR, LDRB, STRB, LDRT, STRT, LDRBT, STRBT
 int arm_load_store(arm_core p, uint32_t ins) {
-    debug("arm_load_store: %d\n", (int)ins);
+    debug("arm load store\n");
 
     uint32_t address;
     int index, result;
@@ -340,7 +359,6 @@ int arm_load_store(arm_core p, uint32_t ins) {
             address = (get_bit(ins, 23)) ? val_rn + index : val_rn - index;
         }
     }
-
     switch (codage3_bits(ins, 22, 21, 20)) {
         case 0 : result = str(p, rd, address);   break;
         case 1 : result = ldr(p, rd, address);   break;
@@ -357,7 +375,7 @@ int arm_load_store(arm_core p, uint32_t ins) {
 
 // LDRH, STRH, LDRSH, STRSH, LDRSB, STRSB, LDRD, STRD
 int arm_load_store_miscellaneous(arm_core p, uint32_t ins) {
-    debug("arm_store_miscellaneous: %d\n", (int)ins);
+    debug("load store miscellaneous\n");
 
     uint32_t address;
     uint8_t rd = get_bits(ins, 15, 12);
@@ -397,7 +415,7 @@ int arm_load_store_miscellaneous(arm_core p, uint32_t ins) {
 
 // LDM(1), STM(1), LDM(2), STM(2), LDM(3), STM(3)
 int arm_load_store_multiple(arm_core p, uint32_t ins) {
-    debug("arm_load_store_multiple: %d\n", (int)ins);
+    debug("arm load store multiple\n");
 
     int result;
     uint8_t rn = get_bits(ins, 19, 16);
@@ -447,7 +465,7 @@ int arm_load_store_multiple(arm_core p, uint32_t ins) {
 
 // <opcode>{<cond>}{L} <coproc>,<CRd>,<addressing_mode>
 int arm_coprocessor_load_store(arm_core p, uint32_t ins) {
-    debug("arm_coprocessor_load_store: %d\n", (int)ins);
+    debug("arm coprocessor load store\n");
     debug("instruction is not implemented");
     return UNDEFINED_INSTRUCTION;
 }

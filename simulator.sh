@@ -12,7 +12,7 @@ for j in $@
 do
 	if [ $j = "-g" ]
 	then
-		c=`echo $c --gdb-port 50000`
+		c=`echo $c --gdb-port 50000 --irq-port 60000`
 	elif [ $j = "-t" ]
 	then 
 		c=`echo $c --trace-registers --trace-memory --trace-state --trace-position`

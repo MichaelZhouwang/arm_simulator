@@ -36,13 +36,14 @@ Contact: Guillaume.Huard@imag.fr
 #define get_bit(x, i) (((x)>>(i))&1)
 #define set_bit(x, i) ((x)|(1<<(i)))
 #define clr_bit(x, i) ((x)&~(1<<(i)))
-#define change_bit(x, i, v) ((x & (~(1<<i))) | ((v)?(1<<i):0))
+#define chg_bit(x, i, v) ((x & (~(1<<i))) | ((v)?(1<<i):0))
 
 #define get_bits(x, h, l) (((x)>>(l))&~(((~0)>>((h)-(l)+1))<<((h)-(l)+1)))
 #define set_bits(x, h, l, bits) \
-                 (((x)&~(((~0)>>(l))<<(l)))|((x)&(((~0)>>((h)+1))<<((h)+1)))| \
-		  ((bits)<<(l)))
-		  
+                 (((x)&~(((~0)>>(l))<<(l)))| \
+                 ((x)&(((~0)>>((h)+1))<<((h)+1)))| \
+                 ((bits)<<(l)))
+
 #define codage2(x, y) ((x<<1) & y)
 #define codage3(x, y, z) ((x<<2) & (y<<1) & z)
 
@@ -56,11 +57,13 @@ Contact: Guillaume.Huard@imag.fr
 #define reverse_4(x) ((((x)&0xFF)<<24)|((((x)>>8)&0xFF)<<16)|\
                       ((((x)>>16)&0xFF)<<8)|(((x)>>24)&0xFF))
 
+int is_big_endian();
+
+int number_of_set_bits(int bits_field);
+
 uint32_t asr(uint32_t value, uint8_t shift);
 uint32_t ror(uint32_t value, uint8_t rotation);
-int shift(arm_core p, int op, int code, int value, uint8_t *shift_C);
-int number_of_set_bits(int bits_field);
-int is_big_endian();
+uint32_t sign_extend_24_to_30(int32_t value);
 
 #endif
 

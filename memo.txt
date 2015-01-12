@@ -31,7 +31,7 @@ Bizzareries:
 Avancement du projet :
 -----------------------------------------------------------------------------
 
-Taches :
+Tâches :
     - gestion de la memoire         : implemente et teste
     - fetch d'une instruction       : implemente et pas teste
     - execution des instructions    : pas implemente et pas teste
@@ -42,8 +42,8 @@ Gestion des differentes instructions :
 |--------------|---------|------------|-------|------------------------------|
 | Instructions |   Doc   | Implemente | Teste | Nom du test                  |
 |--------------|---------|------------|-------|------------------------------|
-|   B          |   160   |    oui     |-------|        exampleB_BL.s         |
-|   BL         |   160   |    oui     |-------|        exampleB_BL.s         |
+|     B        |   160   |    oui     |-------|        exampleB_BL.s         |
+|     BL       |   160   |    oui     |-------|        exampleB_BL.s         |
 |--------------|---------|------------|-------|------------------------------|
 |     TEQ      | 378+442 |    oui     |-------|   exampleTST_TEQ_CMP_CMN.s   |
 |     CMP      | 178+442 |    oui     |-------|   exampleTST_TEQ_CMP_CMN.s   |
@@ -77,16 +77,15 @@ Gestion des differentes instructions :
 
 Ajouter en plus:
 |--------------|---------|------------|-------|------------------------------|
-|     LDRSB    | 206+577 |    oui     |-------|------------------------------|
-|     LDRSH    | 208+578 |    oui     |-------|------------------------------|
+|     LDRSB    | 206+473 |    oui     |-------|------------------------------|
+|     LDRSH    | 208+473 |    oui     |-------|------------------------------|
 |--------------|---------|------------|-------|------------------------------|
-|     LDRT     |---------|    oui     |-------|------------------------------|
-|     STRT     |---------|    oui     |-------|------------------------------|
-|     LDRBT    |---------|    oui     |-------|------------------------------|
-|     STRBT    |---------|    oui     |-------|------------------------------|
-|     STRSB    |---------|    oui     |-------|------------------------------|
-|     LDRD     |---------|    oui     |-------|------------------------------|
-|     STRD     |---------|    oui     |-------|------------------------------|
+|     LDRT     | 210+458 |    oui     |-------|------------------------------|
+|     STRT     | 356+458 |    oui     |-------|------------------------------|
+|     LDRBT    | 198+458 |    oui     |-------|------------------------------|
+|     STRBT    | 347+458 |    oui     |-------|------------------------------|
+|     LDRD     | 196+473 |    oui     |-------|------------------------------|
+|     STRD     | 349+473 |    oui     |-------|------------------------------|
 |--------------|---------|------------|-------|------------------------------|
 |     MSR      |   226   |    oui     |-------|------------------------------|
 |--------------|---------|------------|-------|------------------------------|
@@ -109,7 +108,7 @@ Modification par fichiers :
 |---------------------|------------------------------------------------------|
 | memory              | - implementation des access a la memoire             |
 |---------------------|------------------------------------------------------|
-|arm_instruction      | - ajout du fetch                                     |
+| arm_instruction     | - ajout du fetch                                     |
 |                     | - prise en compte des conditions                     |
 |                     | - redirection des instructions dans les handlers     |
 |---------------------|------------------------------------------------------|
@@ -332,5 +331,19 @@ int arm_msr(arm_core p, uint32_t ins) {
 
 DANS DATA PROCESSING
 
+(value >> rotation) | (value << (32-rotation));
 
+uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t *shift_C) {
+	uint32_t imm_8 = ins & 255;
+	uint8_t rotate_imm = (ins >> 8) & 15;
+	uint32_t result = ror(imm_8,(rotate_imm * 2));
+
+	if (shift_C) {
+		if(rotate_imm == 0)
+			*shift_C = arm_read_c(p);
+		else 
+			*shift_C = get_bit(result,31);
+	}
+	return result;
+}
 

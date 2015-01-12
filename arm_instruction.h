@@ -25,7 +25,7 @@ Contact: Guillaume.Huard@imag.fr
 #define __ARM_INSTRUCTION_H__
 
 #include "arm_core.h"
-         
+
 // Execution of instructions
 int arm_step(arm_core p);
 
@@ -35,9 +35,5 @@ int instruction_check_condition(arm_core p, uint32_t ins);
 // Handlers
 typedef int(* instruction_handler_t)(arm_core, uint32_t);
 instruction_handler_t instruction_get_handler(uint32_t ins);
-
-
-uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t* shift_C);
-uint32_t get_shifted(arm_core p, uint32_t ins, uint8_t* shift_C);
 
 #endif

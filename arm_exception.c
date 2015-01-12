@@ -20,6 +20,8 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
+#include <debug.h>
 #include "arm_exception.h"
 #include "arm_constants.h"
 #include "arm_core.h"
@@ -31,13 +33,197 @@ Contact: Guillaume.Huard@imag.fr
 #define CP15_reg1_EEbit 0
 #endif
 
-#define Exception_bit_9 (CP15_reg1_EEbit << 9)
+#define High_vectors_configured 0
+
+
+// TODO: implement co processor to remove lines below
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Helpers
+/////////////////////////////////////////////////////////////////////////////
+
+void arm_branch_exception_vector(arm_core p, int8_t vector) {
+    int32_t address = vector;
+    if (High_vectors_configured)
+        address |= 0xFFFF0000;
+    else
+        address &= 0x0000FFFF;
+    arm_write_usr_register(p, PC, address);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Exceptions handlers
+/////////////////////////////////////////////////////////////////////////////
+
+static void handle_reset(arm_core p) {
+    debug("exception called : RESET");
+
+    int32_t cpsr = arm_read_cpsr(p);
+    cpsr = set_bits(cpsr, 4, 0, 0x19);        // Enter Supervisor mode
+    cpsr = clr_bit(cpsr, 5);                  // Execute in ARM state
+    cpsr = set_bit(cpsr, 6);                  // Disable fast interrupts
+    cpsr = set_bit(cpsr, 7);                  // Disable normal interrupts
+    cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
+    arm_write_cpsr(p, cpsr);
+
+    arm_branch_exception_vector(p, 0x0000);
+}
+
+static void handle_undefined_instruction(arm_core p) {
+    debug("exception called : UNDEFINED INSTRUCTION");
+
+    int32_t address_next_ins = arm_address_next_instruction(p);
+    int32_t cpsr = arm_read_cpsr(p);
+    int32_t cpsr_copie = cpsr;
+    
+    cpsr = set_bits(cpsr, 4, 0, 0x27);        // Enter Undef Instruction mode
+    cpsr = clr_bit(cpsr, 5);                  // Execute in ARM state
+    cpsr = set_bit(cpsr, 7);                  // Disable normal interrupts
+    cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
+    
+    arm_write_cpsr(p, cpsr);
+    arm_write_register(p, LR, address_next_ins);
+    arm_write_spsr(p, cpsr_copie);
+
+    arm_branch_exception_vector(p, 0x0008);
+}
+
+static void handle_software_interrup(arm_core p) {
+    debug("exception called : SOFTWARE INTERRUP");
+
+    int32_t address_next_ins = arm_address_next_instruction(p);
+    int32_t cpsr = arm_read_cpsr(p);
+    int32_t cpsr_copie = cpsr;
+    
+    cpsr = set_bits(cpsr, 4, 0, 0x19);        // Enter Supervisor mode
+    cpsr = clr_bit(cpsr, 5);                  // Execute in ARM state
+    cpsr = set_bit(cpsr, 7);                  // Disable normal interrupts
+    cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
+
+    arm_write_cpsr(p, cpsr);
+    arm_write_register(p, LR, address_next_ins);
+    arm_write_spsr(p, cpsr_copie);
+
+    arm_branch_exception_vector(p, 0x0004);
+}
+
+static void handle_prefetch_abord(arm_core p) {
+    debug("exception called : PREFETCH ABORD");
+
+    int32_t address_current_ins = arm_address_current_instruction(p);
+    int32_t cpsr = arm_read_cpsr(p);
+    int32_t cpsr_copie = cpsr;
+    
+    cpsr = set_bits(cpsr, 4, 0, 0x23);        // Enter Abord mode
+    cpsr = clr_bit(cpsr, 5);                  // Execute in ARM state
+    cpsr = set_bit(cpsr, 7);                  // Disable normal interrupts
+    cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
+    
+    arm_write_cpsr(p, cpsr);
+    arm_write_register(p, LR, address_current_ins + 4);
+    arm_write_spsr(p, cpsr_copie);
+
+    arm_branch_exception_vector(p, 0x000C);
+}
+
+static void handle_data_abort(arm_core p) {
+    debug("exception called : DATA ABORD");
+
+    int32_t cpsr = arm_read_cpsr(p);
+    if (get_bit(cpsr, A)) {
+        debug("data abord exceptions are disabled\n");
+        return;
+    }
+    
+    int32_t address_current_ins = arm_address_current_instruction(p);
+    int32_t cpsr_copie = cpsr;
+
+    cpsr = set_bits(cpsr, 4, 0, 0x23);        // Enter Abord mode
+    cpsr = clr_bit(cpsr, 5);                  // Execute in ARM state
+    cpsr = set_bit(cpsr, 7);                  // Disable normal interrupts
+    cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
+    
+    arm_write_cpsr(p, cpsr);
+    arm_write_register(p, LR, address_current_ins + 8);
+    arm_write_spsr(p, cpsr_copie);
+
+    arm_branch_exception_vector(p, 0x0010);
+}
+
+static void handle_irq(arm_core p) {
+    debug("exception called : INTERRUPT REQUEST (IRQ)");
+
+    int32_t cpsr = arm_read_cpsr(p);
+    if (get_bit(cpsr, I)) {
+        debug("IRQ exceptions are disabled\n");
+        return;
+    }
+    
+    int32_t address_next_ins = arm_address_next_instruction(p);
+    int32_t cpsr_copie = cpsr;
+
+    cpsr = set_bits(cpsr, 4, 0, 0x18);        // Enter IRQ mode
+    cpsr = clr_bit(cpsr, 5);                   // Execute in ARM state
+    cpsr = set_bit(cpsr, 7);                   // Disable normal interrupts
+    cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
+
+    arm_write_cpsr(p, cpsr);
+    arm_write_register(p, LR, address_next_ins + 4);
+    arm_write_spsr(p, cpsr_copie);
+    
+    //if (VE == 0) {
+        arm_branch_exception_vector(p, 0x0018);
+    //} else {
+    //    IMPLEMENTATION_DEFINED();
+    //}
+}
+
+static void handle_fiq(arm_core p) {
+    debug("exception called : FAST INTERRUPT REQUEST (FIQ)");
+    
+    int32_t cpsr = arm_read_cpsr(p);
+    if (get_bit(cpsr, F)) {
+        debug("FIQ exceptions are disabled\n");
+        return;
+    }
+    
+    int32_t address_next_ins = arm_address_next_instruction(p);
+    int32_t cpsr_copie = cpsr;
+    
+    cpsr = set_bits(cpsr, 4, 0, 0x17);        // Enter IRQ mode
+    cpsr = clr_bit(cpsr, 5);               // Execute in ARM state
+    cpsr = set_bit(cpsr, 6);               // Disable fast interrupts
+    cpsr = set_bit(cpsr, 7);               // Disable normal interrupts
+    cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
+    
+    arm_write_cpsr(p, cpsr);
+    arm_write_register(p, LR, address_next_ins + 4);
+    arm_write_spsr(p, cpsr_copie);
+
+    // if (VE == 0) {
+        arm_branch_exception_vector(p, 0x001C);
+    // } else {
+    //    IMPLEMENTATION_DEFINED();
+    // }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Exceptions management
+/////////////////////////////////////////////////////////////////////////////
 
 void arm_exception(arm_core p, unsigned char exception) {
-    /* We only support RESET initially */
-    /* Semantics of reset interrupt (ARM manual A2-18) */
-    if (exception == RESET) {
-        arm_write_cpsr(p, 0x1d3 | Exception_bit_9);
-	arm_write_usr_register(p, 15, 0);
+    debug("arm_exception %s\n", arm_get_exception_name(exception));
+       
+    switch (exception) {
+        case RESET:                 handle_reset(p);                 break;
+        case UNDEFINED_INSTRUCTION: handle_undefined_instruction(p); break;
+        case SOFTWARE_INTERRUPT:    handle_software_interrup(p);     break;
+        case PREFETCH_ABORT:        handle_prefetch_abord(p);        break;
+        case DATA_ABORT:            handle_data_abort(p);            break;
+        case INTERRUPT:             handle_irq(p);                   break;
+        case FAST_INTERRUPT:        handle_fiq(p);                   break;
+        default: break;
     }
 }
+

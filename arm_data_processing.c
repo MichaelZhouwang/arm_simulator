@@ -74,7 +74,7 @@ int shift(arm_core p, int op, int code, int value, uint8_t *shift_C) {
 					op = asr(op, value);
 				} else {
 					c = get_bit(op,31);
-					op = (get_bit(op,31)) ? : 0xFFFFFFFF;
+					op = (!get_bit(op,31)) ? 0 : 0xFFFFFFFF;
 				}				
 			}			
 			break;
@@ -98,8 +98,8 @@ int shift(arm_core p, int op, int code, int value, uint8_t *shift_C) {
 }
 
 uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t *shift_C) {
-	uint32_t imm_8 = ins & 255;
-	uint8_t rotate_imm = (ins >> 8) & 15;
+	uint32_t imm_8 = get_bits(ins,7,0);
+	uint8_t rotate_imm = get_bits(ins,11,8);
 	uint32_t res = ror(imm_8,(rotate_imm * 2));
 
 	if (shift_C) {
@@ -112,10 +112,10 @@ uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t *shift_C) {
 }
 
 uint32_t get_shifted(arm_core p, uint32_t ins, uint8_t* shift_C) {
-    uint8_t shift_imm = (ins >> 7) & 31;
-	uint8_t shift_code = (ins >> 5) & 3;
-    uint32_t res = arm_read_register(p, ins & 15);
-    if(!shift_imm && !shift_code) {
+    uint8_t shift_imm = get_bits(ins,11,7);
+	uint8_t shift_code = get_bits(ins,6,5);
+    uint32_t res = arm_read_register(p, get_bits(ins,3,0));
+    if(!shift_imm && !shift_code) { // No shift
     	*shift_C = arm_read_c(p);
     }
     else {
@@ -123,7 +123,7 @@ uint32_t get_shifted(arm_core p, uint32_t ins, uint8_t* shift_C) {
     	if (!get_bit(ins,4)) {
     	     shift_value = shift_imm;
     	} else {
-            shift_value = arm_read_register(p, (ins >> 8) & 15);
+            shift_value = arm_read_register(p, get_bits(ins,11,8));
         }
         res = shift(p, res, shift_code, shift_value, shift_C);
     }
@@ -224,7 +224,7 @@ static int rsb(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 		                get_bit(res, 31),                  // N
 		                (res == 0),                        // Z
 		                (op2 >= op1),                      // C
-		                overflow_from_sub(op1, op2, res)); // V
+		                overflow_from_sub(op2, op1, res)); // V
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -320,7 +320,7 @@ static int rsc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 						get_bit(res, 31),			       // N
 		                (res == 0),						   // Z
 		                (op2 >= (op1+c)),				   // C
-		                overflow_from_sub(op1, op2, res)); // V
+		                overflow_from_sub(op2, op1, res)); // V
 		}
 		else {
 			if (arm_current_mode_has_spsr(p)) {

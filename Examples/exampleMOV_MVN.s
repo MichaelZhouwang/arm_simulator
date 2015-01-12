@@ -33,7 +33,7 @@ main:
 	mov r2, r1, ROR #1
 
 @ Rotate right by register
-	mov r2, r1, ROR #1
+	mov r2, r1, ROR r1
 
 @ Rotate right with extend
 	mov r2, r1, RRX
@@ -67,7 +67,7 @@ main:
 	mvn r2, r1, ROR #1
 
 @ Rotate right by register
-	mvn r2, r1, ROR #1
+	mvn r2, r1, ROR r1
 
 @ Rotate right with extend
 	mvn r2, r1, RRX

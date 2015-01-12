@@ -377,7 +377,7 @@ static int cmn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 static int orr(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("ORR r%d %d %d\n", rd, op1, op2);
-	uint64_t result = op1 | op2;
+	uint64_t res = op1 | op2;
 	if (s) {
 		if(rd != 15) {
 	        update_nzcv(p,
@@ -424,7 +424,7 @@ static int mov(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 static int bic(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("BIC r%d %d %d\n", rd, op1, op2);
-	uint64_t result = op1 & ~op2;
+	uint64_t res = op1 & ~op2;
 	if (s) {
 		if (rd != 15) {
 		    update_nzcv(p,
@@ -447,7 +447,7 @@ static int bic(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 static int mvn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("MVN r%d %d\n", rd, op2);
-	uint64_t result = ~op2;
+	uint64_t res = ~op2;
 	if (s) {
 		if (rd != 15) {
 		    update_nzcv(p,

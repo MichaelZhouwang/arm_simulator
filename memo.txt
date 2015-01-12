@@ -13,14 +13,15 @@ Configuration et execution :
     - source ~/.envarm/setenvarm.sh
     - ./configure
     - make 
-    - ./arm_simulator
+    - ./simulator.sh -g -d
     - arm-eabi-gdb
     - file Examples/example1
-    - target remote localhost:43317
+    - target remote localhost:50000
     - load
     - stepi
 
 Pour obtenir de l'aide il y a :
+	- ./simulator.sh -h
     - ./arm_simulator -- help
 	- ./arm_simulator --debug *.c
 

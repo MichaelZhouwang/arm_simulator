@@ -23,5 +23,5 @@ J5 :
 Questions:
 	1- On fait quoi pour les UNPREDICTABLE
 	2- CP15_reg1_Ubit page 194 (voir ldr)
-	3- fonctionnement des exeptions et de IRQ
+	3- fonctionnement des exceptions et de IRQ
 	4- fonctionnement coproc

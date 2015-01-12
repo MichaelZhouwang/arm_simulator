@@ -331,5 +331,19 @@ int arm_msr(arm_core p, uint32_t ins) {
 
 DANS DATA PROCESSING
 
+(value >> rotation) | (value << (32-rotation));
 
+uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t *shift_C) {
+	uint32_t imm_8 = ins & 255;
+	uint8_t rotate_imm = (ins >> 8) & 15;
+	uint32_t result = ror(imm_8,(rotate_imm * 2));
+
+	if (shift_C) {
+		if(rotate_imm == 0)
+			*shift_C = arm_read_c(p);
+		else 
+			*shift_C = get_bit(result,31);
+	}
+	return result;
+}
 

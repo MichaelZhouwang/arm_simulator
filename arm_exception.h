@@ -20,8 +20,10 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
 #ifndef __ARM_EXCEPTION_H__
 #define __ARM_EXCEPTION_H__
+
 #include <stdint.h>
 #include "arm_core.h"
 

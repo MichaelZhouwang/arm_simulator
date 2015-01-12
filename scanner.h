@@ -20,11 +20,14 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
 #ifndef __SCANNER_H__
 #define __SCANNER_H__
+
 #include "arm_core.h"
 
 void gdb_scanner(arm_core p, memory mem, int in, int out,
                  pthread_mutex_t *lock);
 
 #endif
+

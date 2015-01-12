@@ -23,76 +23,9 @@ Contact: Guillaume.Huard@imag.fr
 
 #include "util.h"
 
-// We implement asr because shifting a signed is non portable in ANSI C
-uint32_t asr(uint32_t value, uint8_t shift) {
-    return (value >> shift) | (get_bit(value, 31) ? ~0<<(32-shift) : 0);
-}
-
-uint32_t ror(uint32_t value, uint8_t rotation) {
-    return (value >> rotation) | (value << (32-rotation));
-}
-
-int shift(arm_core p, int op, int code, int value, uint8_t *shift_C) {
-    uint8_t c = 0;
-	switch(code) {
-		case 0: // LSL
-			if (value == 0) {
-			    c = arm_read_c(p);
-			} else {
-				if(value < 32) {
-					c = get_bit(op, 32-value);
-					op <<= value;
-				} else {
-					c = (value == 32) ? get_bit(op, 0) : 0;
-					op = 0;
-				}				
-			}
-			break;
-			
-		case 1: // LSR
-			if (value == 0) {
-			    c = arm_read_c(p);
-			} else {
-				if(value < 32) {
-					c = get_bit(op, value-1);
-					op >>= value;
-				} else {
-					c = (value == 32) ? get_bit(op, 31) : 0;
-					op = 0;
-				}				
-			}
-			break;
-			
-		case 2: // ASR
-			if (value == 0) {
-			    c = arm_read_c(p);
-			} else {
-				if(value < 32) {
-					c = get_bit(op, value-1);
-					op = asr(op, value);
-				} else {
-					c = get_bit(op,31);
-					op = (get_bit(op,31)) ? : 0xFFFFFFFF;
-				}				
-			}			
-			break;
-			
-		case 3: 
-			if (!value) { // RRX
-				c = get_bit(op,0);
-				op = (arm_read_c(p) << 31) | (op >> 1);
-			} else { // ROR
-				if (!get_bits(value,4,0)) {
-				    c = get_bit(op, 31);
-				} else {
-					c = get_bit(op, get_bits(value,4,0) - 1);
-					op = ror(op, value);
-				}
-			}
-			break;
-	}
-	if (shift_C) *shift_C = c;
-	return op;
+int is_big_endian() {
+    static uint32_t one = 1;
+    return ((* (uint8_t *) &one) == 0);
 }
 
 int number_of_set_bits(int bits_field) {
@@ -106,8 +39,15 @@ int number_of_set_bits(int bits_field) {
 	return n;
 }
 
-int is_big_endian() {
-    static uint32_t one = 1;
-    return ((* (uint8_t *) &one) == 0);
+uint32_t asr(uint32_t value, uint8_t shift) {
+    return (value >> shift) | (get_bit(value, 31) ? ~0<<(32-shift) : 0);
+}
+
+uint32_t ror(uint32_t value, uint8_t rotation) {
+    return (value >> rotation) | (value << (32-rotation));
+}
+
+uint32_t sign_extend_24_to_30(int32_t value) {
+	return asr(value << 8, 8);
 }
 

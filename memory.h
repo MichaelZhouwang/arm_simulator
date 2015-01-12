@@ -20,8 +20,10 @@ Contact: Guillaume.Huard@imag.fr
          51 avenue Jean Kuntzmann
          38330 Montbonnot Saint-Martin
 */
+
 #ifndef __MEMORY_H__
 #define __MEMORY_H__
+
 #include <stdint.h>
 #include <sys/types.h>
 
@@ -37,11 +39,11 @@ void memory_destroy(memory mem);
  * big endian access and be == 0 for a little endian access).
  * The return value indicates a succes (0) or a failure (-1).
  */
-int memory_read_byte(memory mem, uint32_t address, uint8_t *value);
-int memory_read_half(memory mem, int be, uint32_t address, uint16_t *value);
-int memory_read_word(memory mem, int be, uint32_t address, uint32_t *value);
-int memory_write_byte(memory mem, uint32_t address, uint8_t value);
-int memory_write_half(memory mem, int be, uint32_t address, uint16_t value);
-int memory_write_word(memory mem, int be, uint32_t address, uint32_t value);
+int memory_read_byte(memory mem, uint32_t add, uint8_t *val);
+int memory_read_half(memory mem, int be, uint32_t add, uint16_t *val);
+int memory_read_word(memory mem, int be, uint32_t add, uint32_t *val);
+int memory_write_byte(memory mem, uint32_t add, uint8_t val);
+int memory_write_half(memory mem, int be, uint32_t add, uint16_t val);
+int memory_write_word(memory mem, int be, uint32_t add, uint32_t val);
 
 #endif

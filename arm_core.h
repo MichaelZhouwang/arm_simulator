@@ -45,12 +45,16 @@ uint32_t arm_read_register(arm_core p, uint8_t reg);
 uint32_t arm_read_usr_register(arm_core p, uint8_t reg);
 uint32_t arm_read_cpsr(arm_core p);
 uint32_t arm_read_spsr(arm_core p);
+
 void arm_write_register(arm_core p, uint8_t reg, uint32_t value);
 void arm_write_usr_register(arm_core p, uint8_t reg, uint32_t value);
 void arm_write_cpsr(arm_core p, uint32_t value);
 void arm_write_spsr(arm_core p, uint32_t value);
 
 int arm_fetch(arm_core p, uint32_t *value);
+int arm_address_current_instruction(arm_core p);
+int arm_address_next_instruction(arm_core p);
+
 int arm_read_byte(arm_core p, uint32_t address, uint8_t *value);
 int arm_read_half(arm_core p, uint32_t address, uint16_t *value);
 int arm_read_word(arm_core p, uint32_t address, uint32_t *value);
@@ -63,11 +67,12 @@ int arm_read_n(arm_core p);
 int arm_read_z(arm_core p);
 int arm_read_c(arm_core p);
 int arm_read_v(arm_core p);
-int is_n_clear(arm_core p);
 
 // 0 to clear, 1 to set, -1 to unaffect
+#define UNAFFECT_FLAG -1
 void update_nzcv(arm_core p, int n, int z, int c, int v);
-void update_t(arm_core p, int t);
+void update_flag_t(arm_core p, int t);
 
 #include "trace_location.h"
 #endif
+

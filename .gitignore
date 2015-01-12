@@ -2,6 +2,8 @@
 *~
 *.swp
 /.deps
+arm_simulator
+memory_test
 Makefile
 Makefile.in
 /Examples/config.log

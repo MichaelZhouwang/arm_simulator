@@ -36,6 +36,7 @@ Contact: Guillaume.Huard@imag.fr
 #define SYS 0x1f
 
 /* ARM Exceptions (by priority) */
+#define NO_EXCEPTION            0
 #define RESET                   1
 #define UNDEFINED_INSTRUCTION   2
 #define SOFTWARE_INTERRUPT      3
@@ -43,6 +44,10 @@ Contact: Guillaume.Huard@imag.fr
 #define DATA_ABORT              5
 #define INTERRUPT               6
 #define FAST_INTERRUPT          7
+
+/* REGISTERS */
+#define LR 14
+#define PC 15
 
 /* Some CPSR bits */
 #define N 31
@@ -75,3 +80,4 @@ char *arm_get_mode_name(uint8_t mode);
 char *arm_get_register_name(uint8_t reg);
 
 #endif
+

@@ -34,14 +34,11 @@ Contact: Guillaume.Huard@imag.fr
 
 static int ldr(arm_core p, uint8_t rd, uint32_t address) {
     uint32_t value;
-	int result = arm_read_word(p, address, &value);
+    int result = arm_read_word(p, address, &value);
     if (!result) {
         if (rd == 15) {
+            update_flag_t(p, get_bit(value, 0));
             value &= 0xFFFFFFFE;
-            uint32_t cpsr = arm_read_cpsr(p);
-            cpsr &= ~(1 << 5);
-            cpsr |= ((value & 1) << 5);
-            arm_write_cpsr(p, cpsr);
         }
         arm_write_register(p, rd, value);
     }
@@ -166,7 +163,7 @@ static int strd(arm_core p, uint8_t rd, uint32_t address) {
 static int ldm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     uint32_t address = s_add;
     int i, result = 0;
-	uint32_t value;
+    uint32_t value;
     
     for (i=0; i<=14 && !result; i++) {
         if (get_bit(r_list, i)) {
@@ -175,18 +172,15 @@ static int ldm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
             address += 4;
         }
     }
-    
+
     if (!result && get_bit(r_list, 15)) {
         result = arm_read_word(p, address, &value);
+        update_flag_t(p, get_bit(value, 0));
         value &= 0xFFFFFFFE;
         arm_write_register(p, 15, value);
-        uint32_t cpsr = arm_read_cpsr(p);
-        cpsr &= ~(1 << 5);
-        cpsr |= ((value & 1) << 5);
-        arm_write_cpsr(p, cpsr);
         address += 4;
     }
-    
+
     assert(e_add == (address - 4));
     return result;
 }
@@ -194,7 +188,7 @@ static int ldm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
 static int stm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     uint32_t address = s_add;
     int i, result = 0;
-	uint32_t value;
+    uint32_t value;
     
     for (i=0; i<=15 && !result; i++) {
         if (get_bit(r_list, i)) {
@@ -203,7 +197,7 @@ static int stm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
             address += 4;
         }
     }
-    
+
     assert(e_add == (address - 4));
     return result;
 }
@@ -211,8 +205,8 @@ static int stm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
 static int ldm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     uint32_t address = s_add;
     int i, result = 0;
-	uint32_t value;
-    
+    uint32_t value;
+
     for (i=0; i<=14 && !result; i++) {
         if (get_bit(r_list, i)) {
             result = arm_read_word(p, address, &value);
@@ -220,7 +214,7 @@ static int ldm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
             address += 4;
         }
     }
-    
+
     assert(e_add == (address - 4));
     return result;
 }
@@ -228,8 +222,8 @@ static int ldm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
 static int stm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     uint32_t address = s_add;
     int i, result = 0;
-	uint32_t value;
-    
+    uint32_t value;
+
     for (i=0; i<=15 && !result; i++) {
         if (get_bit(r_list, i)) {
             value = arm_read_usr_register(p, i);
@@ -237,7 +231,7 @@ static int stm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
             address += 4;
         }
     }
-    
+
     assert(e_add == (address - 4));
     return result;
 }
@@ -245,8 +239,8 @@ static int stm2(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
 static int ldm3(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     uint32_t address = s_add;
     int i, result = 0;
-	uint32_t value;
-    
+    uint32_t value;
+
     for (i=0; i<=14 && !result; i++) {
         if (get_bit(r_list, i)) {
             result = arm_read_word(p, address, &value);
@@ -254,7 +248,7 @@ static int ldm3(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
             address += 4;
         }
     }
-    
+
     if (!result) {
         if (arm_current_mode_has_spsr(p)) {
             arm_write_cpsr(p, arm_read_spsr(p));
@@ -267,6 +261,39 @@ static int ldm3(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
     }
     assert(e_add == (address - 4));
     return result;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Offset
+///////////////////////////////////////////////////////////////////////////////
+
+uint32_t scaled_shift(arm_core p, uint8_t shift, uint8_t shift_imm, 
+                        uint32_t val_rm) {
+    uint32_t index = 0, cpsr;
+    switch (shift) {
+        case 0: /* LSL */
+            index = val_rm << shift_imm;
+            break;
+        case 1: /* LSR */
+            if (shift_imm) index = val_rm >> shift_imm;
+            break;
+        case 2: /* ASR */
+            if (shift_imm) {
+                index = asr(val_rm, shift_imm);
+            } else if (get_bit(val_rm, 31)) {
+                index = 0xFFFFFFFF;
+            }
+            break;
+        case 3: /* ROR or RRX */
+            if (shift_imm == 0) { /* RRX */
+                cpsr = arm_read_cpsr(p);
+                index = (get_bit(cpsr, C) << 31) | (val_rm >> 1);
+            } else { /* ROR */
+                index = ror(val_rm, shift_imm);
+            }
+            break;
+    }
+    return index;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -290,8 +317,8 @@ int arm_load_store(arm_core p, uint32_t ins) {
             val_rn = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
             arm_write_register(p, rn, val_rn);
         } else if (get_bit(ins, 21)) { // pre_indexed
-            address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;   
-            arm_write_register(p, rn, address);           
+            address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
+            arm_write_register(p, rn, address);
         } else { // offset
             address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
            }
@@ -305,15 +332,15 @@ int arm_load_store(arm_core p, uint32_t ins) {
             address = val_rn;
             address = (get_bit(ins, 23)) ? val_rn + val_rm : val_rn - val_rm;
         } else if (get_bit(ins, 21)) { // pre_indexed
-            index = shift(p, val_rm, shift_val, shift_imm, NULL);
+            index = scaled_shift(p, shift_val, shift_imm, val_rm);
             address = (get_bit(ins, 23)) ? val_rn + index : val_rn - index;
             arm_write_register(p, rn, address);
         } else { // offset and scaled offser
-            index = shift(p, val_rm, shift_val, shift_imm, NULL);
-            address = (get_bit(ins, 23)) ? val_rn + index : val_rn - index;   
+            index = scaled_shift(p, shift_val, shift_imm, val_rm);
+            address = (get_bit(ins, 23)) ? val_rn + index : val_rn - index;
         }
     }
-    
+
     switch (codage3_bits(ins, 22, 21, 20)) {
         case 0 : result = str(p, rd, address);   break;
         case 1 : result = ldr(p, rd, address);   break;
@@ -331,21 +358,21 @@ int arm_load_store(arm_core p, uint32_t ins) {
 // LDRH, STRH, LDRSH, STRSH, LDRSB, STRSB, LDRD, STRD
 int arm_load_store_miscellaneous(arm_core p, uint32_t ins) {
     debug("arm_store_miscellaneous: %d\n", (int)ins);
-    
+
     uint32_t address;
     uint8_t rd = get_bits(ins, 15, 12);
     uint8_t rn = get_bits(ins, 19, 16);
     int val_rn = arm_read_register(p, rn);
     int offset_type = codage2_bits(ins, 24, 21);
     int offset, result;
-    
+
     if (get_bit(ins, 22)) { // immediate
         offset = (get_bits(ins, 11, 8) << 4) | get_bits(ins, 3, 0);
     } else { // register
         uint8_t rm = get_bits(ins, 3, 0);
         offset = arm_read_register(p, rm);
     }
-        
+
     if (offset_type == 0) { // post_indexed
         address = offset;
         address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
@@ -355,7 +382,7 @@ int arm_load_store_miscellaneous(arm_core p, uint32_t ins) {
     } else { // offset
         address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
     }
-    
+
     switch (codage3_bits(ins, 20, 6, 5)) {
         case 1 : result = strh(p, rd, address); break;
         case 2 : result = ldrd(p, rd, address); break;
@@ -404,7 +431,7 @@ int arm_load_store_multiple(arm_core p, uint32_t ins) {
             arm_write_register(p, rn, val_rn);
         }
     }
-    
+
     switch (codage3_bits(ins, 22, 20, 15)) {
         case 0 :
         case 1 : result = stm1(p, reg_list, start_add, end_add); break;

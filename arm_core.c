@@ -164,6 +164,14 @@ int arm_fetch(arm_core p, uint32_t *value) {
     return result;
 }
 
+int arm_address_current_instruction(arm_core p) {
+    return arm_read_register(p, PC) - 8;
+}
+
+int arm_address_next_instruction(arm_core p) {
+    return arm_read_register(p, PC) - 4;
+}
+
 int arm_read_byte(arm_core p, uint32_t address, uint8_t *value) {
     int result;
 
@@ -278,16 +286,20 @@ inline int is_n_clear(arm_core p) {
 }
 void update_nzcv(arm_core p, int n, int z, int c, int v) {
     uint32_t cpsr = arm_read_cpsr(p);
-    if (n != -1) cpsr = (n == 1) ? set_bit(cpsr, N) : clr_bit(cpsr, N);
-    if (z != -1) cpsr = (z == 1) ? set_bit(cpsr, Z) : clr_bit(cpsr, Z);
-    if (c != -1) cpsr = (c == 1) ? set_bit(cpsr, C) : clr_bit(cpsr, C);
-    if (v != -1) cpsr = (v == 1) ? set_bit(cpsr, V) : clr_bit(cpsr, V);
+    if (n != UNAFFECT_FLAG)
+         cpsr = (n == 1) ? set_bit(cpsr, N) : clr_bit(cpsr, N);
+    if (z != UNAFFECT_FLAG)
+        cpsr = (z == 1) ? set_bit(cpsr, Z) : clr_bit(cpsr, Z);
+    if (c != UNAFFECT_FLAG)
+        cpsr = (c == 1) ? set_bit(cpsr, C) : clr_bit(cpsr, C);
+    if (v != UNAFFECT_FLAG)
+        cpsr = (v == 1) ? set_bit(cpsr, V) : clr_bit(cpsr, V);
     arm_write_cpsr(p, cpsr);
 }
 
-void update_t(arm_core p, int t) {
+void update_flag_t(arm_core p, int t) {
     uint32_t cpsr = arm_read_cpsr(p);
-    if (t != -1) 
+    if (t != UNAFFECT_FLAG) 
 		cpsr = (t == 1) ? set_bit(cpsr, T) : clr_bit(cpsr, T);
     arm_write_cpsr(p, cpsr);
 }

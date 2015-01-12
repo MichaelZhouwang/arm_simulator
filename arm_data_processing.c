@@ -31,59 +31,177 @@ Contact: Guillaume.Huard@imag.fr
 #include "debug.h"
 
 ///////////////////////////////////////////////////////////////////////////////
+// Helpers
+///////////////////////////////////////////////////////////////////////////////
+
+int shift(arm_core p, int op, int code, int value, uint8_t *shift_C) {
+    uint8_t c = 0;
+	switch(code) {
+		case 0: // LSL
+			if (value == 0) {
+			    c = arm_read_c(p);
+			} else {
+				if(value < 32) {
+					c = get_bit(op, 32-value);
+					op <<= value;
+				} else {
+					c = (value == 32) ? get_bit(op, 0) : 0;
+					op = 0;
+				}				
+			}
+			break;
+			
+		case 1: // LSR
+			if (value == 0) {
+			    c = arm_read_c(p);
+			} else {
+				if(value < 32) {
+					c = get_bit(op, value-1);
+					op >>= value;
+				} else {
+					c = (value == 32) ? get_bit(op, 31) : 0;
+					op = 0;
+				}				
+			}
+			break;
+			
+		case 2: // ASR
+			if (value == 0) {
+			    c = arm_read_c(p);
+			} else {
+				if(value < 32) {
+					c = get_bit(op, value-1);
+					op = asr(op, value);
+				} else {
+					c = get_bit(op,31);
+					op = (get_bit(op,31)) ? : 0xFFFFFFFF;
+				}				
+			}			
+			break;
+			
+		case 3: 
+			if (!value) { // RRX
+				c = get_bit(op,0);
+				op = (arm_read_c(p) << 31) | (op >> 1);
+			} else { // ROR
+				if (!get_bits(value,4,0)) {
+				    c = get_bit(op, 31);
+				} else {
+					c = get_bit(op, get_bits(value,4,0) - 1);
+					op = ror(op, value);
+				}
+			}
+			break;
+	}
+	if (shift_C) *shift_C = c;
+	return op;
+}
+
+uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t *shift_C) {
+	uint32_t imm_8 = ins & 255;
+	uint8_t rotate_imm = (ins >> 8) & 15;
+	uint32_t res = ror(imm_8,(rotate_imm * 2));
+
+	if (shift_C) {
+		if(rotate_imm == 0)
+			*shift_C = arm_read_c(p);
+		else 
+			*shift_C = get_bit(res,31);
+	}
+	return res;
+}
+
+uint32_t get_shifted(arm_core p, uint32_t ins, uint8_t* shift_C) {
+    uint8_t shift_imm = (ins >> 7) & 31;
+	uint8_t shift_code = (ins >> 5) & 3;
+    uint32_t res = arm_read_register(p, ins & 15);
+    if(!shift_imm && !shift_code) {
+    	*shift_C = arm_read_c(p);
+    }
+    else {
+    	uint8_t shift_value;
+    	if (!get_bit(ins,4)) {
+    	     shift_value = shift_imm;
+    	} else {
+            shift_value = arm_read_register(p, (ins >> 8) & 15);
+        }
+        res = shift(p, res, shift_code, shift_value, shift_C);
+    }
+    return res;
+}
+
+
+int overflow_from_add(int32_t op1, int32_t op2, int64_t res) {
+    return get_bit(op1, 31) == get_bit(op2, 31) &&
+		   get_bit(op1, 31) != get_bit(res, 31);
+}
+
+int overflow_from_sub(int32_t op1, int32_t op2, int64_t res) {
+    return get_bit(op1, 31) != get_bit(op2, 31) &&
+		   get_bit(op1, 31) != get_bit(res, 31);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Available instructions
 ///////////////////////////////////////////////////////////////////////////////
 
 static int and(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t carry_out) {
 	debug("AND r%d %d %d\n", rd, op1, op2);
-	uint64_t result = op1 & op2;
+	uint64_t res = op1 & op2;
 	if (s) {
 		if (rd != 15) {
-		    update_nzcv(p, get_bit(result ,31), !result, shift_c, -1);
+		    update_nzcv(p, 
+		                get_bit(res ,31), // Z
+		                (res == 0),       // N
+		                carry_out,        // C
+		                UNAFFECT_FLAG);   // V
 		} else {
 			if(arm_current_mode_has_spsr(p)) {
-				arm_write_cpsr(p,arm_read_spsr(p));
+				arm_write_cpsr(p, arm_read_spsr(p));
 			} else {
 				UNPREDICTABLE();
 			}
 		}
 	}
-	arm_write_register(p, rd, result);
+	arm_write_register(p, rd, res);
 	return 0;
 }
 
 static int eor(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
-                 uint8_t shift_c) {
+                 uint8_t carry_out) {
 	debug("EOR r%d %d %d\n", rd, op1, op2);
-    uint64_t result = op1 ^ op2;
+    uint64_t res = op1 ^ op2;
 	if (s) {
 		if (rd != 15) {
-		    update_nzcv(p, get_bit(result ,31), !result, shift_c, -1);
+		    update_nzcv(p,
+		                get_bit(res ,31), // Z
+		                (res == 0),       // N
+		                carry_out,        // C
+		                UNAFFECT_FLAG);   // V
 		} else {
 			if(arm_current_mode_has_spsr(p)) {
-				arm_write_cpsr(p,arm_read_spsr(p));
+				arm_write_cpsr(p, arm_read_spsr(p));
 			} else {
 				UNPREDICTABLE();
 			}
 		}
 	}
-	arm_write_register(p, rd, result);
+	arm_write_register(p, rd, res);
 	return 0;
 }
 
 static int sub(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("SUB r%d %d %d\n", rd, op1, op2);
-	uint64_t result = op1 - op2;
+	uint64_t res = op1 - op2;
 	if (s) {
 		if (rd != 15) {
-		    int overflow = get_bit(op1,31) != get_bit(op2,31) &&
-		                   get_bit(op1,31) != get_bit(result,31);
-		    update_nzcv(p, get_bit(result, 31), // N
-		                !result,             // Z
-		                !(op1<op2),          // C
-		                overflow);           // V
+		    update_nzcv(p,
+		                get_bit(res, 31),                  // N
+		                (res == 0),                        // Z
+		                (op1 >= op2),                      // C
+		                overflow_from_sub(op1, op2, res)); // V
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -92,22 +210,21 @@ static int sub(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 			}
 		}
 	}
-	arm_write_register(p, rd, result);
+	arm_write_register(p, rd, res);
 	return 0;
 }
 
 static int rsb(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("RSB r%d %d %d\n", rd, op1, op2);
-	uint64_t result = op2 - op1;
+	uint64_t res = op2 - op1;
 	if (s) {
 		if (rd != 15) {
-		    int overflow = get_bit(op1,31) != get_bit(op2,31) &&
-		                   get_bit(op2,31) != get_bit(result,31);
-		    update_nzcv(p, get_bit(result, 31), // N
-		                !result,             // Z
-		                !(op2<op1),          // C
-		                overflow);           // V
+		    update_nzcv(p,
+		                get_bit(res, 31),                  // N
+		                (res == 0),                        // Z
+		                (op2 >= op1),                      // C
+		                overflow_from_sub(op1, op2, res)); // V
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -116,22 +233,21 @@ static int rsb(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 			}
 		}
 	}
-	arm_write_register(p, rd, result);
+	arm_write_register(p, rd, res);
 	return 0;
 }
 
 static int add(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("ADD r%d %d %d\n", rd, op1, op2);
-	uint64_t result = op1 + op2;
+	uint64_t res = op1 + op2;
 	if (s) {
 		if (rd != 15) {
-		    int overflow = get_bit(op1,31) == get_bit(op2,31) &&
-		                   get_bit(op2,31) != get_bit(result,31);
-		    update_nzcv(p, get_bit(result, 31), // N
-		                !result,             // Z
-		                (result > UINT_MAX), // C
-		                overflow);           // V
+		    update_nzcv(p, 
+		                get_bit(res, 31),                      // N
+		                (res == 0),                            // Z
+		                (res > 0xFFFFFFFF),                    // C
+		                overflow_from_add(op1, op2, res));     // V
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -140,7 +256,7 @@ static int add(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 			}
 		}
 	}
-	arm_write_register(p, rd, result);
+	arm_write_register(p, rd, res);
 	return 0;
 }
 
@@ -148,16 +264,14 @@ static int adc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                uint8_t shift_c) {
 	debug("ADC r%d %d %d\n", rd, op1, op2);
     int c = arm_read_c(p);
-	uint64_t result = op1 + op2 + c;
+	uint64_t res = op1 + op2 + c;
 	if (s) {
 		if (rd != 15) {
-		    int overflow = get_bit(op1,31) == get_bit(op2,31) &&
-		                   get_bit(op2,31) != get_bit(result,31);
 			update_nzcv(p, 
-						get_bit(result, 31), // N
-		                !result,             // Z
-		                (result > UINT_MAX), // C
-		                overflow);           // V
+						get_bit(res, 31),                  // N
+		                (res == 0),                        // Z
+		                (res > UINT_MAX),                  // C
+		                overflow_from_add(op1, op2, res)); // V
 		}
 		else {
 			if(arm_current_mode_has_spsr(p)) {
@@ -167,7 +281,7 @@ static int adc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 			}
 		}
 	}
-	arm_write_register(p, rd, result);
+	arm_write_register(p, rd, res);
 	return 0;
 }
 
@@ -175,16 +289,14 @@ static int sbc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("SBC r%d %d\n", op1, op2);
     int c = arm_read_c(p);
-	uint64_t result = op1 - op2 - !c;
+	uint64_t res = op1 - op2 - !c;
 	if (s) {
 		if(rd != 15){
-		    int overflow = get_bit(op1,31) != get_bit(op2,31) &&
-		                   get_bit(op1,31) != get_bit(result,31);
 		    update_nzcv(p,
-						get_bit(result, 31),			// N
-		                !result,						// Z
-		                !(op1 < (op2+c)),				// C
-		                overflow);						// V
+						get_bit(res, 31),			       // N
+		                (res == 0),						   // Z
+		                (op1 >= (op2+c)),				   // C
+		                overflow_from_sub(op1, op2, res)); // V
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -193,7 +305,7 @@ static int sbc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 			}
 		}
 	}
-	arm_write_register(p, rd, result);
+	arm_write_register(p, rd, res);
 	return 0;
 }
 
@@ -201,16 +313,14 @@ static int rsc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("RSC r%d %d\n", op1, op2);
     int c = arm_read_c(p);
-	uint64_t result = op2 - op1 - !c;
+	uint64_t res = op2 - op1 - !c;
 	if (s) {
 		if (rd != 15) {
-		    int overflow = get_bit(op1,31) != get_bit(op2,31) &&
-		                   get_bit(op2,31) != get_bit(result,31);
 		    update_nzcv(p,
-						get_bit(result, 31),			// N
-		                !result,						// Z
-		                !(op2 < (op1+c)),				// C
-		                overflow);						// V
+						get_bit(res, 31),			       // N
+		                (res == 0),						   // Z
+		                (op2 >= (op1+c)),				   // C
+		                overflow_from_sub(op1, op2, res)); // V
 		}
 		else {
 			if (arm_current_mode_has_spsr(p)) {
@@ -220,59 +330,61 @@ static int rsc(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 			}
 		}
 	}
-	arm_write_register(p, rd, result);
+	arm_write_register(p, rd, res);
 	return 0;
 }
 
 static int tst(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("TST r%d %d\n", op1, op2);
-	uint64_t result = op1 & op2;
-	update_nzcv(p, get_bit(result, 31), !result, shift_c, -1);
+	uint64_t res = op1 & op2;
+	update_nzcv(p, get_bit(res, 31), (res == 0), shift_c, UNAFFECT_FLAG);
 	return 0;
 }
 
 static int teq(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("TEQ r%d %d\n", op1, op2);
-	uint64_t result = op1 ^ op2;
-	update_nzcv(p, get_bit(result, 31), !result, shift_c, -1);
+	uint64_t res = op1 ^ op2;
+	update_nzcv(p, get_bit(res, 31), (res == 0), shift_c, UNAFFECT_FLAG);
 	return 0;
 }
 
 static int cmp(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("CMP r%d %d\n", op1, op2);
-	uint64_t result = op1 - op2;
-	int overflow = get_bit(op1,31) != get_bit(op2,31) &&
-		           get_bit(op1,31) != get_bit(result, 31);
-	update_nzcv(p, get_bit(result, 31), // N
-		        !result,             // Z
-		        !(op1 <  op2),       // C
-		        overflow);           // V
+	uint64_t res = op1 - op2;
+	update_nzcv(p,
+	            get_bit(res, 31),                  // N
+		        (res == 0),                        // Z
+		        (op1 >=  op2),                     // C
+		        overflow_from_sub(op1, op2, res)); // V
 	return 0;
 }
 
 static int cmn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("CMN r%d %d\n", op1, op2);
-	uint64_t result = op1 + op2;
-	int overflow = get_bit(op1,31) == get_bit(op2,31) &&
-		           get_bit(op1,31) != get_bit(result, 31);
-	update_nzcv(p, get_bit(result, 31), // N
-		        !result,             // Z
-		        (result > UINT_MAX), // C
-		        overflow);           // V	
+	uint64_t res = op1 + op2;
+	update_nzcv(p,
+	            get_bit(res, 31),                  // N
+		        (res == 0),                        // Z
+		        (res > UINT_MAX),                  // C
+		        overflow_from_add(op1, op2, res)); // V	
 	return 0;
 }
 
 static int orr(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("ORR r%d %d\n", rd, op2);
-	uint64_t result = op1 | op2;
+	uint64_t res = op1 | op2;
 	if (s) {
 		if(rd != 15) {
-	        update_nzcv(p, get_bit(result, 31), !result, shift_c, -1);
+	        update_nzcv(p,
+	                    get_bit(res, 31), // N
+	                    (res == 0),       // Z
+	                    shift_c,          // C
+	                    UNAFFECT_FLAG);   // V
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -281,7 +393,7 @@ static int orr(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 			}
 		}
 	}
-	arm_write_register(p, rd, result);
+	arm_write_register(p, rd, res);
 	return 0;
 }
 
@@ -289,10 +401,14 @@ static int mov(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("MOV r%d %d\n", rd, op2);
 
-	uint64_t result = op2;
+	uint64_t res = op2;
 	if (s) {
 		if (rd != 15) {
-	        update_nzcv(p, get_bit(result, 31), !result, shift_c, -1);
+	        update_nzcv(p,
+	                    get_bit(res, 31), // N
+	                    (res == 0),       // Z
+	                    shift_c,          // C
+	                    UNAFFECT_FLAG);   // V
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -301,17 +417,21 @@ static int mov(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 			}
 		}
 	}
-	arm_write_register(p, rd, result);
+	arm_write_register(p, rd, res);
 	return 0;
 }
 
 static int bic(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("BIC r%d %d\n", rd, op2);
-	uint64_t result = op1 & ~op2;
+	uint64_t res = op1 & ~op2;
 	if (s) {
 		if (rd != 15) {
-		    update_nzcv(p, get_bit(result, 31), !result, shift_c, -1);
+		    update_nzcv(p,
+	                    get_bit(res, 31), // N
+	                    (res == 0),       // Z
+	                    shift_c,          // C
+	                    UNAFFECT_FLAG);   // V
 		} else {
 			if (arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -320,17 +440,21 @@ static int bic(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 			}
 		}
 	}
-	arm_write_register(p, rd, result);
+	arm_write_register(p, rd, res);
 	return 0;
 }
 
 static int mvn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_c) {
 	debug("MVN r%d %d\n", op1, op2);
-	uint64_t result = ~op2;
+	uint64_t res = ~op2;
 	if (s) {
 		if (rd != 15) {
-		    update_nzcv(p, get_bit(result, 31), !result, shift_c, -1);
+		    update_nzcv(p,
+	                    get_bit(res, 31), // N
+	                    (res == 0),       // Z
+	                    shift_c,          // C
+	                    UNAFFECT_FLAG);   // V
 		} else {
 			if(arm_current_mode_has_spsr(p)) {
 				arm_write_cpsr(p,arm_read_spsr(p));
@@ -339,7 +463,7 @@ static int mvn(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
 			}
 		}
 	}
-	arm_write_register(p, rd, result);
+	arm_write_register(p, rd, res);
 	return 0;
 }
 
@@ -372,23 +496,23 @@ typedef enum {
 dp_op_handler_t arm_get_dp_handler(int32_t ins) {
 	dp_op_handler_t handler;
 	switch(get_bits(ins, 24, 21)) {
-		case AND:  handler = and;  break;
-		case EOR:  handler = eor;  break;
-		case SUB:  handler = sub;  break;
-		case RSB:  handler = rsb;  break;
-		case ADD:  handler = add;  break;
-		case ADC:  handler = adc;  break;
-		case SBC:  handler = sbc;  break;
-		case RSC:  handler = rsc;  break;
-		case TST:  handler = tst;  break;
-		case TEQ:  handler = teq;  break;
+		case AND: handler = and;  break;
+		case EOR: handler = eor;  break;
+		case SUB: handler = sub;  break;
+		case RSB: handler = rsb;  break;
+		case ADD: handler = add;  break;
+		case ADC: handler = adc;  break;
+		case SBC: handler = sbc;  break;
+		case RSC: handler = rsc;  break;
+		case TST: handler = tst;  break;
+		case TEQ: handler = teq;  break;
 		case CMP: handler = cmp;  break;
 		case CMN: handler = cmn;  break;
 		case ORR: handler = orr;  break;
 		case MOV: handler = mov;  break;
 		case BIC: handler = bic;  break;
 		case MVN: handler = mvn;  break;
-		default: handler = NULL; break;
+		default:  handler = NULL; break;
 	}
 	return handler;
 }
@@ -412,7 +536,6 @@ static inline uint8_t get_rn(uint32_t ins) {
 static inline uint8_t get_S(uint32_t ins) {
 	return get_bit(ins, 20);
 }
-
 
 int arm_data_processing_shift(arm_core p, uint32_t ins) {
     debug("arm_data_processing_shift\n");    
@@ -473,7 +596,6 @@ int arm_data_processing_immediate(arm_core p, uint32_t ins) {
 
 
 // NE PAS SUPPRIMER TANT QUE LES TESTS SONT PAS PASSES
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Shift operands
@@ -627,18 +749,18 @@ static dp_shift_handler_t arm_dp_get_shift_handler(int32_t ins) {
 int arm_data_processing_shift(arm_core p, uint32_t ins) {
     debug("arm_data_processing_shift: %d\n", (int)ins);
     
-    int result = 0;
+    int res = 0;
     dp_shift_handler_t shift_handler = arm_dp_get_shift_handler(ins);
     if (shift_handler) {
         int32_t *op, carry_out;
         shift_handler(p, ins, &*op, &carry_out);
         dp_op_handler_t op_handler = arm_dp_get_op_handler(ins);
         if (op_handler) {
-            result = op_handler();
+            res = op_handler();
         }
     }
     
-    return result;
+    return res;
 }
 
 int arm_data_processing_immediate(arm_core p, uint32_t ins) {

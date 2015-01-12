@@ -58,7 +58,8 @@ void memory_destroy(memory mem) {
 
 // Private memory read / write
 
-int memory_read_bytes(memory mem, int be, uint32_t address, uint8_t *bytes, size_t len) {
+int memory_read_bytes(memory mem, int be, uint32_t address, uint8_t *bytes, 
+                      size_t len) {
     if (address+len-1 >= mem->size) {
         return -1;
     }
@@ -72,7 +73,8 @@ int memory_read_bytes(memory mem, int be, uint32_t address, uint8_t *bytes, size
     return 0;
 }
 
-int memory_write_bytes(memory mem, int be, uint32_t address, uint8_t *bytes, size_t len) {
+int memory_write_bytes(memory mem, int be, uint32_t address, uint8_t *bytes, 
+                       size_t len) {
     if (address+len-1 >= mem->size) {
         return -1;
     }
@@ -88,26 +90,27 @@ int memory_write_bytes(memory mem, int be, uint32_t address, uint8_t *bytes, siz
 
 // Public memory read / write
 
-int memory_read_byte(memory mem, uint32_t address, uint8_t *value) {
-    return memory_read_bytes(mem, 1, address, (uint8_t *)value, sizeof(uint8_t));
+int memory_read_byte(memory mem, uint32_t add, uint8_t *val) {
+    return memory_read_bytes(mem, 1, add, (uint8_t *)val, sizeof(uint8_t));
 }
 
-int memory_read_half(memory mem, int be, uint32_t address, uint16_t *value) {
-    return memory_read_bytes(mem, be, address, (uint8_t *)value, sizeof(uint16_t));
+int memory_read_half(memory mem, int be, uint32_t add, uint16_t *val) {
+    return memory_read_bytes(mem, be, add, (uint8_t *)val, sizeof(uint16_t));
 }
 
-int memory_read_word(memory mem, int be, uint32_t address, uint32_t *value) {
-    return memory_read_bytes(mem, be, address, (uint8_t *)value, sizeof(uint32_t));
+int memory_read_word(memory mem, int be, uint32_t add, uint32_t *val) {
+    return memory_read_bytes(mem, be, add, (uint8_t *)val, sizeof(uint32_t));
 }
 
-int memory_write_byte(memory mem, uint32_t address, uint8_t value) {
-    return memory_write_bytes(mem, 1, address, (uint8_t *)&value, sizeof(uint8_t));
+int memory_write_byte(memory mem, uint32_t add, uint8_t val) {
+    return memory_write_bytes(mem, 1, add, (uint8_t *)&val, sizeof(uint8_t));
 }
 
-int memory_write_half(memory mem, int be, uint32_t address, uint16_t value) {
-    return memory_write_bytes(mem, be, address, (uint8_t *)&value, sizeof(uint16_t));
+int memory_write_half(memory mem, int be, uint32_t add, uint16_t val) {
+    return memory_write_bytes(mem, be, add, (uint8_t *)&val, sizeof(uint16_t));
 }
 
-int memory_write_word(memory mem, int be, uint32_t address, uint32_t value) {
-    return memory_write_bytes(mem, be, address, (uint8_t *)&value, sizeof(uint32_t));
+int memory_write_word(memory mem, int be, uint32_t add, uint32_t val) {
+    return memory_write_bytes(mem, be, add, (uint8_t *)&val, sizeof(uint32_t));
 }
+

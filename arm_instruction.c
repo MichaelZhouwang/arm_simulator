@@ -40,7 +40,7 @@ static int arm_execute_instruction(arm_core p) {
 	
     uint32_t ins;
     int result = arm_fetch(p, &ins);
-    if (result == NO_EXCEPTION) {
+    if (result != NO_EXCEPTION) {
 	    debug("error during fetch %d\n", result);
         return result;
     } else {   
@@ -49,11 +49,17 @@ static int arm_execute_instruction(arm_core p) {
 
     result = instruction_check_condition(p, ins);
     instruction_handler_t handler = NULL;
-    if (result == 1) {
-        handler = instruction_get_handler(ins);
-    } else if (result == -1){
-        handler = arm_miscellaneous;
-    }
+    
+    if (result == 0) {
+    	debug("Cond false \n");
+    	return NO_EXCEPTION;
+    } else if (result == 1) {
+		debug("Cond true \n");
+	    handler = instruction_get_handler(ins);
+	} else if (result == -1) {
+		debug("Cond undefined \n");
+		handler = arm_miscellaneous;
+	}
     
     return (handler) ? handler(p, ins) : UNDEFINED_INSTRUCTION;
 }

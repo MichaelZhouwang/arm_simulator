@@ -331,15 +331,19 @@ int arm_load_store(arm_core p, uint32_t ins) {
 
     if (!get_bit(ins, 25)) { // Immmediate
         uint32_t offset = get_bits(ins, 11, 0);
+		debug("imediate\n");
         if (get_bit(ins, 24)) { // post_indexed
-            address = val_rn;
-            val_rn = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
-            arm_write_register(p, rn, val_rn);
+			debug("offset\n");
+            address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
         } else if (get_bit(ins, 21)) { // pre_indexed
+			debug("pre indexed\n");
             address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
             arm_write_register(p, rn, address);
         } else { // offset
-            address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
+			debug("post indexed\n");
+            address = val_rn;
+            val_rn = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
+            arm_write_register(p, rn, val_rn);
            }
     } else { // Registers
         int rm = get_bits(ins, 3, 0);
@@ -348,15 +352,15 @@ int arm_load_store(arm_core p, uint32_t ins) {
         int shift_imm = get_bits(ins, 11, 7);
 
         if (get_bit(ins, 24)) { // post_indexed
-            address = val_rn;
-            address = (get_bit(ins, 23)) ? val_rn + val_rm : val_rn - val_rm;
+            index = scaled_shift(p, shift_val, shift_imm, val_rm);
+            address = (get_bit(ins, 23)) ? val_rn + index : val_rn - index;
         } else if (get_bit(ins, 21)) { // pre_indexed
             index = scaled_shift(p, shift_val, shift_imm, val_rm);
             address = (get_bit(ins, 23)) ? val_rn + index : val_rn - index;
             arm_write_register(p, rn, address);
         } else { // offset and scaled offser
-            index = scaled_shift(p, shift_val, shift_imm, val_rm);
-            address = (get_bit(ins, 23)) ? val_rn + index : val_rn - index;
+            address = val_rn;
+            address = (get_bit(ins, 23)) ? val_rn + val_rm : val_rn - val_rm;
         }
     }
     switch (codage3_bits(ins, 22, 21, 20)) {

@@ -24,7 +24,7 @@ do
 -g : gdb-port 50000
 -t : --trace-registers --trace-memory --trace-state --trace-position
 -d : ajout tout les fichier arm*.c au debug
--h : c'ette aide"
+-h : cette aide"
 		a="1"
 	fi
 done

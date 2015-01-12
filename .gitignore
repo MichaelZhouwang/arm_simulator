@@ -38,5 +38,7 @@ Makefile.in
 /Examples/exampleB_BL
 /Examples/exampleMOV_MVN
 /Examples/example_operations
+/Examples/example_operations_bin
 /Examples/stamp-h1
 /autom4te.cache/
+/arm_simulator

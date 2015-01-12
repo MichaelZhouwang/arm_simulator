@@ -12,20 +12,23 @@ for j in $@
 do
 	if [ $j = "-g" ]
 	then
-		c=`echo $c --gdb-port 50000`
+		c=`echo $c --gdb-port 50000 --irq-port 60000`
 	elif [ $j = "-t" ]
 	then 
 		c=`echo $c --trace-registers --trace-memory --trace-state --trace-position`
 	elif [ $j = "-d" ]
 	then
 		c=`echo $c $d`
-	else
+	elif [ $j = "-h" ]
+	then
 		echo "simulator -g -t -d -h
 -g : gdb-port 50000
 -t : --trace-registers --trace-memory --trace-state --trace-position
 -d : ajout tout les fichier arm*.c au debug
 -h : cette aide"
 		a="1"
+	else
+		c=`echo $c $j`
 	fi
 done
 

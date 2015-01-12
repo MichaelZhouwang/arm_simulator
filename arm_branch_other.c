@@ -38,7 +38,7 @@ int arm_branch(arm_core p, uint32_t ins) {
     uint32_t val_pc = arm_read_register(p, PC);
     if (get_bit(ins, 24)) {
         debug_raw("================> BL\n");
-        arm_write_register(p, LR, val_pc - 4);
+        arm_write_register(p, LR, val_pc-4);
     } else {
         debug_raw("================> B\n");
     }

@@ -343,7 +343,11 @@ static int tst(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
 	debug("TST 0x%x 0x%x\n", op1, op2);
 	uint64_t res = op1 & op2;
-	update_nzcv(p, get_bit(res, 31), (res == 0), shift_carry_out, UNAFFECT_FLAG);
+	update_nzcv(p, 
+				get_bit(res, 31), 			       // N
+				(res == 0), 					   // Z
+				shift_carry_out, 				   // C
+				UNAFFECT_FLAG); 				   // V
 	return 0;
 }
 
@@ -351,7 +355,11 @@ static int teq(arm_core p, uint8_t rd, uint32_t op1, uint32_t op2, uint8_t s,
                  uint8_t shift_carry_out) {
 	debug("TEQ 0x%x 0x%x\n", op1, op2);
 	uint64_t res = op1 ^ op2;
-	update_nzcv(p, get_bit(res, 31), (res == 0), shift_carry_out, UNAFFECT_FLAG);
+	update_nzcv(p, 
+				get_bit(res, 31), 			       // N
+				(res == 0), 					   // Z
+				shift_carry_out, 				   // C
+				UNAFFECT_FLAG); 				   // V
 	return 0;
 }
 

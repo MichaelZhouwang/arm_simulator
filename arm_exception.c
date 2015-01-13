@@ -41,10 +41,12 @@ Contact: Guillaume.Huard@imag.fr
 
 void arm_branch_exception_vector(arm_core p, int8_t vector) {
     int32_t address = vector;
-    if (High_vectors_configured)
+    if (High_vectors_configured) {
         address |= 0xFFFF0000;
-    else
+    } else {
         address &= 0x0000FFFF;
+		address += 0x1000;
+	}
     arm_write_usr_register(p, PC, address);
 }
 

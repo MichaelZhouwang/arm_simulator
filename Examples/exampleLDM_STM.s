@@ -11,19 +11,19 @@ main:
 
 	@ Increment After LDMIA + STMIB
 	STMIB sp!, {r0, r1, r2}
-	LDMIA sp!, {r0, r1, r2}
+	LDMDA sp!, {r0, r1, r2}
 
 	@ Increment Before LMDIB + STMIA
 	STMIA sp!, {r0, r1, r2}
-	LDMIB sp!, {r0, r1, r2}
+	LDMDB sp!, {r0, r1, r2}
 
 	@ Decrement After LDMDA + STMDB
 	STMDA sp!, {r0, r1, r2}
-	LDMDB sp!, {r0, r1, r2}
+	LDMIB sp!, {r0, r1, r2}
 
 	@ Decrement Before LDMDB + STMIA
 	STMDB sp!, {r0, r1, r2}
-	LDMDA sp!, {r0, r1, r2}
+	LDMIA sp!, {r0, r1, r2}
 
 
 	swi 0x123456

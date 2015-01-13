@@ -21,7 +21,7 @@ J5 :
 	*.c : nettoyage
 
 J6 :
-	Tests
+	Debut des tests
 	
 	
 Questions:

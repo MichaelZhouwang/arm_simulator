@@ -34,9 +34,9 @@ Avancement du projet :
 
 Tâches :
     - gestion de la memoire         : implemente et teste
-    - fetch d'une instruction       : implemente et pas teste
-    - execution des instructions    : pas implemente et pas teste
-    - gestion des interruptions IRQ : pas implemente et pas teste
+    - fetch d'une instruction       : implemente et teste
+    - execution des instructions    : implemente et en cours de test
+    - gestion des interruptions IRQ : implemente et pas teste
     - compte rendu final            : en cours
     
 Gestion des differentes instructions :
@@ -204,8 +204,11 @@ Les différents Shifts (p.449-457)
 |  10  |   ASR    | Identique à LSR, sauf que les bits ajoutés à      |
 |      |          | gauche sont les mêmes que le bit de poids fort    |
 |------|----------|---------------------------------------------------|
-|  11  |  ROR/RRX | Decale d'un certain nombre de bits vers la droite,|
+|  11  |    ROR   | Decale d'un certain nombre de bits vers la droite,|
 |      |          | les bits dépassant à droite sont ajoutés à gauche |
+|------|----------|---------------------------------------------------|
+|  11  |    RRX   | Decale de 1 vers la droite, ajoute C à gauche     |
+|      |          | (RRX <=> ROR #0)                                  |
 |------|----------|---------------------------------------------------|
  
  
@@ -348,3 +351,6 @@ uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t *shift_C) {
 	return result;
 }
 
+
+TODO :
+	- rendre les debug plus lisibles (écriture hexa => texte)

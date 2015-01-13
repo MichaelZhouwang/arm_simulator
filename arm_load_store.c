@@ -147,7 +147,7 @@ static int ldrsb(arm_core p, uint8_t rd, uint32_t address) {
 
 static int ldrd(arm_core p, uint8_t rd, uint32_t address) {
 	debug("LDRD rd:r%d %x\n", rd, address);
-    if (is_odd(rd) || (rd == 14) || (address & 3)) {
+    if (is_odd(rd) || (rd == LR) || (address & 3)) {
         UNPREDICTABLE();
         return 0;
     }
@@ -192,7 +192,7 @@ static int ldm1(arm_core p, int16_t r_list, uint32_t s_add, uint32_t e_add) {
         result = arm_read_word(p, address, &value);
         update_flag_t(p, get_bit(value, 0));
         value &= 0xFFFFFFFE;
-        arm_write_register(p, 15, value);
+        arm_write_register(p, PC, value);
         address += 4;
     }
 

@@ -46,6 +46,7 @@ int arm_branch(arm_core p, uint32_t ins) {
     uint32_t signed_immed = get_bits(ins, 23, 0);
     uint32_t address = val_pc;
     address += sign_extend_24_to_30(signed_immed) << 2;
+    debug("Adresse: %x\n", address);
     arm_write_register(p, PC, address);
 	
     return 0;

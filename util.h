@@ -50,6 +50,10 @@ Contact: Guillaume.Huard@imag.fr
 #define codage2_bits(v, x, y) (((((v)>>(x))&1)<<1) | (((v)>>(y))&1))
 #define codage3_bits(v, x, y, z) (((((v)>>(x))&1)<<2) | \
                                  ((((v)>>(y))&1)<<1) | (((v)>>(z))&1))
+#define codage4_bits(v, w, x, y, z) \
+								  (((((v)>>(w))&1)<<3) | \
+								  (((((v)>>(x))&1)<<2) | \
+                                  ((((v)>>(y))&1)<<1) | (((v)>>(z))&1)))
 
 #define check_mask(ins, m0, m1) (((ins) & (m0)) == 0 && ((ins) & (m1)) == (m1))
 

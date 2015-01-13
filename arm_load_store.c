@@ -331,39 +331,48 @@ int arm_load_store(arm_core p, uint32_t ins) {
 
     if (!get_bit(ins, 25)) { // Immmediate
         uint32_t offset = get_bits(ins, 11, 0);
-		debug("imediate\n");
-        if (get_bit(ins, 24)) { // post_indexed
-			debug("offset\n");
+        if (get_bit(ins, 24) && !get_bit(ins, 21)) {
+			debug("immediate offset\n");
             address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
-        } else if (get_bit(ins, 21)) { // pre_indexed
-			debug("pre indexed\n");
+        } else if (get_bit(ins, 24) && get_bit(ins, 21)) {
+			debug("immediate pre indexed\n");
             address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
             arm_write_register(p, rn, address);
-        } else { // offset
-			debug("post indexed\n");
+        } else if (!get_bit(ins, 24) && !get_bit(ins, 21)){
+			debug("immediate post indexed\n");
             address = val_rn;
             val_rn = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
             arm_write_register(p, rn, val_rn);
-           }
+        } else {
+        	return UNDEFINED_INSTRUCTION;
+        }
     } else { // Registers
         int rm = get_bits(ins, 3, 0);
         int val_rm = arm_read_register(p, rm);
         int shift_val = get_bits(ins, 6, 5);
         int shift_imm = get_bits(ins, 11, 7);
 
-        if (get_bit(ins, 24)) { // post_indexed
+        if (get_bit(ins, 24) && !get_bit(ins, 21)) {
+        	debug("reg scaled offset\n");
             index = scaled_shift(p, shift_val, shift_imm, val_rm);
             address = (get_bit(ins, 23)) ? val_rn + index : val_rn - index;
-        } else if (get_bit(ins, 21)) { // pre_indexed
+        } else if (get_bit(ins, 24) && get_bit(ins, 21)) {
+        	debug("reg pre indexed\n");
             index = scaled_shift(p, shift_val, shift_imm, val_rm);
             address = (get_bit(ins, 23)) ? val_rn + index : val_rn - index;
             arm_write_register(p, rn, address);
-        } else { // offset and scaled offser
+        } else if (!get_bit(ins, 24) && !get_bit(ins, 21)) {
+        	debug("post indexed\n");
             address = val_rn;
-            address = (get_bit(ins, 23)) ? val_rn + val_rm : val_rn - val_rm;
+            index = scaled_shift(p, shift_val, shift_imm, val_rm);
+            val_rn = (get_bit(ins, 23)) ? val_rn + index : val_rn - index;
+            arm_write_register(p, rn, val_rn);
+        } else {
+        	return UNDEFINED_INSTRUCTION;
         }
     }
-    switch (codage3_bits(ins, 22, 21, 20)) {
+    
+    switch (codage4_bits(ins, 24, 22, 21, 20)) {
         case 0 : result = str(p, rd, address);   break;
         case 1 : result = ldr(p, rd, address);   break;
         case 2 : result = strt(p, rd, address);  break;
@@ -372,6 +381,14 @@ int arm_load_store(arm_core p, uint32_t ins) {
         case 5 : result = ldrb(p, rd, address);  break;
         case 6 : result = strbt(p, rd, address); break;
         case 7 : result = ldrbt(p, rd, address); break;
+        case 8 : result = str(p, rd, address);   break;
+        case 9 : result = ldr(p, rd, address);   break;
+        case 10: result = str(p, rd, address);   break;
+        case 11: result = ldr(p, rd, address);   break;
+        case 12: result = strb(p, rd, address);  break;
+        case 13: result = ldrb(p, rd, address);  break;
+        case 14: result = strb(p, rd, address);  break;
+        case 15: result = ldrb(p, rd, address);  break;
         default: result =  0; break; // impossible
     }
     return result;
@@ -396,13 +413,16 @@ int arm_load_store_miscellaneous(arm_core p, uint32_t ins) {
     }
 
     if (offset_type == 0) { // post_indexed
-        address = offset;
-        address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
-    } else if (offset_type == 2) { // pre_indexed
+        address = val_rn;
+        val_rn = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
+        arm_write_register(p, rn, val_rn);
+    } else if (offset_type == 3) { // pre_indexed
         address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
         arm_write_register(p, rn, address);
-    } else { // offset
+    } else if (offset_type == 2) { // offset
         address = (get_bit(ins, 23)) ? val_rn + offset : val_rn - offset;
+    } else {
+    	return UNDEFINED_INSTRUCTION;	
     }
 
     switch (codage3_bits(ins, 20, 6, 5)) {

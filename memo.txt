@@ -91,11 +91,9 @@ Ajouter en plus:
 |     MSR      |   226   |    oui     |-------|------------------------------|
 |--------------|---------|------------|-------|------------------------------|
 
-Instructions ne respectant pas les classes:
-    
 
 TODO:
-	- load et store ne declenche pas d'exeption
+	- load et store ne declenche pas d'exception
     
 
 -----------------------------------------------------------------------------
@@ -103,11 +101,11 @@ Modification par fichiers :
 -----------------------------------------------------------------------------
 
 |---------------------|------------------------------------------------------|
-| arm_core            | - ajout de fonctions pour l'access a NZCV            |
+| arm_core            | - ajout de fonctions pour l'acces et ecriture de NZCV|
 |---------------------|------------------------------------------------------|
 | arm_exception       | - a completer ...                                    |
 |---------------------|------------------------------------------------------|
-| memory              | - implementation des access a la memoire             |
+| memory              | - implementation des acces a la memoire              |
 |---------------------|------------------------------------------------------|
 | arm_instruction     | - ajout du fetch                                     |
 |                     | - prise en compte des conditions                     |
@@ -204,10 +202,10 @@ Les différents Shifts (p.449-457)
 |  10  |   ASR    | Identique à LSR, sauf que les bits ajoutés à      |
 |      |          | gauche sont les mêmes que le bit de poids fort    |
 |------|----------|---------------------------------------------------|
-|  11  |    ROR   | Decale d'un certain nombre de bits vers la droite,|
+|  11  |   ROR    | Decale d'un certain nombre de bits vers la droite,|
 |      |          | les bits dépassant à droite sont ajoutés à gauche |
 |------|----------|---------------------------------------------------|
-|  11  |    RRX   | Decale de 1 vers la droite, ajoute C à gauche     |
+|  11  |   RRX    | Decale de 1 vers la droite, ajoute C à gauche     |
 |      |          | (RRX <=> ROR #0)                                  |
 |------|----------|---------------------------------------------------|
  
@@ -231,39 +229,6 @@ Load and store offset :
 
 
 A GARDER AVANT VALIDATION:
-
-
-DANS INSTRUCTION
-
-// Immediate operand value
-inline uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t* shift_C) {
-	uint32_t imm_8 = ins & 255;
-	uint8_t rotate_imm = (ins >> 8) & 15;
-	uint32_t result = ror(imm_8,(rotate_imm * 2));
-	if(rotate_imm == 0) *shift_C = arm_read_c(p);
-	else *shift_C = get_bit(result,31);
-	return result;
-}
-
-
-// Shifted register operand value
-inline uint32_t get_shifted(arm_core p, uint32_t ins, uint8_t* shift_C) {
-    uint8_t shift_imm = (ins >> 7) & 31;
-		uint8_t shift_code = (ins >> 5) & 3;
-    uint32_t result = arm_read_register(p, ins & 15);
-    if(!shift_imm && !shift_code) {
-    	*shift_C = arm_read_c(p);
-    }
-    else {
-    	uint8_t shift_value;
-    	if(!get_bit(ins,4)) shift_value = shift_imm;
-    	else {
-				shift_value = arm_read_register(p, (ins >> 8) & 15);
-		  }
-		  result = shift(p, result, shift_code, shift_value, shift_C);
-		}
-		return result;
-}
 
 
 DANS BRANCH
@@ -332,25 +297,6 @@ int arm_msr(arm_core p, uint32_t ins) {
 
 	return 0;
 }
-
-DANS DATA PROCESSING
-
-(value >> rotation) | (value << (32-rotation));
-
-uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t *shift_C) {
-	uint32_t imm_8 = ins & 255;
-	uint8_t rotate_imm = (ins >> 8) & 15;
-	uint32_t result = ror(imm_8,(rotate_imm * 2));
-
-	if (shift_C) {
-		if(rotate_imm == 0)
-			*shift_C = arm_read_c(p);
-		else 
-			*shift_C = get_bit(result,31);
-	}
-	return result;
-}
-
 
 TODO :
 	- rendre les debug plus lisibles (écriture hexa => texte)

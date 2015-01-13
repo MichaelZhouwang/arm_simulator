@@ -21,6 +21,9 @@ Contact: Guillaume.Huard@imag.fr
          38330 Montbonnot Saint-Martin
 */
 #include "arm.h"
+#include "arm_core.h"
+#include <debug.h>
 
-void arm_init() {
+void arm_init(arm_core p) {
+
 }

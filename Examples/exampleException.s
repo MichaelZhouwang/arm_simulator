@@ -1,41 +1,32 @@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@@ Exceptions
+@@ Exceptions table
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-.global	_undefined_instruction_vect
-_undefined_instruction_vect:	.text
-    mov r0, #2
-    movs pc, r14
+.section .vectors
 
-.global	_software_interrupt_vect
-_software_interrupt_vect:	.text
-    mov r0, #3
-    movs pc, r14
+resetVector:         b resetHandler
+undefVector:         b UndefinedException
+swiVector:           b SwiException
+prefetchAbortVector: b PrefetchAbortException
+dataAbortVector:     b DataAbortException
+reservedVector:      b reservedVector
+irqVector:           b irqHandler
+fiqVector:           b fiqVector
 
-.global	_prefetch_abort_vect
-_prefetch_abort_vect:	.text
-    mov r0, #4
-    subs pc, r14, #4
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@ Exceptions handlers
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-.global	_data_abort_vect
-_data_abort_vect:	.text
-    mov r0, #5
-    subs pc, r14, #8
-
-.global	_data_abort_vect
-_data_abort_vect:	.text
-    mov r0, #5
-    subs pc, r14, #8
-
-.global	_irq_vect
-_irq_vect:	.text
-    mov r0, #6
-    subs pc, r14, #8
-
-.global	_fiq_vect
-_fiq_vect:	.text
-    mov r0, #7
-    subs pc, r14, #8
+resetHandler:
+UndefinedException:
+SwiException:
+PrefetchAbortException:
+DataAbortException:
+reservedVector:
+irqHandler:
+fiqVector:
+    mov r1, #99
+    
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@ Main

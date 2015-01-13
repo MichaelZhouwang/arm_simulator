@@ -197,11 +197,12 @@ int main(int argc, char *argv[]) {
         }
     }
     gdb_init();
-    arm_init();
     set_trace_file(trace_file);
 
     shared.mem = memory_create(0x20000);
     shared.arm = arm_create(shared.mem);
+
+    arm_init(shared.arm);
 
     pthread_mutex_init(&shared.lock, NULL);
     pthread_create(&gdb_thread, NULL, gdb_listener, &shared);

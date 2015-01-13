@@ -8,7 +8,6 @@ Makefile
 Makefile.in
 /Examples/config.log
 /Examples/config.status
-/Examples/toto
 /confdefs.h
 /config.h
 /config.log
@@ -38,7 +37,10 @@ Makefile.in
 /Examples/exampleMOV_MVN
 /Examples/example_operations
 /Examples/example_operations_bin
+/Examples/exampleADC
 /Examples/stamp-h1
-/Examples/it_vectors
+/Examples/exampleUndefined_Instruction
+/Examples/exampleIrq
+/Examples/exampleHandler
 /autom4te.cache/
 /arm_simulator

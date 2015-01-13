@@ -3,6 +3,7 @@
 	A: .byte 10
 	B: .byte 11
 	C: .byte 12
+
 .global main
 .text
 
@@ -55,7 +56,7 @@ main:
   ldr r0, ptr_b
   ldrb r1, [r0], r2 @ B est chargé dans r1
   @ r0 modifié
-  add r0, r0, #1 @ r0 à la valeur de ptr_b
+  sub r0, r0, #1 @ r0 à la valeur de ptr_b
 
 @ Scaled register post-indexed
   @ LSL
@@ -63,42 +64,9 @@ main:
   ldrb r1, [r0], r2, LSL #1 @ C est chargé dans r1
   @ r0 modifié
   sub r0, r0, #2 @ r0 à la valeur de ptr_c
-  
-  
+
   swi 0x123456
-  
 
   ptr_a: .word A
   ptr_b: .word B
   ptr_c: .word C
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  

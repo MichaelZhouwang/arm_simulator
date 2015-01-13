@@ -1,5 +1,9 @@
 @ Utilisation de tous les cas de la fonction LDR
-
+.data
+  A: .word 10
+  B: .word 11
+  C: .word 12
+  
 .global main
 .text
 
@@ -61,46 +65,8 @@ main:
   @ r0 modifié
   sub r0, r0, #2 @ r0 à la valeur de ptr_c
   
-  
-  
   swi 0x123456
 
-
-  A: .word 10
-  B: .word 11
-  C: .word 12
-  
   ptr_a: .word A
   ptr_b: .word B
   ptr_c: .word C
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  

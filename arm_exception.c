@@ -57,15 +57,14 @@ void arm_branch_exception_vector(arm_core p, int8_t vector) {
 static void handle_reset(arm_core p) {
     debug("exception called : RESET\n");
 
-	/*
     int32_t cpsr = arm_read_cpsr(p);
-    cpsr = set_bits(cpsr, 4, 0, 0x19);        // Enter Supervisor mode
-    cpsr = clr_bit(cpsr, 5);                  // Execute in ARM state
-    cpsr = set_bit(cpsr, 6);                  // Disable fast interrupts
-    cpsr = set_bit(cpsr, 7);                  // Disable normal interrupts
+    cpsr = set_bits(cpsr, 4, 0, USR);        // Enter Supervisor mode
+    //cpsr = clr_bit(cpsr, 5);                  // Execute in ARM state
+    cpsr = clr_bit(cpsr, 6);                  // Disable fast interrupts
+    cpsr = clr_bit(cpsr, 7);                  // Disable normal interrupts
     cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
-	*/
-    arm_write_cpsr(p, 0x153 | 1<<9);
+
+    arm_write_cpsr(p, cpsr);
 
 	arm_write_usr_register(p, 15, 0);
 
@@ -79,16 +78,16 @@ static void handle_undefined_instruction(arm_core p) {
     int32_t cpsr = arm_read_cpsr(p);
     int32_t cpsr_copie = cpsr;
     
-    cpsr = set_bits(cpsr, 4, 0, 0x27);        // Enter Undef Instruction mode
-    cpsr = clr_bit(cpsr, 5);                  // Execute in ARM state
-    cpsr = set_bit(cpsr, 7);                  // Disable normal interrupts
-    cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
+    cpsr = set_bits(cpsr, 4, 0, 0x1b);        // Enter Undef Instruction mode
+    cpsr = clr_bit(cpsr, T);                  // Execute in ARM state
+    cpsr = set_bit(cpsr, I);                  // Disable normal interrupts
+    cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
     
     arm_write_cpsr(p, cpsr);
     arm_write_register(p, LR, address_next_ins);
     arm_write_spsr(p, cpsr_copie);
 
-    arm_branch_exception_vector(p, 0x0008);
+    arm_branch_exception_vector(p, 0x0004);
 }
 
 static void handle_software_interrup(arm_core p) {
@@ -98,29 +97,29 @@ static void handle_software_interrup(arm_core p) {
     int32_t cpsr = arm_read_cpsr(p);
     int32_t cpsr_copie = cpsr;
     
-    cpsr = set_bits(cpsr, 4, 0, 0x19);        // Enter Supervisor mode
-    cpsr = clr_bit(cpsr, 5);                  // Execute in ARM state
-    cpsr = set_bit(cpsr, 7);                  // Disable normal interrupts
-    cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
+    cpsr = set_bits(cpsr, 4, 0, 0x13);        // Enter Supervisor mode
+    cpsr = clr_bit(cpsr, T);                  // Execute in ARM state
+    cpsr = set_bit(cpsr, I);                  // Disable normal interrupts
+    cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
 
     arm_write_cpsr(p, cpsr);
     arm_write_register(p, LR, address_next_ins);
     arm_write_spsr(p, cpsr_copie);
 
-    arm_branch_exception_vector(p, 0x0004);
+    arm_branch_exception_vector(p, 0x0008);
 }
 
 static void handle_prefetch_abord(arm_core p) {
-    debug("exception called : PREFETCH ABORD\n");
+    debug("exception called : PREFETCH ABORT\n");
 
     int32_t address_current_ins = arm_address_current_instruction(p);
     int32_t cpsr = arm_read_cpsr(p);
     int32_t cpsr_copie = cpsr;
     
-    cpsr = set_bits(cpsr, 4, 0, 0x23);        // Enter Abord mode
-    cpsr = clr_bit(cpsr, 5);                  // Execute in ARM state
-    cpsr = set_bit(cpsr, 7);                  // Disable normal interrupts
-    cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
+    cpsr = set_bits(cpsr, 4, 0, 0x17);        // Enter Abord mode
+    cpsr = clr_bit(cpsr, T);                  // Execute in ARM state
+    cpsr = set_bit(cpsr, I);                  // Disable normal interrupts
+    cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
     
     arm_write_cpsr(p, cpsr);
     arm_write_register(p, LR, address_current_ins + 4);
@@ -130,7 +129,7 @@ static void handle_prefetch_abord(arm_core p) {
 }
 
 static void handle_data_abort(arm_core p) {
-    debug("exception called : DATA ABORD\n");
+    debug("exception called : DATA ABORT\n");
 
     int32_t cpsr = arm_read_cpsr(p);
     if (get_bit(cpsr, A)) {
@@ -141,10 +140,10 @@ static void handle_data_abort(arm_core p) {
     int32_t address_current_ins = arm_address_current_instruction(p);
     int32_t cpsr_copie = cpsr;
 
-    cpsr = set_bits(cpsr, 4, 0, 0x23);        // Enter Abord mode
-    cpsr = clr_bit(cpsr, 5);                  // Execute in ARM state
-    cpsr = set_bit(cpsr, 7);                  // Disable normal interrupts
-    cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
+    cpsr = set_bits(cpsr, 4, 0, 0x17);        // Enter Abord mode
+    cpsr = clr_bit(cpsr, T);                  // Execute in ARM state
+    cpsr = set_bit(cpsr, I);                  // Disable normal interrupts
+    cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
     
     arm_write_cpsr(p, cpsr);
     arm_write_register(p, LR, address_current_ins + 8);
@@ -165,10 +164,10 @@ static void handle_irq(arm_core p) {
     int32_t address_next_ins = arm_address_next_instruction(p);
     int32_t cpsr_copie = cpsr;
 
-    cpsr = set_bits(cpsr, 4, 0, 0x18);        // Enter IRQ mode
-    cpsr = clr_bit(cpsr, 5);                   // Execute in ARM state
-    cpsr = set_bit(cpsr, 7);                   // Disable normal interrupts
-    cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
+    cpsr = set_bits(cpsr, 4, 0, 0x12);        // Enter IRQ mode
+    cpsr = clr_bit(cpsr, T);                   // Execute in ARM state
+    cpsr = set_bit(cpsr, I);                   // Disable normal interrupts
+    cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
 
     arm_write_cpsr(p, cpsr);
     arm_write_register(p, LR, address_next_ins + 4);
@@ -189,11 +188,11 @@ static void handle_fiq(arm_core p) {
     int32_t address_next_ins = arm_address_next_instruction(p);
     int32_t cpsr_copie = cpsr;
     
-    cpsr = set_bits(cpsr, 4, 0, 0x17);        // Enter IRQ mode
-    cpsr = clr_bit(cpsr, 5);               // Execute in ARM state
-    cpsr = set_bit(cpsr, 6);               // Disable fast interrupts
-    cpsr = set_bit(cpsr, 7);               // Disable normal interrupts
-    cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
+    cpsr = set_bits(cpsr, 4, 0, 0x11);        // Enter IRQ mode
+    cpsr = clr_bit(cpsr, T);               // Execute in ARM state
+    cpsr = set_bit(cpsr, F);               // Disable fast interrupts
+    cpsr = set_bit(cpsr, I);               // Disable normal interrupts
+    cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
     
     arm_write_cpsr(p, cpsr);
     arm_write_register(p, LR, address_next_ins + 4);

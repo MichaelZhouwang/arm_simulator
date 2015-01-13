@@ -1,6 +1,9 @@
 @ Utilisation de tous les cas de la fonction STR
 @ p.458 -- A5-18
-
+.data
+  A: .word 10
+  B: .word 11
+  C: .word 12
 .global main
 .text
 
@@ -25,6 +28,7 @@ main:
 
   
 @ Immediate pre-index
+  mov r1, #3
   ldr r0, ptr_a
   sub r0, r0, #1
   str r1, [r0, #1]! @ r1 est chargé dans A
@@ -45,6 +49,7 @@ main:
 
   
 @ Immediate post-indexed
+  mov r1, #5
   ldr r0, ptr_a
   str r1, [r0], #1 @ r1 est chargé dans A
   @ r0 est modifié
@@ -66,41 +71,7 @@ main:
   swi 0x123456
   
 
-  A: .word 10
-  B: .word 11
-  C: .word 12
   
   ptr_a: .word A
   ptr_b: .word B
   ptr_c: .word C
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  

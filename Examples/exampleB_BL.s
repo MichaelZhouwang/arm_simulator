@@ -13,19 +13,19 @@ main:
   mov r0, #0
   mov r1, #6
   bl add
-  bne LT @ r0 == 2
+  bne LE @ r0 == 2
 LT:
   bl add
-  blt LE @ r0 == 4
+  blt GE @ r0 == 4
 LE:
   cmp r0, r1
-  ble GE @ r0 == 4
-GE:
-  bl add
-  bge EQ  @ r0 == 6
+  ble LT @ r0 == 4
 EQ:
   cmp r0, r1
   beq GT @ r0 == 6
+GE:
+  bl add
+  bge EQ  @ r0 == 6
 GT:
   bl add
   bgt CS @ r0 == 8
@@ -34,24 +34,25 @@ GT:
 CS:
   cmp r0, r1
   bcs CC
-CC:
-  cmp r0, r1
-  bcc PL
 PL:
   cmp r0, r1
   bpl VS
-VS:
+CC:
   cmp r0, r1
-  bvs VC
+  bcc PL
 VC:
   cmp r0, r1
   bvc HI
-HI:
+VS:
   cmp r0, r1
-  bhi LS
+  bvs VC
 LS:
   cmp r0, r1
   bls end
+HI:
+  cmp r0, r1
+  bhi LS
+
 
 end:
 	

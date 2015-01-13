@@ -105,7 +105,6 @@ int arm_msr(arm_core p, uint32_t ins) {
         UNPREDICTABLE();
 
 	debug("operande: %x\n", operand);
-	UNPREDICTABLE();
 
     uint32_t mask = 0;
     uint32_t byte_mask = (get_bit(ins, 16) ? 0x000000FF : 0) | //C

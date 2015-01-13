@@ -39,6 +39,7 @@ Makefile.in
 /Examples/example_operations
 /Examples/example_operations_bin
 /Examples/stamp-h1
-/Examples/it_vectors
+/Examples/exampleUndefInstruction
+/Examples/exampleIrq
 /autom4te.cache/
 /arm_simulator

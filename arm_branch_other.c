@@ -37,12 +37,9 @@ int arm_branch(arm_core p, uint32_t ins) {
 
     uint32_t val_pc = arm_read_register(p, PC);
     if (get_bit(ins, 24)) {
-        debug_raw("================> BL\n");
         arm_write_register(p, LR, val_pc-4);
-    } else {
-        debug_raw("================> B\n");
-    }
-    
+    }     
+
     uint32_t signed_immed = get_bits(ins, 23, 0);
     uint32_t address = val_pc;
     address += sign_extend_24_to_30(signed_immed) << 2;
@@ -55,7 +52,6 @@ int arm_coprocessor_others_swi(arm_core p, uint32_t ins) {
     debug("arm_coprocessor_other_swi\n");
 
     if (get_bit(ins, 24)) {
-        debug_raw("================> SWI\n");
         // Here we implement the end of the simulation as swi 0x123456
         if ((ins & 0xFFFFFF) == 0x123456) {
             exit(0);

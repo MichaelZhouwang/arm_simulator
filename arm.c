@@ -25,7 +25,5 @@ Contact: Guillaume.Huard@imag.fr
 #include <debug.h>
 
 void arm_init(arm_core p) {
-	debug("Init\n");
-	arm_write_cpsr(p, 0x00000010);
 
 }

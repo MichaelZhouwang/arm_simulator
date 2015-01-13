@@ -354,3 +354,4 @@ uint32_t get_immediate(arm_core p, uint32_t ins, uint8_t *shift_C) {
 
 TODO :
 	- rendre les debug plus lisibles (écriture hexa => texte)
+	- progresssion des tests : https://docs.google.com/spreadsheets/d/1uVqLLIrAIYpqXpx9BKyF-LIT051zsBn1Ceasu3MpmaA/edit#gid=0

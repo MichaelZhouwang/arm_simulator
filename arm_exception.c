@@ -88,7 +88,7 @@ static void handle_undefined_instruction(arm_core p) {
     arm_write_register(p, LR, address_next_ins);
     arm_write_spsr(p, cpsr_copie);
 
-    arm_branch_exception_vector(p, 0x0008);
+    arm_branch_exception_vector(p, 0x0004);
 }
 
 static void handle_software_interrup(arm_core p) {
@@ -107,7 +107,7 @@ static void handle_software_interrup(arm_core p) {
     arm_write_register(p, LR, address_next_ins);
     arm_write_spsr(p, cpsr_copie);
 
-    arm_branch_exception_vector(p, 0x0004);
+    arm_branch_exception_vector(p, 0x0008);
 }
 
 static void handle_prefetch_abord(arm_core p) {

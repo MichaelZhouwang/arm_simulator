@@ -59,16 +59,16 @@ static void handle_reset(arm_core p) {
 
     int32_t cpsr = arm_read_cpsr(p);
     cpsr = set_bits(cpsr, 4, 0, USR);        // Enter Supervisor mode
-    //cpsr = clr_bit(cpsr, 5);                  // Execute in ARM state
-    cpsr = clr_bit(cpsr, 6);                  // Disable fast interrupts
-    cpsr = clr_bit(cpsr, 7);                  // Disable normal interrupts
-    cpsr = chg_bit(cpsr, 9, CP15_reg1_EEbit); // Endianness on exception entry
+    //cpsr = clr_bit(cpsr, T);                  // Execute in ARM state
+    cpsr = clr_bit(cpsr, F);                  // Disable fast interrupts
+    cpsr = clr_bit(cpsr, I);                  // Disable normal interrupts
+    cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
 
     arm_write_cpsr(p, cpsr);
 
-	arm_write_usr_register(p, 15, 0);
+	//arm_write_usr_register(p, 15, 0);
 
-    //arm_branch_exception_vector(p, 0x0000);
+    arm_branch_exception_vector(p, 0x0000);
 }
 
 static void handle_undefined_instruction(arm_core p) {
@@ -78,7 +78,7 @@ static void handle_undefined_instruction(arm_core p) {
     int32_t cpsr = arm_read_cpsr(p);
     int32_t cpsr_copie = cpsr;
     
-    cpsr = set_bits(cpsr, 4, 0, 0x1b);        // Enter Undef Instruction mode
+    cpsr = set_bits(cpsr, 4, 0, UND);        // Enter Undef Instruction mode
     cpsr = clr_bit(cpsr, T);                  // Execute in ARM state
     cpsr = set_bit(cpsr, I);                  // Disable normal interrupts
     cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
@@ -97,7 +97,7 @@ static void handle_software_interrup(arm_core p) {
     int32_t cpsr = arm_read_cpsr(p);
     int32_t cpsr_copie = cpsr;
     
-    cpsr = set_bits(cpsr, 4, 0, 0x13);        // Enter Supervisor mode
+    cpsr = set_bits(cpsr, 4, 0, SVC);        // Enter Supervisor mode
     cpsr = clr_bit(cpsr, T);                  // Execute in ARM state
     cpsr = set_bit(cpsr, I);                  // Disable normal interrupts
     cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
@@ -116,7 +116,7 @@ static void handle_prefetch_abord(arm_core p) {
     int32_t cpsr = arm_read_cpsr(p);
     int32_t cpsr_copie = cpsr;
     
-    cpsr = set_bits(cpsr, 4, 0, 0x17);        // Enter Abord mode
+    cpsr = set_bits(cpsr, 4, 0, ABT);        // Enter Abord mode
     cpsr = clr_bit(cpsr, T);                  // Execute in ARM state
     cpsr = set_bit(cpsr, I);                  // Disable normal interrupts
     cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
@@ -140,7 +140,7 @@ static void handle_data_abort(arm_core p) {
     int32_t address_current_ins = arm_address_current_instruction(p);
     int32_t cpsr_copie = cpsr;
 
-    cpsr = set_bits(cpsr, 4, 0, 0x17);        // Enter Abord mode
+    cpsr = set_bits(cpsr, 4, 0, ABT);        // Enter Abord mode
     cpsr = clr_bit(cpsr, T);                  // Execute in ARM state
     cpsr = set_bit(cpsr, I);                  // Disable normal interrupts
     cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
@@ -164,7 +164,7 @@ static void handle_irq(arm_core p) {
     int32_t address_next_ins = arm_address_next_instruction(p);
     int32_t cpsr_copie = cpsr;
 
-    cpsr = set_bits(cpsr, 4, 0, 0x12);        // Enter IRQ mode
+    cpsr = set_bits(cpsr, 4, 0, IRQ);        // Enter IRQ mode
     cpsr = clr_bit(cpsr, T);                   // Execute in ARM state
     cpsr = set_bit(cpsr, I);                   // Disable normal interrupts
     cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
@@ -188,7 +188,7 @@ static void handle_fiq(arm_core p) {
     int32_t address_next_ins = arm_address_next_instruction(p);
     int32_t cpsr_copie = cpsr;
     
-    cpsr = set_bits(cpsr, 4, 0, 0x11);        // Enter IRQ mode
+    cpsr = set_bits(cpsr, 4, 0, FIQ);        // Enter IRQ mode
     cpsr = clr_bit(cpsr, T);               // Execute in ARM state
     cpsr = set_bit(cpsr, F);               // Disable fast interrupts
     cpsr = set_bit(cpsr, I);               // Disable normal interrupts

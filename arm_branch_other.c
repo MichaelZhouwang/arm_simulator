@@ -69,28 +69,33 @@ int arm_miscellaneous(arm_core p, uint32_t ins) {
 }
 
 int arm_mrs(arm_core p, uint32_t ins) {
-
+	debug("MRS ");
     uint8_t rd = get_bits(ins, 15, 12);
+	debug_raw("rd:r%d ", rd);
+
     if (rd == 15)
         UNPREDICTABLE();
-    if (get_bits(ins, 19, 16) != 0xF)
+    /*if (get_bits(ins, 19, 16) != 0xF)
         SHOULD_BE_ONE();
     if (get_bits(ins, 11, 0) != 0x0)
         SHOULD_BE_ZERO();
+	*/
 
     int32_t value;
-    if (get_bit(ins, 22))
+    if (get_bit(ins, 22)){
         value = arm_read_spsr(p);
-    else
+		debug_raw("SPSR:%x\n", value);
+    } else {
         value = arm_read_cpsr(p);
+		debug_raw("CPSR:%x\n", value);
+	}
 
-	debug("MRS rd:r%d\n", rd);
     arm_write_register(p, rd, value);
     return 0;
 }
 
 int arm_msr(arm_core p, uint32_t ins) {
-    debug("MSR\n");
+    debug("MSR ");
 
     uint32_t operand;
     if (get_bit(ins, 25)) {
@@ -105,7 +110,7 @@ int arm_msr(arm_core p, uint32_t ins) {
     if ((operand & UnallocMask) != 0) 
         UNPREDICTABLE();
 
-	debug("operande: %x\n", operand);
+	debug_raw("operande:%x ", operand);
 
     uint32_t mask = 0;
     uint32_t byte_mask = (get_bit(ins, 16) ? 0x000000FF : 0) | //C
@@ -113,32 +118,31 @@ int arm_msr(arm_core p, uint32_t ins) {
                          (get_bit(ins, 18) ? 0x00FF0000 : 0) | //S
                          (get_bit(ins, 19) ? 0xFF000000 : 0);  //F
 
-	debug("byte mask: %x\n", byte_mask);
+	debug_raw("byte mask:%x ", byte_mask);
 
     if (get_bit(ins, 22)) {
-		debug("SPSR\n");
+		debug_raw("SPSR ");
         if (arm_current_mode_has_spsr(p)) {
-			debug("mode SPSR\n");
             mask = byte_mask & (UserMask | PrivMask | StateMask);
-			debug("mask: %x\n", mask);
+			debug_raw("mask:%x\n", mask);
             arm_write_spsr(p, (arm_read_spsr(p) & ~mask) | (operand & mask));
         } else {
             UNPREDICTABLE();
         }
     } else {
-		debug("CPSR\n");
+		debug_raw("CPSR ");
 		if (arm_in_a_privileged_mode(p)) {
-			debug("mode privileged\n");
+			debug_raw("mode privileged ");
 			if ((operand & StateMask) == 0) {
 				mask = byte_mask & (UserMask | PrivMask);
 			} else {
 				UNPREDICTABLE();
 			}
 		} else {
-			debug("mode user\n");
+			debug_raw("mode user ");
 			mask = byte_mask & UserMask;
 		}
-		debug("mask: %x\n", mask);
+		debug_raw("mask:%x\n", mask);
 		arm_write_cpsr(p, (arm_read_cpsr(p) & ~mask) | (operand & mask));
 	}
 	return 0;

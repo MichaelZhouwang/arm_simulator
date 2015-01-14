@@ -45,7 +45,7 @@ main:
   ldr r0, ptr_b
   ldrh r1, [r0], r2 @ B est chargé dans r1
   @ r0 modifié
-  add r0, r0, #1 @ r0 à la valeur de ptr_b
+  sub r0, r0, #1 @ r0 à la valeur de ptr_b
 
   swi 0x123456
 

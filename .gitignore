@@ -29,6 +29,7 @@ Makefile.in
 /Examples/exampleSTRB
 /Examples/exampleSTRH
 /Examples/exampleLDM_STM
+/Examples/exampleLDRSH_LDRSB_LDRD_STRD
 /Examples/exampleTST_TEQ_CMP_CMN
 /Examples/examplesLDR
 /Examples/exampleLDRB

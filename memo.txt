@@ -167,26 +167,26 @@ Les differentes valeurs du champ de condition (p112 figure A3-4)
 |-----------------------------------|------|-----------|----------|
 
 Operation de Data processing (p115 table A3-2)
-|--------|----------|------------------------------|------------------------------------------------|
-| Opcode | Mnemonic | Operation                    | Instructions action                            |
-|--------|----------|------------------------------|------------------------------------------------|
-|  0000  |   AND    | Logical AND                  | Rd := Rn AND shifter_operand                   |
-|  0001  |   EOR    | Logical Exclusive OR         | Rd := Rn EOR shifter_operand                   |
-|  0010  |   SUB    | Subtract                     | Rd := Rn - shifter_operand                     |
-|  0011  |   RSB    | Reverse                      | Rd := shifter_operand - Rn                     |
-|  0100  |   ADD    | Add                          | Rd := Rn + shifter_operand                     |
-|  0101  |   ADC    | Add with Carry               | Rd := Rn + shifter_operand + Carry Flag        |
-|  0110  |   SBC    | Subtract with Carry          | Rd := Rn - shifter_operand - NOT(Carry Flag)   |
-|  0111  |   RSC    | Reverse Subtract with Carry  | Rd := shifter_operand - Rn - NOT(Carry Flag)   |
-|  1000  |   TST    | Test                         | Update flags after Rn AND shifter_operand      |
-|  1001  |   TEQ    | Test Equivalence             | Update flags after Rn EOR shifter_operand      |
-|  1010  |   CMP    | Compare                      | Update flags after Rn - shifter_operand        |
-|  1011  |   CMN    | Compare Negated              | Update flags after Rn + shifter_operand        |
-|  1100  |   ORR    | Logical (inclusive) OR       | Rd := Rn OR shifter_operand                    |
-|  1101  |   MOV    | Move                         | Rd := shifter_operand (no first operand)       |
-|  1110  |   BIC    | Bit Clear                    | Rd := Rn AND NOT(shifter_operand)              |
-|  1111  |   MVN    | Move Not                     | Rd := NOT shifter_operand (no first operand)   |
-|--------|----------|------------------------------|------------------------------------------------|
+|--------|----------|------------------------------|-----------------------------------------------|
+| Opcode | Mnemonic | Operation                    | Instructions action                           |
+|--------|----------|------------------------------|-----------------------------------------------|
+|  0000  |   AND    | Logical AND                  | Rd := Rn AND shifter_operand                  |
+|  0001  |   EOR    | Logical Exclusive OR         | Rd := Rn EOR shifter_operand                  |
+|  0010  |   SUB    | Subtract                     | Rd := Rn - shifter_operand                    |
+|  0011  |   RSB    | Reverse                      | Rd := shifter_operand - Rn                    |
+|  0100  |   ADD    | Add                          | Rd := Rn + shifter_operand                    |
+|  0101  |   ADC    | Add with Carry               | Rd := Rn + shifter_operand + Carry Flag       |
+|  0110  |   SBC    | Subtract with Carry          | Rd := Rn - shifter_operand - NOT(Carry Flag)  |
+|  0111  |   RSC    | Reverse Subtract with Carry  | Rd := shifter_operand - Rn - NOT(Carry Flag)  |
+|  1000  |   TST    | Test                         | Update flags after Rn AND shifter_operand     |
+|  1001  |   TEQ    | Test Equivalence             | Update flags after Rn EOR shifter_operand     |
+|  1010  |   CMP    | Compare                      | Update flags after Rn - shifter_operand       |
+|  1011  |   CMN    | Compare Negated              | Update flags after Rn + shifter_operand       |
+|  1100  |   ORR    | Logical (inclusive) OR       | Rd := Rn OR shifter_operand                   |
+|  1101  |   MOV    | Move                         | Rd := shifter_operand (no first operand)      |
+|  1110  |   BIC    | Bit Clear                    | Rd := Rn AND NOT(shifter_operand)             |
+|  1111  |   MVN    | Move Not                     | Rd := NOT shifter_operand (no first operand)  |
+|--------|----------|------------------------------|-----------------------------------------------|
 
 
 Les différents Shifts (p.449-457)

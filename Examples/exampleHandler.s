@@ -9,10 +9,10 @@ main:
 @	cdp P3, #2, C12, C10, C3, #4;
 	mov r1, #10
 	swi 0x10
-	mov r0, #0
-	mov r0, #0
-	mov r0, #0
-	mov r0, #0
+
+loop:
+	add r0, #1
+	b loop
 
 
 	swi 0x123456
@@ -20,7 +20,9 @@ main:
 
 
 undefined_instruction_handler:
-	mov r4, #1
+	str r0 , [sp, #-4]!		
+	mov r0, #1
+	ldr r0, [sp, #4]!
 	subs pc, lr, #4
 
 swi_handler:

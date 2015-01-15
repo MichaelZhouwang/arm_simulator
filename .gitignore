@@ -45,5 +45,6 @@ Makefile.in
 /Examples/exampleUndefined_Instruction
 /Examples/tri_insertion
 /Examples/demoIntteruption
+/Examples/pgcd
 /autom4te.cache/
 /arm_simulator

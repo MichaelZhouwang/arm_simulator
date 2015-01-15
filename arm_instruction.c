@@ -95,7 +95,7 @@ int instruction_check_condition(arm_core p, uint32_t ins) {
         case 6 : result = (v == 1);           break;
         case 7 : result = (v == 0);           break;
         case 8 : result = (c == 1 && z == 0); break;
-        case 9 : result = (c == 0 && z == 1); break;
+        case 9 : result = (c == 0 || z == 1); break;
         case 10: result = (n == v);           break;
         case 11: result = (n != v);           break;
         case 12: result = (z == 0 && n == v); break;

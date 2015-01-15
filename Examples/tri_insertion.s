@@ -29,6 +29,7 @@
 @ r4 ← w ← j - 1
 @ r5 ← y = T[w]
 tri_insertion:
+	stmdb sp!, {r0,r1,r2,r3,r4,r5}
 	ldr r0, ptr_tab
 	mov r1, #1						@ i ← 1
 
@@ -56,6 +57,7 @@ tri_insertion:
 
 	bal loop_t
   end_loop_t:
+	ldmia sp!, {r0,r1,r2,r3,r4,r5}
 	mov pc, lr
 @@@@@@@@@@@@@@@@@@@@@@@
 @@ FIN TRI INSERTION @@

@@ -26,30 +26,30 @@ Le travail a été globalement réparti par fichiers :
 Nous avons suivi le squelette fourni.
 
 ### Fonctionnalités ajoutées
-|---------------------|---------------------------------------------------------|
-| arm_branch_others   | B, BL, MRS, MSR                                         |
-|---------------------|---------------------------------------------------------|
-| arm_constant        | Constantes registres, bits de CPSR, NO_EXCEPTION        | 
-|---------------------|---------------------------------------------------------|
-| arm_core            | Exceptions PREFETCH_ABORT, DATA_ABORT                   |
-|                     | MAJ des flags de CPSR                                   |
-|---------------------|---------------------------------------------------------|
-| arm_data_processing | AND, EOR, SUB, RSB, ADD, ADC, SBC, RSC, TST, TEQ, CMP   |
-|                     | CMN, ORR, MOV, BIC, MVN                                 |
-|---------------------|---------------------------------------------------------|
-| arm_exception       | Traitements des exceptions                              |
-|---------------------|---------------------------------------------------------|
-| arm_instruction     | Exception UNDEFINED_INSTRUCTION                         |
-|                     | Traitement du champ de conditions                       |
-|                     | Redirection des instructions vers les fichiers          |
-|                     | correspondants                                          |
-|---------------------|---------------------------------------------------------|
-| arm_load_store      | LDR/STR{S/B/T/D/H/M}                                    |
-|---------------------|---------------------------------------------------------|
-| memory              | lecture/écriture{byte/half/word}                        |
-|---------------------|---------------------------------------------------------|
-| util                | Macros de manipulation bits à bits                      |
-|---------------------|---------------------------------------------------------|
+|---------------------|--------------------------------------------------------|
+| arm_branch_others   | B, BL, MRS, MSR                                        |
+|---------------------|--------------------------------------------------------|
+| arm_constant        | Constantes registres, bits de CPSR, NO_EXCEPTION       | 
+|---------------------|--------------------------------------------------------|
+| arm_core            | Exceptions PREFETCH_ABORT, DATA_ABORT                  |
+|                     | MAJ des flags de CPSR                                  |
+|---------------------|--------------------------------------------------------|
+| arm_data_processing | AND, EOR, SUB, RSB, ADD, ADC, SBC, RSC, TST, TEQ, CMP  |
+|                     | CMN, ORR, MOV, BIC, MVN                                |
+|---------------------|--------------------------------------------------------|
+| arm_exception       | Traitements des exceptions                             |
+|---------------------|--------------------------------------------------------|
+| arm_instruction     | Exception UNDEFINED_INSTRUCTION                        |
+|                     | Traitement du champ de conditions                      |
+|                     | Redirection des instructions vers les fichiers         |
+|                     | correspondants                                         |
+|---------------------|--------------------------------------------------------|
+| arm_load_store      | LDR/STR{S/B/T/D/H/M}                                   |
+|---------------------|--------------------------------------------------------|
+| memory              | lecture/écriture{byte/half/word}                       |
+|---------------------|--------------------------------------------------------|
+| util                | Macros de manipulation bits à bits                     |
+|---------------------|--------------------------------------------------------|
 
 ### Ecriture des tests
 

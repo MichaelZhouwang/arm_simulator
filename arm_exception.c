@@ -64,9 +64,10 @@ static void handle_reset(arm_core p) {
     cpsr = clr_bit(cpsr, I);                  // Disable normal interrupts
     cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
 
-	arm_write_register(p, SP, 0x11940);
 
     arm_write_cpsr(p, cpsr);
+
+	arm_write_register(p, SP, 0x11940);
 
 	//arm_write_usr_register(p, 15, 0);
 

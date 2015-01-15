@@ -30,6 +30,7 @@
 @ r5 ← y = T[w]
 @ r6 ← N
 tri_insertion:
+
 	stmda sp!, {r0-r5}
 	
 	ldr r0, ptr_n
@@ -59,6 +60,7 @@ tri_insertion:
 
 		str r3, [r0, r2, LSL #2]		@ T[j] ← x
 		add r1, r1, #1 					@ i++
+
 
 		bal loop_t
 	end_loop_t:

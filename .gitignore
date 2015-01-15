@@ -43,5 +43,6 @@ Makefile.in
 /Examples/exampleUndefined_Instruction
 /Examples/exampleIrq
 /Examples/exampleHandler
+/Examples/presentation
 /autom4te.cache/
 /arm_simulator

@@ -23,6 +23,13 @@ J5 :
 J6 :
 	Debut des tests
 	
+J7 :
+	Ajout des interruptions & exceptions
+	Suite des tests
+	
+J8 :
+	Fin des tests
+	
 	
 Questions:
 	1- On fait quoi pour les UNPREDICTABLE

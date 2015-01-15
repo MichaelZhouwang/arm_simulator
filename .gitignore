@@ -29,6 +29,7 @@ Makefile.in
 /Examples/exampleSTRB
 /Examples/exampleSTRH
 /Examples/exampleLDM_STM
+/Examples/exampleLDRSH_LDRSB_LDRD_STRD
 /Examples/exampleTST_TEQ_CMP_CMN
 /Examples/examplesLDR
 /Examples/exampleLDRB
@@ -37,10 +38,7 @@ Makefile.in
 /Examples/exampleMOV_MVN
 /Examples/example_operations
 /Examples/example_operations_bin
-/Examples/exampleADC
 /Examples/stamp-h1
-/Examples/exampleUndefined_Instruction
-/Examples/exampleIrq
 /Examples/exampleHandler
 /autom4te.cache/
 /arm_simulator

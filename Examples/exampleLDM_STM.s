@@ -9,15 +9,15 @@ main:
 	mov r1, #2
 	mov r2, #3
 
-	@ Increment After LDMIA + STMIB
+	@ Increment After LDMDA + STMIB
 	STMIB sp!, {r0, r1, r2}
 	LDMDA sp!, {r0, r1, r2}
 
-	@ Increment Before LMDIB + STMIA
+	@ Increment Before LMDIB + STMDA
 	STMIA sp!, {r0, r1, r2}
 	LDMDB sp!, {r0, r1, r2}
 
-	@ Decrement After LDMDA + STMDB
+	@ Decrement After LDMDA + STMIB
 	STMDA sp!, {r0, r1, r2}
 	LDMIB sp!, {r0, r1, r2}
 

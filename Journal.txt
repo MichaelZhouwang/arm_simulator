@@ -7,28 +7,42 @@ J2 :
 	arm_data_processing : décodage des instructions, des registres / valeurs immédiates
 	arm_branch_other : implémentation des instructions B, BL et MRS
 	arm_load_store : debut de l'implementation de LDR / STR
+	Debut de création de tests
 	
 J3 :
 	arm_core : ajout de la màj des flags
 	arm_instruction : ajout du calcul de la 2nde opérande
 	arm_load_store : implementation des 'load et store' sauf co-processeur
 	util : ajout du shift avec calcul de C
+	arm_load_store: implémentation de MSR
+	Clean du git (.gitignore)
+	Ajout d'exemple pour load/store et branchement
 	
 J4 :
-	arm_data_processing : implémentation des instructions de DP
+	arm_data_processing : implémentation des instructions
+	arm_load_store: factorisation du code
+
 
 J5 :
-	*.c : nettoyage
+	Mise en commun du code, nettoyage et débogage
+	Ajout d'exemple pour data_processing
 
 J6 :
-	Debut des tests
+	Début des tests/correction de bug
 	
 J7 :
 	Ajout des interruptions & exceptions
 	Suite des tests
 	
 J8 :
+	Implémentation de tests pour les interruptions
 	Fin des tests
+
+J9 :
+	Préparation de la soutenance et du compte-rendu
+
+J10 :
+	Soutenance
 	
 	
 Questions:

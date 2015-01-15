@@ -5,7 +5,7 @@ AM_LDFLAGS+=-Wl,-EB
 
 if HAVE_ARM_COMPILER
 
-noinst_PROGRAMS=example1 example2 example3 example4 insertion_sort exampleB_BL exampleLDM_STM exampleLDR exampleLDRB exampleLDRH exampleLDRSH_LDRSB_LDRD_STRD exampleMRS exampleMSR exampleMOV_MVN example_operations example_operations_bin exampleSTR exampleSTRB exampleSTRH exampleTST_TEQ_CMP_CMN exampleHandler presentation tri_insertion
+noinst_PROGRAMS=example1 example2 example3 example4 insertion_sort exampleB_BL exampleLDM_STM exampleLDR exampleLDRB exampleLDRH exampleLDRSH_LDRSB_LDRD_STRD exampleMRS exampleMSR exampleMOV_MVN example_operations example_operations_bin exampleSTR exampleSTRB exampleSTRH exampleTST_TEQ_CMP_CMN exampleHandler presentation tri_insertion pgcd
 
 all-am: $(PROGS)
 endif
@@ -33,6 +33,7 @@ exampleTST_TEQ_CMP_CMN_SOURCES=exampleTST_TEQ_CMP_CMN.s
 exampleHandler_SOURCES=exampleHandler.s
 presentation_SOURCES=presentation.s
 tri_insertion_SOURCES=tri_insertion.s
+pgcd_SOURCES=pgcd.s
 
 EXTRA_DIST=linker_script
 

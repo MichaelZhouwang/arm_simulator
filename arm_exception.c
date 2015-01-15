@@ -58,7 +58,7 @@ static void handle_reset(arm_core p) {
     debug("exception called : RESET\n");
 
     int32_t cpsr = arm_read_cpsr(p);
-    cpsr = set_bits(cpsr, 4, 0, USR);        // Enter Supervisor mode
+    cpsr = set_bits(cpsr, 4, 0, SVC);        // Enter Supervisor mode
     //cpsr = clr_bit(cpsr, T);                  // Execute in ARM state
     cpsr = clr_bit(cpsr, F);                  // Disable fast interrupts
     cpsr = clr_bit(cpsr, I);                  // Disable normal interrupts

@@ -39,7 +39,9 @@ J8 :
 	Fin des tests
 
 J9 :
+	Ajout de la prise en compte de la pile
 	Préparation de la soutenance et du compte-rendu
+	Ajout de programmes-tests(tri_insertion, pgdc, demoIntteruption)
 
 J10 :
 	Soutenance

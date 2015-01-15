@@ -145,26 +145,26 @@ Schema d'une instruction vu au niveau de arm_instruction (p110 figure A3-1)
 |-------------|----------|--------------------|
 
 Les differentes valeurs du champ de condition (p112 figure A3-4)
-|-----------------------------------|------|-----------|----------|
-| Description                       | Code | Flags     | Mnemonic |
-|-----------------------------------|------|-----------|----------|
-| Equal                             | 0000 | Z=1       | EQ       |
-| Not equal                         | 0001 | Z=0       | NE       |
-| Carry set/unsigned higher or same | 0010 | C=1       | CS/HS    |
-| Carry clear/unsigned lower        | 0011 | C=0       | CC/LO    |
-| Minus/negative                    | 0100 | N=1       | MI       |
-| Plus/positive or zero             | 0101 | N=0       | PL       |
-| Overflow                          | 0110 | V=1       | VS       |
-| No overflow                       | 0111 | V=0       | VC       |
-| Unsigned higher                   | 1000 | C=1 Z=0   | HI       |
-| Unsigned lower or same            | 1001 | C=0 Z=1   | LS       |
-| Signed greater than or equal      | 1010 | N=V       | GE       |
-| Signed less than                  | 1011 | N!=V      | LT       |
-| Signed greater than               | 1100 | Z=0 N=V   | GT       |
-| Signed less than or equal         | 1101 | Z=1 N!=V  | LE       |
-| Always (unconditional)            | 1110 | Always    | AL       |
-| 1111  (see page 110)              | 1111 | Undefined |          |
-|-----------------------------------|------|-----------|----------|
+|-----------------------------------|------|------------|----------|
+| Description                       | Code | Flags      | Mnemonic |
+|-----------------------------------|------|------------|----------|
+| Equal                             | 0000 | Z=1        | EQ       |
+| Not equal                         | 0001 | Z=0        | NE       |
+| Carry set/unsigned higher or same | 0010 | C=1        | CS/HS    |
+| Carry clear/unsigned lower        | 0011 | C=0        | CC/LO    |
+| Minus/negative                    | 0100 | N=1        | MI       |
+| Plus/positive or zero             | 0101 | N=0        | PL       |
+| Overflow                          | 0110 | V=1        | VS       |
+| No overflow                       | 0111 | V=0        | VC       |
+| Unsigned higher                   | 1000 | C=1 & Z=0  | HI       |
+| Unsigned lower or same            | 1001 | C=0 | Z=1  | LS       |
+| Signed greater than or equal      | 1010 | N=V        | GE       |
+| Signed less than                  | 1011 | N!=V       | LT       |
+| Signed greater than               | 1100 | Z=0 & N=V  | GT       |
+| Signed less than or equal         | 1101 | Z=1 | N!=V | LE       |
+| Always (unconditional)            | 1110 | Always     | AL       |
+| 1111  (see page 110)              | 1111 | Undefined  |          |
+|-----------------------------------|------|------------|----------|
 
 Operation de Data processing (p115 table A3-2)
 |--------|----------|------------------------------|-----------------------------------------------|

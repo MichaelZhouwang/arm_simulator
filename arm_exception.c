@@ -58,14 +58,43 @@ static void handle_reset(arm_core p) {
     debug("exception called : RESET\n");
 
     int32_t cpsr = arm_read_cpsr(p);
-    cpsr = set_bits(cpsr, 4, 0, SVC);        // Enter Supervisor mode
+    //cpsr = set_bits(cpsr, 4, 0, SVC);        // Enter Supervisor mode
     //cpsr = clr_bit(cpsr, T);                  // Execute in ARM state
     cpsr = clr_bit(cpsr, F);                  // Disable fast interrupts
     cpsr = clr_bit(cpsr, I);                  // Disable normal interrupts
     cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
 
-	arm_write_register(p, SP, 0x11940);
+	
+	cpsr = set_bits(cpsr, 4, 0, USR);
+	arm_write_cpsr(p, cpsr);
+	arm_write_register(p, SP, 0x10000);
+	
+	cpsr = set_bits(cpsr, 4, 0, FIQ);
+	arm_write_cpsr(p, cpsr);
+	arm_write_register(p, SP, 0x10100);
 
+	cpsr = set_bits(cpsr, 4, 0, IRQ);
+	arm_write_cpsr(p, cpsr);
+	arm_write_register(p, SP, 0x10200);
+
+	cpsr = set_bits(cpsr, 4, 0, SVC);
+	arm_write_cpsr(p, cpsr);
+	arm_write_register(p, SP, 0x10300);
+
+	cpsr = set_bits(cpsr, 4, 0, ABT);
+	arm_write_cpsr(p, cpsr);
+	arm_write_register(p, SP, 0x10400);
+
+	cpsr = set_bits(cpsr, 4, 0, UND);
+	arm_write_cpsr(p, cpsr);
+	arm_write_register(p, SP, 0x10500);
+
+	cpsr = set_bits(cpsr, 4, 0, SYS);
+	arm_write_cpsr(p, cpsr);
+	arm_write_register(p, SP, 0x10600);
+
+
+	cpsr = set_bits(cpsr, 4, 0, SVC);
     arm_write_cpsr(p, cpsr);
 
 	//arm_write_usr_register(p, 15, 0);

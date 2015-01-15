@@ -48,3 +48,7 @@ Makefile.in
 /Examples/pgcd
 /autom4te.cache/
 /arm_simulator
+/Examples/configure
+/config.h.in
+/Examples/alclocal.m4
+/core

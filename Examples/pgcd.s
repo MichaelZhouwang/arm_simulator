@@ -20,56 +20,45 @@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
-.bss
-	res: .word
 .data
-	A: .word 12
-	B: .word 9
+	A: .word 11
+	B: .word 4
+	res: .word 0
 
 
 .global main
 .text
 
-main:
-	@ r0 = A, r1 = B, r2 = res
-	
+main:	
+	@ r0 = A, r1 = B, r2 = res, r3 = @res
 	ldr r0, =A
 	ldr r0, [r0]
 	ldr r1, =B
 	ldr r1, [r1]
-	stmdb sp!, {r0, r1}
+	stmda sp!, {r0, r1}
 	bl pgcd
-	ldmia sp!, {r0, r1}
-	ldr r2, =res
-	str r2, [r2]
+	ldmib sp!, {r0, r1}
+	ldr r3, =res
+	str r2, [r3]
 	
 	swi 0x123456
 	
+	
+	
 pgcd:
 	@ r0 = A, r1 = B, r2 = res
-	ldr r0, [sp, #4]
-	ldr r1, [sp]
+	str lr, [sp] , #-4
+	
 	cmp r0, r1
-		bne else1
+		bne else
 		mov r2, r0
 		b endif
-	else1:
-		bls else2
-			sub r0, r0, r1
-			str lr, [sp, #-4]!
-			stmdb sp!, {r0, r1}
+	else:
+			subhi r0, r0, r1
+			subls r1, r1, r0
 			bl pgcd
-			ldmia sp!, {r0, r1}
-			ldr lr, [sp], #4
-			b endif
-		else2:
-			sub r1, r1, r0
-			str lr, [sp, #-4]!
-			stmdb sp!, {r0, r1}
-			bl pgcd
-			ldmia sp!, {r0, r1}
-			ldr lr, [sp], #4
 	endif:
 	
+	ldr lr, [sp, #4]!
 	mov pc, lr
 	

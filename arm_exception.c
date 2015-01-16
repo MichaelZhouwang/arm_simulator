@@ -64,12 +64,39 @@ static void handle_reset(arm_core p) {
     cpsr = clr_bit(cpsr, I);                  // Disable normal interrupts
     cpsr = chg_bit(cpsr, E, CP15_reg1_EEbit); // Endianness on exception entry
 
-	cpsr = set_bits(cpsr, 4, 0, SVC);
-    arm_write_cpsr(p, cpsr);
-
-	arm_write_register(p, SP, 0x11940);
-
 	//arm_write_usr_register(p, 15, 0);
+	cpsr = set_bits(cpsr, 4, 0, USR);
+	arm_write_cpsr(p, cpsr);
+	arm_write_register(p, SP, 0x10000);
+
+	cpsr = set_bits(cpsr, 4, 0, FIQ);
+	arm_write_cpsr(p, cpsr);
+	arm_write_register(p, SP, 0x10100);
+
+	cpsr = set_bits(cpsr, 4, 0, IRQ);
+	arm_write_cpsr(p, cpsr);
+	arm_write_register(p, SP, 0x10200);
+
+	cpsr = set_bits(cpsr, 4, 0, SVC);
+	arm_write_cpsr(p, cpsr);
+	arm_write_register(p, SP, 0x10300);
+
+	cpsr = set_bits(cpsr, 4, 0, ABT);
+	arm_write_cpsr(p, cpsr);
+	arm_write_register(p, SP, 0x10400);
+
+	cpsr = set_bits(cpsr, 4, 0, UND);
+	arm_write_cpsr(p, cpsr);
+	arm_write_register(p, SP, 0x10500);
+
+	cpsr = set_bits(cpsr, 4, 0, SYS);
+	arm_write_cpsr(p, cpsr);
+	arm_write_register(p, SP, 0x10600);
+
+
+	cpsr = set_bits(cpsr, 4, 0, SVC);
+	arm_write_cpsr(p, cpsr);
+
 
     arm_branch_exception_vector(p, 0x0000);
 }
